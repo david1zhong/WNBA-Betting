@@ -36,6 +36,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add scraped_data.json
+          git add props.json
           git commit -m "Update scraped data ($TODAY)" || echo "No changes to commit"
           git push
