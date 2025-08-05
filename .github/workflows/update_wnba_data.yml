@@ -1,0 +1,44 @@
+name: Update WNBA PlayerBox 2025
+
+on:
+  schedule:
+    - cron: '0 8 * 1-12 *'
+  workflow_dispatch:
+
+jobs:
+  update_playerbox:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+
+      - name: Setup Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Install R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: |
+            sportsdataverse/wehoop
+            sportsdataverse/sportsdataverse-data
+            ropensci/piggyback
+
+      - name: Update only PlayerBox 2025
+        env:
+          GITHUB_PAT: ${{ secrets.SDV_GH_TOKEN }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          Rscript R/espn_wnba_03_player_box_creation.R -s 2025 -e 2025
+          git add wnba/player_box/*
+          git commit -m "PlayerBox 2025 Update" || echo "No changes to commit"
+          git push
