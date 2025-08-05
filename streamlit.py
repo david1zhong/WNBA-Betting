@@ -4,7 +4,6 @@ import os
 from sqlalchemy import create_engine
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-
 engine = create_engine(DATABASE_URL)
 
 
@@ -25,34 +24,33 @@ def highlight_result(val):
 
 
 num_cols = df.select_dtypes(include="number").columns
-df[num_cols] = df[num_cols].round(0).astype("Int64")
-
+df[num_cols] = df[num_cols].astype(float)
 
 st.set_page_config(layout="wide")
 st.title("WNBA Betting")
 
-
 if "id" in df.columns:
     df = df.drop(columns=["id"])
 
-
 st.subheader("All Predictions")
+
+
+def smart_format(x):
+    if pd.isna(x):
+        return ""
+    if float(x).is_integer():
+        return str(int(x))
+    return str(x)
+    
 styled_df = (
     df.style
     .applymap(highlight_result, subset=["result"])
+    .format({col: smart_format for col in num_cols})
     .hide(axis="index")
 )
 
-def format_dynamic_numbers(df):
-    df_copy = df.copy()
-    for col in df_copy.select_dtypes(include=['float']):
-        df_copy[col] = df_copy[col].apply(lambda x: int(x) if x.is_integer() else x)
-    return df_copy
-
-formatted_df = format_dynamic_numbers(df)
-
 st.dataframe(
-    formatted_df,
+    styled_df,
     use_container_width=True,
     height=600
 )
