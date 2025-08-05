@@ -35,7 +35,7 @@ for player in players:
 
     if over_odds == "even":
         over_odds = under_odds
-        
+
     if under_odds == "even":
         under_odds = over_odds
 
@@ -47,8 +47,10 @@ for player in players:
         "under_odds": under_odds
     })
 
+instances = len(data)
+
 output = {
-    "_comment": f"Player props as of {timestamp}",
+    "_comment": f"{instances} player props as of {timestamp}",
     "players": data
 }
 
