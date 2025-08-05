@@ -43,19 +43,18 @@ styled_df = (
     .hide(axis="index")
 )
 
-st.dataframe(df.style.format({
-    "over_line": "{:.1f}",
-    "under_line": "{:.1f}",
-    "predicted_points": "{:.1f}",
-    "actual_points": "{:.1f}"
-}))
+def format_dynamic(val):
+    if isinstance(val, float):
+        return f"{val:.1f}".rstrip('0').rstrip('.')
+    return val
+
+styled_df = df.style.format(format_dynamic)
 
 st.dataframe(
     styled_df,
     use_container_width=True,
     height=600
 )
-
 
 st.subheader("Average Model Accuracy (PTS Differential)")
 accuracy = df.groupby("model_name")["pts_differential"].mean().reset_index()
