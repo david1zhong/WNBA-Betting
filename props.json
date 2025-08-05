@@ -1,8 +1,313 @@
 {
-  "_comment": "Player props as of 2025-08-05 10:15 EDT",
-  "name": "Sug Sutton",
-  "over_line": "o7.5",
-  "over_odds": "-115",
-  "under_line": "u7.5",
-  "under_odds": "-110"
+  "_comment": "Player props as of 2025-08-05 10:35 EDT",
+  "players": [
+    {
+      "name": "Sabrina Ionescu",
+      "over_line": "22.5",
+      "over_odds": "-120",
+      "under_line": "23.5",
+      "under_odds": "-125"
+    },
+    {
+      "name": "Kelsey Mitchell",
+      "over_line": "20.5",
+      "over_odds": "-105",
+      "under_line": "20.5",
+      "under_odds": "-120"
+    },
+    {
+      "name": "Kelsey Plum",
+      "over_line": "18.5",
+      "over_odds": "-105",
+      "under_line": "18.5",
+      "under_odds": "-120"
+    },
+    {
+      "name": "Paige Bueckers",
+      "over_line": "17.5",
+      "over_odds": "-128",
+      "under_line": "18.5",
+      "under_odds": "-130"
+    },
+    {
+      "name": "Ezi Magbegor",
+      "over_line": "8.5",
+      "over_odds": "-110",
+      "under_line": "8.5",
+      "under_odds": "-105"
+    },
+    {
+      "name": "Kahleah Copper",
+      "over_line": "17.5",
+      "over_odds": "+110",
+      "under_line": "17.5",
+      "under_odds": "-125"
+    },
+    {
+      "name": "Nneka Ogwumike",
+      "over_line": "16.5",
+      "over_odds": "-120",
+      "under_line": "16.5",
+      "under_odds": "-105"
+    },
+    {
+      "name": "Kayla McBride",
+      "over_line": "16.5",
+      "over_odds": "-120",
+      "under_line": "16.5",
+      "under_odds": "-120"
+    },
+    {
+      "name": "Dearica Hamby",
+      "over_line": "16.5",
+      "over_odds": "-102",
+      "under_line": "16.5",
+      "under_odds": "-120"
+    },
+    {
+      "name": "Jonquel Jones",
+      "over_line": "16.5",
+      "over_odds": "-125",
+      "under_line": "16.5",
+      "under_odds": "-125"
+    },
+    {
+      "name": "Alyssa Thomas",
+      "over_line": "15.5",
+      "over_odds": "-120",
+      "under_line": "16.5",
+      "under_odds": "-122"
+    },
+    {
+      "name": "Arike Ogunbowale",
+      "over_line": "15.5",
+      "over_odds": "-110",
+      "under_line": "15.5",
+      "under_odds": "-105"
+    },
+    {
+      "name": "Satou Sabally",
+      "over_line": "15.5",
+      "over_odds": "-105",
+      "under_line": "15.5",
+      "under_odds": "-108"
+    },
+    {
+      "name": "Aliyah Boston",
+      "over_line": "15.5",
+      "over_odds": "-108",
+      "under_line": "15.5",
+      "under_odds": "-115"
+    },
+    {
+      "name": "Shakira Austin",
+      "over_line": "14.5",
+      "over_odds": "-122",
+      "under_line": "15.5",
+      "under_odds": "-125"
+    },
+    {
+      "name": "Tina Charles",
+      "over_line": "14.5",
+      "over_odds": "-110",
+      "under_line": "14.5",
+      "under_odds": "-110"
+    },
+    {
+      "name": "Skylar Diggins",
+      "over_line": "14.5",
+      "over_odds": "-120",
+      "under_line": "14.5",
+      "under_odds": "-120"
+    },
+    {
+      "name": "Sonia Citron",
+      "over_line": "13.5",
+      "over_odds": "-115",
+      "under_line": "13.5",
+      "under_odds": "+105"
+    },
+    {
+      "name": "Courtney Williams",
+      "over_line": "13.5",
+      "over_odds": "-115",
+      "under_line": "13.5",
+      "under_odds": "-115"
+    },
+    {
+      "name": "Brittney Sykes",
+      "over_line": "13.5",
+      "over_odds": "-110",
+      "under_line": "13.5",
+      "under_odds": "-115"
+    },
+    {
+      "name": "Rickea Jackson",
+      "over_line": "13.5",
+      "over_odds": "-105",
+      "under_line": "13.5",
+      "under_odds": "-120"
+    },
+    {
+      "name": "Kamilla Cardoso",
+      "over_line": "12.5",
+      "over_odds": "-130",
+      "under_line": "13.5",
+      "under_odds": "-105"
+    },
+    {
+      "name": "Marina Mabrey",
+      "over_line": "12.5",
+      "over_odds": "-128",
+      "under_line": "13.5",
+      "under_odds": "-115"
+    },
+    {
+      "name": "Azura Stevens",
+      "over_line": "12.5",
+      "over_odds": "-115",
+      "under_line": "12.5",
+      "under_odds": "-104"
+    },
+    {
+      "name": "Alanna Smith",
+      "over_line": "11.5",
+      "over_odds": "-128",
+      "under_line": "12.5",
+      "under_odds": "-130"
+    },
+    {
+      "name": "Gabby Williams",
+      "over_line": "11.5",
+      "over_odds": "-130",
+      "under_line": "11.5",
+      "under_odds": "+110"
+    },
+    {
+      "name": "Kiki Iriafen",
+      "over_line": "11.5",
+      "over_odds": "-102",
+      "under_line": "11.5",
+      "under_odds": "-110"
+    },
+    {
+      "name": "Rachel Banham",
+      "over_line": "11.5",
+      "over_odds": "-120",
+      "under_line": "11.5",
+      "under_odds": "-108"
+    },
+    {
+      "name": "Bridget Carleton",
+      "over_line": "7.5",
+      "over_odds": "-150",
+      "under_line": "8.5",
+      "under_odds": "-150"
+    },
+    {
+      "name": "Natasha Howard",
+      "over_line": "11.5",
+      "over_odds": "-115",
+      "under_line": "11.5",
+      "under_odds": "-110"
+    },
+    {
+      "name": "Aari McDonald",
+      "over_line": "10.5",
+      "over_odds": "-114",
+      "under_line": "11.5",
+      "under_odds": "-120"
+    },
+    {
+      "name": "Jessica Shepard",
+      "over_line": "9.5",
+      "over_odds": "-140",
+      "under_line": "10.5",
+      "under_odds": "-105"
+    },
+    {
+      "name": "Erica Wheeler",
+      "over_line": "9.5",
+      "over_odds": "-130",
+      "under_line": "9.5",
+      "under_odds": "+102"
+    },
+    {
+      "name": "Natasha Cloud",
+      "over_line": "9.5",
+      "over_odds": "-130",
+      "under_line": "9.5",
+      "under_odds": "-130"
+    },
+    {
+      "name": "Sophie Cunningham",
+      "over_line": "8.5",
+      "over_odds": "-130",
+      "under_line": "9.5",
+      "under_odds": "-135"
+    },
+    {
+      "name": "Monique Akoa Makani",
+      "over_line": "8.5",
+      "over_odds": "-120",
+      "under_line": "8.5",
+      "under_odds": "-110"
+    },
+    {
+      "name": "Luisa Geiselsoder",
+      "over_line": "8.5",
+      "over_odds": "+125",
+      "under_line": "8.5",
+      "under_odds": "-155"
+    },
+    {
+      "name": "Haley Jones",
+      "over_line": "9.5",
+      "over_odds": "-110",
+      "under_line": "9.5",
+      "under_odds": "-120"
+    },
+    {
+      "name": "Leonie Fiebich",
+      "over_line": "8.5",
+      "over_odds": "-120",
+      "under_line": "9.5",
+      "under_odds": "-150"
+    },
+    {
+      "name": "Angel Reese",
+      "over_line": "12.5",
+      "over_odds": "-130",
+      "under_line": "13.5",
+      "under_odds": "-125"
+    },
+    {
+      "name": "Bria Hartley",
+      "over_line": "8.5",
+      "over_odds": "-115",
+      "under_line": "8.5",
+      "under_odds": "-115"
+    },
+    {
+      "name": "Aneesah Morrow",
+      "over_line": "8.5",
+      "over_odds": "-110",
+      "under_line": "8.5",
+      "under_odds": "-115"
+    },
+    {
+      "name": "Cameron Brink",
+      "over_line": "6.5",
+      "over_odds": "-105",
+      "under_line": "6.5",
+      "under_odds": "-125"
+    },
+    {
+      "name": "Sug Sutton",
+      "over_line": "7.5",
+      "over_odds": "-115",
+      "under_line": "7.5",
+      "under_odds": "-110"
+    }
+  ]
 }
