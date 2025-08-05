@@ -36,4 +36,4 @@ jobs:
         env:
           GITHUB_PAT: ${{ secrets.SDV_GH_TOKEN }}
         run: |
-          bash scripts/update_playerbox.sh -s 2025 -e 2025
+          bash scripts/daily_wnba_R_processor.sh -s 2025 -e 2025
