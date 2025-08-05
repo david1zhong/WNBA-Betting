@@ -20,6 +20,8 @@ def highlight_result(val):
         return "color: green; font-weight: bold;"
     elif val == "LOST":
         return "color: red; font-weight: bold;"
+    elif val == "VOID":
+        return "color: gray; font-weight: bold;"
     return ""
 
 
