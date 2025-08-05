@@ -17,7 +17,7 @@ df = load_data()
 
 
 def highlight_result(val):
-    if val == "WIN":
+    if val == "WON":
         return "color: green; font-weight: bold;"
     elif val == "LOST":
         return "color: red; font-weight: bold;"
