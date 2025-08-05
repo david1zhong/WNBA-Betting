@@ -43,6 +43,13 @@ styled_df = (
     .hide(axis="index")
 )
 
+st.dataframe(df.style.format({
+    "over_line": "{:.1f}",
+    "under_line": "{:.1f}",
+    "predicted_points": "{:.1f}",
+    "actual_points": "{:.1f}"
+}))
+
 st.dataframe(
     styled_df,
     use_container_width=True,
