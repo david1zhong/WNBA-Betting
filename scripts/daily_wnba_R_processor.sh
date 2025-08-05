@@ -17,7 +17,7 @@ do
 
     Rscript R/espn_wnba_03_player_box_creation.R -s $i -e $i
 
-    git add "wnba/player_box/player_box_${i}.csv" >> /dev/null
+    git add "wnba/player_box/csv/player_box_${i}.csv" >> /dev/null
     git commit -m "PlayerBox Update (Year: $i)" >> /dev/null || echo "No changes to commit"
     git pull --rebase >> /dev/null
     git push >> /dev/null
