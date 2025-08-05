@@ -36,9 +36,4 @@ jobs:
         env:
           GITHUB_PAT: ${{ secrets.SDV_GH_TOKEN }}
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          Rscript R/espn_wnba_03_player_box_creation.R -s 2025 -e 2025
-          git add wnba/player_box/*
-          git commit -m "PlayerBox 2025 Update" || echo "No changes to commit"
-          git push
+          bash scripts/update_playerbox.sh -s 2025 -e 2025
