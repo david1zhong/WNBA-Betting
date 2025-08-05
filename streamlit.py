@@ -43,15 +43,16 @@ styled_df = (
     .hide(axis="index")
 )
 
-def format_dynamic(val):
-    if isinstance(val, float):
-        return f"{val:.1f}".rstrip('0').rstrip('.')
-    return val
+def format_dynamic_numbers(df):
+    df_copy = df.copy()
+    for col in df_copy.select_dtypes(include=['float']):
+        df_copy[col] = df_copy[col].apply(lambda x: int(x) if x.is_integer() else x)
+    return df_copy
 
-styled_df = df.style.format(format_dynamic)
+formatted_df = format_dynamic_numbers(df)
 
 st.dataframe(
-    styled_df,
+    formatted_df,
     use_container_width=True,
     height=600
 )
