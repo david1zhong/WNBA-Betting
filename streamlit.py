@@ -8,7 +8,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def load_data():
     return pd.read_sql("SELECT * FROM predictions", engine)
 
