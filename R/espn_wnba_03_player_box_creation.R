@@ -151,34 +151,36 @@ cli::cli_progress_step(msg = "Compiling ESPN WNBA master schedule",
                        msg_done = "ESPN WNBA master schedule compiled and written to disk")
 
 sched_list <- list.files(path = glue::glue("wnba/schedules/rds/"))
-sched_g <-  purrr::map_dfr(sched_list, function(x) {
-  sched <- readRDS(paste0("wnba/schedules/rds/", x)) %>%
-    dplyr::mutate(dplyr::across(dplyr::any_of(c(
-      "id",
-      "game_id",
-      "type_id",
-      "status_type_id",
-      "home_id",
-      "home_venue_id",
-      "home_conference_id",
-      "home_score",
-      "away_id",
-      "away_venue_id",
-      "away_conference_id",
-      "away_score",
-      "season",
-      "season_type",
-      "groups_id",
-      "tournament_id",
-      "venue_id"
-    )), ~as.integer(.x))) %>%
-    dplyr::mutate(
-      status_display_clock = as.character(.data$status_display_clock),
-      game_date_time = lubridate::ymd_hm(substr(.data$date, 1, nchar(.data$date) - 1)) %>%
-        lubridate::with_tz(tzone = "America/New_York"),
-      game_date = as.Date(substr(.data$game_date_time, 1, 10)))
+sched_list <- list.files(path = "wnba/schedules/rds/", pattern = "\\.rds$")
+
+sched_g <- purrr::map_dfr(sched_list, function(x) {
+  filepath <- paste0("wnba/schedules/rds/", x)
+  
+  sched <- tryCatch(
+    {
+      readRDS(filepath) %>%
+        dplyr::mutate(dplyr::across(dplyr::any_of(c(
+          "id", "game_id", "type_id", "status_type_id", "home_id",
+          "home_venue_id", "home_conference_id", "home_score", "away_id",
+          "away_venue_id", "away_conference_id", "away_score", "season",
+          "season_type", "groups_id", "tournament_id", "venue_id"
+        )), ~as.integer(.x))) %>%
+        dplyr::mutate(
+          status_display_clock = as.character(.data$status_display_clock),
+          game_date_time = lubridate::ymd_hm(substr(.data$date, 1, nchar(.data$date) - 1)) %>%
+            lubridate::with_tz(tzone = "America/New_York"),
+          game_date = as.Date(substr(.data$game_date_time, 1, 10))
+        )
+    },
+    error = function(e) {
+      message(glue::glue("[WARNING] Could not read {filepath}: {e$message}"))
+      return(NULL)  # Skip this file
+    }
+  )
+  
   return(sched)
 })
+
 
 sched_g <- sched_g %>%
   wehoop:::make_wehoop_data("ESPN WNBA Schedule from wehoop data repository", Sys.time())
