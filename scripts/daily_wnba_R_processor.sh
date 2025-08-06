@@ -17,10 +17,12 @@ do
 
     Rscript R/espn_wnba_03_player_box_creation.R -s $i -e $i
 
-    git pull >> /dev/null
-    git add wnba/* >> /dev/null
-    git pull >> /dev/null
-    git commit -m "WNBA Data Update (Year: $i)" >> /dev/null || echo "No changes to commit"
+    if [ -f "wnba/player_box/csv/player_box_${i}.csv.gz" ]; then
+        gzip -d -f "wnba/player_box/csv/player_box_${i}.csv.gz"
+    fi
+
+    git add "wnba/player_box/csv/player_box_${i}.csv" >> /dev/null
+    git commit -m "PlayerBox CSV Update (Year: $i)" >> /dev/null || echo "No changes to commit"
     git pull --rebase >> /dev/null
     git push >> /dev/null
 done
