@@ -3,6 +3,7 @@ name: Run WNBA Models and Update Player Box
 on:
   schedule:
     - cron: '0 9 * * *'
+  workflow_dispatch:
 
 jobs:
   run-models:
