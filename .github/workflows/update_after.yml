@@ -1,4 +1,4 @@
-name: Run update_after.py
+name: Update scores
 
 on:
   schedule:
