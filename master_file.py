@@ -25,12 +25,13 @@ with open("props.json") as f:
 with engine.begin() as conn:
     for player in players:
         for model_name, model in models.items():
-            predicted_pts = model.predict(player)
+            result = model.predict(player)
 
-            if predicted_pts is None:
+            if result is None:
                 continue
 
-            bet = "OVER" if predicted_pts > player["over_line"] else "UNDER"
+            predicted_pts = result["predicted_points"]
+            bet = result["bet"]
 
             conn.execute(
                 text("""
@@ -48,8 +49,8 @@ with engine.begin() as conn:
                     "player_name": player["name"],
                     "model_name": model_name,
                     "predicted_pts": predicted_pts,
-                    "over_line": player["over_line"],
-                    "under_line": player["under_line"],
+                    "over_line": result["over_line"],
+                    "under_line": result["under_line"],
                     "over_odds": player["over_odds"],
                     "under_odds": player["under_odds"],
                     "bet": bet,
@@ -57,3 +58,4 @@ with engine.begin() as conn:
             )
 
 print("Predictions added to database.")
+
