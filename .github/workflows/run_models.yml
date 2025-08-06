@@ -1,4 +1,4 @@
-name: Run WNBA Models and Update Player Box
+name: Models
 
 on:
   schedule:
