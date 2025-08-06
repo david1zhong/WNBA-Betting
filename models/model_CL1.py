@@ -15,27 +15,26 @@ class WNBACyclicalPatternDetector:
         self.focus_player = focus_player
         self.custom_game_dates = custom_game_dates or []
         self.years = {
-            2025: r"C:\Users\todav\Desktop\player_box_2025.csv",
-            2024: r"C:\Users\todav\Desktop\player_box_2024.csv",
-            2023: r"C:\Users\todav\Desktop\player_box_2023.csv",
-            2022: r"C:\Users\todav\Desktop\player_box_2022.csv",
-            2021: r"C:\Users\todav\Desktop\player_box_2021.csv",
-            2020: r"C:\Users\todav\Desktop\player_box_2020.csv",
-            2019: r"C:\Users\todav\Desktop\player_box_2019.csv",
-            2018: r"C:\Users\todav\Desktop\player_box_2018.csv",
-            2017: r"C:\Users\todav\Desktop\player_box_2017.csv",
-            2016: r"C:\Users\todav\Desktop\player_box_2016.csv",
-            2015: r"C:\Users\todav\Desktop\player_box_2015.csv",
-            2014: r"C:\Users\todav\Desktop\player_box_2014.csv",
-            2013: r"C:\Users\todav\Desktop\player_box_2013.csv",
-            2012: r"C:\Users\todav\Desktop\player_box_2012.csv",
-            2011: r"C:\Users\todav\Desktop\player_box_2011.csv",
-            2010: r"C:\Users\todav\Desktop\player_box_2010.csv",
-            2009: r"C:\Users\todav\Desktop\player_box_2009.csv"
+            2025: "../wnba/player_box/player_box_2025.csv",
+            2024: "../wnba/player_box/player_box_2024.csv",
+            2023: "../wnba/player_box/player_box_2023.csv",
+            2022: "../wnba/player_box/player_box_2022.csv",
+            2021: "../wnba/player_box/player_box_2021.csv",
+            2020: "../wnba/player_box/player_box_2020.csv",
+            2019: "../wnba/player_box/player_box_2019.csv",
+            2018: "../wnba/player_box/player_box_2018.csv",
+            2017: "../wnba/player_box/player_box_2017.csv",
+            2016: "../wnba/player_box/player_box_2016.csv",
+            2015: "../wnba/player_box/player_box_2015.csv",
+            2014: "../wnba/player_box/player_box_2014.csv",
+            2013: "../wnba/player_box/player_box_2013.csv",
+            2012: "../wnba/player_box/player_box_2012.csv",
+            2011: "../wnba/player_box/player_box_2011.csv",
+            2010: "../wnba/player_box/player_box_2010.csv",
+            2009: "../wnba/player_box/player_box_2009.csv"
         }
 
     def get_current_players(self):
-        """Get list of players who played in 2024"""
         try:
             df_2024 = pd.read_csv(self.years[2025])
             current_players = set(df_2024['athlete_display_name'].unique())
@@ -44,7 +43,6 @@ class WNBACyclicalPatternDetector:
             return set()
 
     def load_all_player_data(self, current_players_only=True):
-        """Load data for all years, optionally filtering for current players only"""
         all_data = []
         current_players = self.get_current_players() if current_players_only else None
 
