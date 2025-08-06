@@ -10,15 +10,17 @@ done
 
 for i in $(seq "${START_YEAR}" "${END_YEAR}")
 do
-    echo "Updating PlayerBox CSV for year $i"
+    echo "$i"
     git pull >> /dev/null
     git config --local user.email "action@github.com"
     git config --local user.name "Github Action"
 
-    Rscript R/espn_wnba_03_player_box_creation.R -s $i -e $i
+    Rscript scripts/daily_wnba_R_processor.R -s $i -e $i
 
-    git add "wnba/player_box/csv/player_box_${i}.csv" >> /dev/null
-    git commit -m "PlayerBox Update (Year: $i)" >> /dev/null || echo "No changes to commit"
+    git pull >> /dev/null
+    git add wnba/* >> /dev/null
+    git pull >> /dev/null
+    git commit -m "WNBA Data Update (Year: $i)" >> /dev/null || echo "No changes to commit"
     git pull --rebase >> /dev/null
     git push >> /dev/null
 done
