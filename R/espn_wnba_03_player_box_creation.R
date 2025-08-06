@@ -68,7 +68,7 @@ wnba_player_box_games <- function(y) {
 
     ifelse(!dir.exists(file.path("wnba/player_box")), dir.create(file.path("wnba/player_box")), FALSE)
 
-    data.table::fwrite(espn_df, file = paste0("wnba/player_box/player_box_", y, ".csv"))
+    data.table::fwrite(espn_df, file = paste0("wnba/player_box/csv/player_box_", y, ".csv"))
 
     cli::cli_progress_step(msg = "Saved PlayerBox CSV for {y}",
                            msg_done = "PlayerBox CSV {y} saved successfully!")
