@@ -80,16 +80,6 @@ wnba_player_box_games <- function(y) {
     ifelse(!dir.exists(file.path("wnba/player_box/parquet")), dir.create(file.path("wnba/player_box/parquet")), FALSE)
     arrow::write_parquet(espn_df, glue::glue("wnba/player_box/parquet/player_box_{y}.parquet"))
 
-    sportsdataversedata::sportsdataverse_save(
-      data_frame = espn_df,
-      file_name =  glue::glue("player_box_{y}"),
-      sportsdataverse_type = "player boxscores data",
-      release_tag = "espn_wnba_player_boxscores",
-      pkg_function = "wehoop::load_wnba_player_box()",
-      file_types = c("rds", "csv", "parquet"),
-      .token = Sys.getenv("GITHUB_PAT")
-    )
-
   }
 
   sched <- sched %>%
@@ -137,16 +127,6 @@ wnba_player_box_games <- function(y) {
 
   final_sched <- final_sched %>%
     wehoop:::make_wehoop_data("ESPN WNBA Schedule from wehoop data repository", Sys.time())
-
-  sportsdataversedata::sportsdataverse_save(
-    data_frame = final_sched,
-    file_name =  glue::glue("wnba_schedule_{y}"),
-    sportsdataverse_type = "schedule data",
-    release_tag = "espn_wnba_schedules",
-    pkg_function = "wehoop::load_wnba_schedules()",
-    file_types = c("rds", "csv", "parquet"),
-    .token = Sys.getenv("GITHUB_PAT")
-  )
 
   ifelse(!dir.exists(file.path("wnba/schedules")), dir.create(file.path("wnba/schedules")), FALSE)
   ifelse(!dir.exists(file.path("wnba/schedules/rds")), dir.create(file.path("wnba/schedules/rds")), FALSE)
@@ -206,26 +186,6 @@ sched_g <- sched_g %>%
 final_sched <- sched_g %>%
   dplyr::arrange(dplyr::desc(.data$date))
 
-sportsdataversedata::sportsdataverse_save(
-  data_frame = final_sched,
-  file_name =  glue::glue("wnba_schedule_master"),
-  sportsdataverse_type = "schedule data",
-  release_tag = "espn_wnba_schedules",
-  pkg_function = "wehoop::load_wnba_schedule()",
-  file_types = c("rds", "csv", "parquet"),
-  .token = Sys.getenv("GITHUB_PAT")
-)
-
-sportsdataversedata::sportsdataverse_save(
-  data_frame = final_sched %>%
-              dplyr::filter(.data$PBP == TRUE),
-  file_name =  glue::glue("wnba_games_in_data_repo"),
-  sportsdataverse_type = "schedule data",
-  release_tag = "espn_wnba_schedules",
-  pkg_function = "wehoop::load_wnba_schedule()",
-  file_types = c("rds", "csv", "parquet"),
-  .token = Sys.getenv("GITHUB_PAT")
-)
 
 # data.table::fwrite(sched_g %>%
 #                      dplyr::arrange(dplyr::desc(.data$date)), "wnba/wnba_schedule_master.csv")
