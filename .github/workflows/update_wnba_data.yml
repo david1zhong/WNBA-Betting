@@ -18,6 +18,14 @@ jobs:
         with:
           python-version: "3.x"
 
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install requests
+          fi
+
       - name: Run scrape script (May–Oct only)
         run: |
           month=$(date -u +"%m")
