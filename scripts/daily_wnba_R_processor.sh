@@ -11,6 +11,8 @@ done
 for i in $(seq "${START_YEAR}" "${END_YEAR}")
 do
     echo "$i"
+    git reset --hard >> /dev/null
+    git clean -fd >> /dev/null
     git pull >> /dev/null
     git config --local user.email "action@github.com"
     git config --local user.name "Github Action"
