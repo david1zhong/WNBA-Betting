@@ -1,4 +1,4 @@
-name: Update WNBA PlayerBox 2025
+name: Playerbox
 
 on:
   schedule:
