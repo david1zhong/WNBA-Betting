@@ -18,7 +18,8 @@ for mf in model_files:
 
 
 with open("props.json") as f:
-    players = json.load(f)
+    data = json.load(f)
+    players = data["players"]
 
 
 with engine.begin() as conn:
