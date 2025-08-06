@@ -7,24 +7,19 @@ do
         r) RESCRAPE=${OPTARG};;
     esac
 done
-
 for i in $(seq "${START_YEAR}" "${END_YEAR}")
 do
     echo "$i"
-    git reset --hard >> /dev/null
-    git clean -fd >> /dev/null
-    git pull >> /dev/null
+    git pull  >> /dev/null
     git config --local user.email "action@github.com"
     git config --local user.name "Github Action"
-
+    Rscript R/espn_wnba_01_pbp_creation.R -s $i -e $i
+    Rscript R/espn_wnba_02_team_box_creation.R -s $i -e $i
     Rscript R/espn_wnba_03_player_box_creation.R -s $i -e $i
-
-    if [ -f "wnba/player_box/csv/player_box_${i}.csv.gz" ]; then
-        gzip -d -f "wnba/player_box/csv/player_box_${i}.csv.gz"
-    fi
-
-    git add "wnba/player_box/csv/player_box_${i}.csv" >> /dev/null
-    git commit -m "PlayerBox CSV Update (Year: $i)" >> /dev/null || echo "No changes to commit"
-    git pull --rebase >> /dev/null
-    git push >> /dev/null
+    git pull  >> /dev/null
+    git add wnba/*  >> /dev/null
+    git pull  >> /dev/null
+    git commit -m "WNBA Data Update (Start: $i End: $i)"  >> /dev/null || echo "No changes to commit"
+    git pull --rebase  >> /dev/null
+    git push  >> /dev/null
 done
