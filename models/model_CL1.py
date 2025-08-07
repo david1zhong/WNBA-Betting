@@ -281,7 +281,7 @@ def predict(player):
     window_end = props_date + timedelta(days=1)
     
     # Filter games for that player within this window
-    candidate_games = df[(df["player_name"] == player["name"]) &
+    candidate_games = df[(df["athlete_display_name"] == player["name"]) &
                          (df["game_date_time"] >= props_date) &
                          (df["game_date_time"] <= window_end)]
     
