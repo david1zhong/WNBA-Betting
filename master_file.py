@@ -30,7 +30,7 @@ with engine.begin() as conn:
             if result is None:
                 continue
 
-            predicted_pts = result["predicted_points"]
+            predicted_pts = round(result["predicted_points"], 0)
             bet = result["bet"]
 
             conn.execute(
