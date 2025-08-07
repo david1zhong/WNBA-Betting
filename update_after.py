@@ -17,11 +17,13 @@ cur = conn.cursor()
 year = datetime.now().year
 file_path = f"playerboxes/player_box_{year}.csv"
 df = pd.read_csv(file_path)
+df["game_date_time"] = pd.to_datetime(df["game_date_time"])
 
-est = pytz.timezone('US/Eastern')
-current_time_est = datetime.now(est)
-yesterday = current_time_est - timedelta(days=2)
-formatted_date = yesterday.strftime('%Y-%m-%d')
+eastern = pytz.timezone('US/Eastern')
+current_time_est = datetime.now(eastern)
+
+yesterday = current_time_est - timedelta(days=1)
+yesterday_date = yesterday.strftime('%Y-%m-%d')
 
 with open("props.json", "r") as f:
     data = json.load(f)
@@ -29,50 +31,53 @@ with open("props.json", "r") as f:
 for player in data["players"]:
     player_name = player["name"]
 
-    filtered_data = df[
-        (df['athlete_display_name'] == player_name) &
-        (df['game_date'] == formatted_date)
-    ]
+    props_date = datetime.strptime(player["date"], "%Y-%m-%d")
+    props_date_est = eastern.localize(props_date)
+    props_date_utc = props_date_est.astimezone(pytz.UTC)
 
-    if len(filtered_data) == 0:
-        print(f"No data for {player_name} on {formatted_date}")
+    window_end = props_date + timedelta(days=1)
+    window_end_est = eastern.localize(window_end)
+    window_end_utc = window_end_est.astimezone(pytz.UTC)
+
+    candidate_games = df[(df["athlete_display_name"] == player_name) &
+                         (df["game_date_time"] >= props_date_utc) &
+                         (df["game_date_time"] <= window_end_utc)]
+
+    if candidate_games.empty:
+        print(f"{player_name} did not play on {props_date.date()}")
+        cur.execute("""
+            UPDATE predictions
+            SET actual_pts = NULL, result = 'DNP'
+            WHERE player_name = %s AND date = %s;
+        """, (player_name, props_date.date()))
         continue
 
-    actual_points = int(filtered_data['points'].values[0])
-    player_team = filtered_data['team_name'].values[0]
+    actual_points = int(candidate_games['points'].values[0])
+    player_team = candidate_games['team_name'].values[0]
 
     cur.execute("""
         UPDATE predictions
-        SET actual_pts = %s
+        SET actual_pts = %s,
+            pts_differential = %s - predicted_pts,
+            team = %s,
+            result = CASE
+                WHEN bet = 'OVER' AND %s > over_line THEN 'WON'
+                WHEN bet = 'UNDER' AND %s < under_line THEN 'WON'
+                ELSE 'LOST'
+            END
         WHERE player_name = %s AND date = %s;
-    """, (actual_points, player_name, formatted_date))
-
-    cur.execute("""
-        UPDATE predictions
-        SET pts_differential = actual_pts - predicted_pts
-        WHERE player_name = %s AND date = %s;
-    """, (player_name, formatted_date))
-
-    cur.execute("""
-        UPDATE predictions
-        SET team = %s
-        WHERE player_name = %s AND date = %s;
-    """, (player_team, player_name, formatted_date))
-
-    cur.execute("""
-        UPDATE predictions
-        SET result = CASE
-            WHEN bet = 'OVER' AND actual_pts > over_line THEN 'WON'
-            WHEN bet = 'UNDER' AND actual_pts < under_line THEN 'WON'
-            ELSE 'LOST'
-        END
-        WHERE player_name = %s AND date = %s;
-    """, (player_name, formatted_date))
+    """, (
+        actual_points,
+        actual_points,
+        player_team,
+        actual_points,
+        actual_points,
+        player_name,
+        props_date.date()
+    ))
 
     print(f"Updated {player_name}: {actual_points} points, team {player_team}")
 
-
 conn.commit()
-
 cur.close()
 conn.close()
