@@ -257,6 +257,7 @@ class WNBACyclicalPatternDetector:
         # Check if player exists - skip if not found
         available_players = df['athlete_display_name'].unique()
         if player_name not in available_players:
+            print(f"{player_name} not found")
             return None
 
         player_baselines = self.calculate_weighted_baselines(df)
@@ -266,10 +267,12 @@ class WNBACyclicalPatternDetector:
             predictions = self.get_predictions_only(df, player_name, player_baselines, dip_results)
             return predictions
         else:
+            print(f"{player["name"]} not in dip results")
             return None
 
 
 def predict(player):
+    print(f"\n--- Running prediction for {player['name']} on {player['date']} ---")
     analyzer = WNBACyclicalPatternDetector()
     results = analyzer.analyze_player(player["name"], [player["date"]])
 
@@ -277,6 +280,7 @@ def predict(player):
         pred_df = analyzer.prediction_results.get('predictions')
         if pred_df is not None and not pred_df.empty:
             predicted_points = int(round(float(pred_df['predicted_points'].iloc[0])))
+            print(f"Prediction successful for {player['name']}: {predicted_points} pts")
             performance_note = pred_df['category'].iloc[0]
             over_line = float(player['over_line'])
             under_line = float(player['under_line'])
@@ -289,6 +293,11 @@ def predict(player):
                 "under_line": under_line,
                 "note": performance_note
             }
+        else:
+            print(f"Prediction empty or invalid for {player['name']}")
+
+    else:
+        print(f"Prediction not generated for {player['name']}")
 
     return None
 
