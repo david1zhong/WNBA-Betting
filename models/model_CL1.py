@@ -284,7 +284,7 @@ def predict(player):
     window_end_est = eastern.localize(window_end)
     window_end_utc = window_end_est.astimezone(pytz.UTC)
     
-    candidate_games = df[(df["player_name"] == player["name"]) &
+    candidate_games = df[(df["athlete_display_name"] == player["name"]) &
                          (df["game_date_time"] >= props_date_utc) &
                          (df["game_date_time"] <= window_end_utc)]
     
