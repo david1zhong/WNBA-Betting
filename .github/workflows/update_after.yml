@@ -31,4 +31,4 @@ jobs:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
         run: |
-          python models/update_after.py
+          python update_after.py
