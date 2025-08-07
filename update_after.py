@@ -15,7 +15,7 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 year = datetime.now().year
-file_path = f"wnba/player_box/player_box_{year}.csv"
+file_path = f"playerboxes/player_box_{year}.csv"
 df = pd.read_csv(file_path)
 
 est = pytz.timezone('US/Eastern')
