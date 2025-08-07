@@ -15,23 +15,23 @@ class WNBACyclicalPatternDetector:
         self.focus_player = focus_player
         self.custom_game_dates = custom_game_dates or []
         self.years = {
-            2025: "wnba/player_box/csv/player_box_2025.csv",
-            2024: "wnba/player_box/csv/player_box_2024.csv",
-            2023: "wnba/player_box/csv/player_box_2023.csv",
-            2022: "wnba/player_box/csv/player_box_2022.csv",
-            2021: "wnba/player_box/csv/player_box_2021.csv",
-            2020: "wnba/player_box/csv/player_box_2020.csv",
-            2019: "wnba/player_box/csv/player_box_2019.csv",
-            2018: "wnba/player_box/csv/player_box_2018.csv",
-            2017: "wnba/player_box/csv/player_box_2017.csv",
-            2016: "wnba/player_box/csv/player_box_2016.csv",
-            2015: "wnba/player_box/csv/player_box_2015.csv",
-            2014: "wnba/player_box/csv/player_box_2014.csv",
-            2013: "wnba/player_box/csv/player_box_2013.csv",
-            2012: "wnba/player_box/csv/player_box_2012.csv",
-            2011: "wnba/player_box/csv/player_box_2011.csv",
-            2010: "wnba/player_box/csv/player_box_2010.csv",
-            2009: "wnba/player_box/csv/player_box_2009.csv"
+            2025: "playerboxes/player_box_2025.csv",
+            2024: "playerboxes/player_box_2024.csv",
+            2023: "playerboxes/player_box_2023.csv",
+            2022: "playerboxes/player_box_2022.csv",
+            2021: "playerboxes/player_box_2021.csv",
+            2020: "playerboxes/player_box_2020.csv",
+            2019: "playerboxes/player_box_2019.csv",
+            2018: "playerboxes/player_box_2018.csv",
+            2017: "playerboxes/player_box_2017.csv",
+            2016: "playerboxes/player_box_2016.csv",
+            2015: "playerboxes/player_box_2015.csv",
+            2014: "playerboxes/player_box_2014.csv",
+            2013: "playerboxes/player_box_2013.csv",
+            2012: "playerboxes/player_box_2012.csv",
+            2011: "playerboxes/player_box_2011.csv",
+            2010: "playerboxes/player_box_2010.csv",
+            2009: "playerboxes/player_box_2009.csv"
         }
 
     def get_current_players(self):
