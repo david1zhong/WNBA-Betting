@@ -46,14 +46,14 @@ with engine.begin() as conn:
                     ON CONFLICT (player_name, model_name, date) DO NOTHING
                 """),
                 {
-                    'player_name': player_name,
+                    'player_name': player['name'],
                     'model_name': model_name,
                     'date': player['date'],
                     'predicted_pts': predicted_pts,
-                    'over_line': over_line,
-                    'under_line': under_line,
-                    'over_odds': over_odds,
-                    'under_odds': under_odds,
+                    'over_line': player['over_line'],
+                    'under_line': player['under_line'],
+                    'over_odds': player['over_odds'],
+                    'under_odds': player['under_odds'],
                     'bet': bet
                 }
             )
