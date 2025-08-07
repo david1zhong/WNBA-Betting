@@ -9,7 +9,7 @@ conn = psycopg2.connect(
     user="DB_USER",
     password="DB_PASSWORD",
     host="DB_HOST",
-    port="DB_PORT"
+    port=5432
 )
 cur = conn.cursor()
 
