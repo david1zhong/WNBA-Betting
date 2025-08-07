@@ -270,31 +270,9 @@ class WNBACyclicalPatternDetector:
 
 
 def predict(player):
-    # Load player boxscores
-    df = pd.read_csv("playerboxes/player_box_2025.csv")
-    df["game_date_time"] = pd.to_datetime(df["game_date_time"])
-
-    eastern = pytz.timezone('US/Eastern')
-    
+    # Just use the scheduled date for prediction
     props_date = datetime.strptime(player["date"], "%Y-%m-%d")
-    props_date_est = eastern.localize(props_date)
-    props_date_utc = props_date_est.astimezone(pytz.UTC)
-    
-    window_end = props_date + timedelta(days=1)
-    window_end_est = eastern.localize(window_end)
-    window_end_utc = window_end_est.astimezone(pytz.UTC)
-    
-    candidate_games = df[(df["athlete_display_name"] == player["name"]) &
-                         (df["game_date_time"] >= props_date_utc) &
-                         (df["game_date_time"] <= window_end_utc)]
-    
-    if candidate_games.empty:
-        print(f"{player['name']} likely DNP for props on {props_date.date()}")
-        return None
-
-    # Use the matched game date for analysis
-    matched_game_date = candidate_games.sort_values("game_date_time").iloc[0]["game_date_time"]
-    formatted_date = matched_game_date.strftime('%Y-%m-%d')
+    formatted_date = props_date.strftime('%Y-%m-%d')
 
     # Run analyzer
     analyzer = WNBACyclicalPatternDetector()
