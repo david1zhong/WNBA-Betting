@@ -277,6 +277,7 @@ def predict(player):
         pred_df = analyzer.prediction_results.get('predictions')
         if pred_df is not None and not pred_df.empty:
             predicted_points = int(round(float(pred_df['predicted_points'].iloc[0])))
+            performance_note = pred_df['category'].iloc[0]
             over_line = float(player['over_line'])
             under_line = float(player['under_line'])
             bet = "OVER" if predicted_points > over_line else "UNDER"
@@ -285,7 +286,8 @@ def predict(player):
                 "predicted_points": predicted_points,
                 "bet": bet,
                 "over_line": over_line,
-                "under_line": under_line
+                "under_line": under_line,
+                "note": performance_note
             }
 
     return None
@@ -301,5 +303,6 @@ if __name__ == "__main__":
         if pred:
             print(f"{player['name']} predicted points: {pred['predicted_points']:.1f}")
             print(f"Bet: {pred['bet']}, Over line: {pred['over_line']}, Under line: {pred['under_line']}")
+            print(f"Performance Note: {pred['note']}")
             print()
 """
