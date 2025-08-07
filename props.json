@@ -1,54 +1,61 @@
 {
-  "_comment": "7 player props as of 2025-08-06 10:14 EDT",
+  "_comment": "7 player props as of 2025-08-06 20:13 EDT",
   "players": [
     {
       "name": "A'ja Wilson",
+      "date": "2025-08-06",
       "over_line": "21.5",
-      "over_odds": "-118",
+      "over_odds": "-106",
       "under_line": "21.5",
-      "under_odds": "+110"
+      "under_odds": "-105"
     },
     {
       "name": "Jackie Young",
-      "over_line": "15.5",
-      "over_odds": "-125",
+      "date": "2025-08-06",
+      "over_line": "14.5",
+      "over_odds": "-120",
       "under_line": "15.5",
       "under_odds": "-125"
     },
     {
       "name": "Tiffany Hayes",
-      "over_line": "12.5",
-      "over_odds": "-114",
-      "under_line": "12.5",
-      "under_odds": "-115"
-    },
-    {
-      "name": "Jewell Loyd",
+      "date": "2025-08-06",
       "over_line": "11.5",
       "over_odds": "-120",
       "under_line": "12.5",
-      "under_odds": "-120"
+      "under_odds": "-130"
     },
     {
-      "name": "Veronica Burton",
+      "name": "Jewell Loyd",
+      "date": "2025-08-06",
       "over_line": "10.5",
-      "over_odds": "-114",
-      "under_line": "10.5",
-      "under_odds": "-110"
+      "over_odds": "-105",
+      "under_line": "12.5",
+      "under_odds": "-180"
     },
     {
       "name": "Janelle Salaun",
+      "date": "2025-08-06",
       "over_line": "9.5",
-      "over_odds": "-145",
+      "over_odds": "-150",
       "under_line": "10.5",
-      "under_odds": "-120"
+      "under_odds": "-105"
+    },
+    {
+      "name": "Veronica Burton",
+      "date": "2025-08-06",
+      "over_line": "9.5",
+      "over_odds": "-138",
+      "under_line": "10.5",
+      "under_odds": "-125"
     },
     {
       "name": "Chelsea Gray",
+      "date": "2025-08-06",
       "over_line": "8.5",
       "over_odds": "-120",
-      "under_line": "8.5",
-      "under_odds": "-105"
+      "under_line": "9.5",
+      "under_odds": "-135"
     }
   ]
 }
