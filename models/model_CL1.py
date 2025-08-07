@@ -276,7 +276,7 @@ def predict(player):
     if results is not None and hasattr(analyzer, 'prediction_results'):
         pred_df = analyzer.prediction_results.get('predictions')
         if pred_df is not None and not pred_df.empty:
-            predicted_points = float(pred_df['predicted_points'].iloc[0])
+            predicted_points = int(round(float(pred_df['predicted_points'].iloc[0])))
             over_line = float(player['over_line'])
             under_line = float(player['under_line'])
             bet = "OVER" if predicted_points > over_line else "UNDER"
