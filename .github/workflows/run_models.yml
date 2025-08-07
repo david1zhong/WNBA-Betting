@@ -27,6 +27,3 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: python master_file.py
-
-      - name: Run update_playerbox.py
-        run: python update_playerbox.py
