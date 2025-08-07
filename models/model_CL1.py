@@ -275,7 +275,7 @@ def predict(player):
     df["game_date_time"] = pd.to_datetime(df["game_date_time"])
 
     # Convert prop date
-    props_date = datetime.strptime(player["game_date"], "%Y-%m-%d")
+    props_date = datetime.strptime(player["date"], "%Y-%m-%d")
     
     # Create a 2-day window to handle next-day boxscore issue
     window_end = props_date + timedelta(days=1)
