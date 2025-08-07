@@ -270,15 +270,9 @@ class WNBACyclicalPatternDetector:
 
 
 def predict(player):
-    # Just use the scheduled date for prediction
-    props_date = datetime.strptime(player["date"], "%Y-%m-%d")
-    formatted_date = props_date.strftime('%Y-%m-%d')
-
-    # Run analyzer
     analyzer = WNBACyclicalPatternDetector()
-    results = analyzer.analyze_player(player["name"], [formatted_date])
+    results = analyzer.analyze_player(player["name"], [player["date"]])
 
-    # Extract predictions
     if results is not None and hasattr(analyzer, 'prediction_results'):
         pred_df = analyzer.prediction_results.get('predictions')
         if pred_df is not None and not pred_df.empty:
@@ -295,6 +289,7 @@ def predict(player):
             }
 
     return None
+
 
 """
 if __name__ == "__main__":
