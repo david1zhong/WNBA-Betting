@@ -270,21 +270,40 @@ class WNBACyclicalPatternDetector:
 
 
 def predict(player):
-    est = pytz.timezone('US/Eastern')
-    current_time_est = datetime.now(est)
-    yesterday = current_time_est - timedelta(2)
-    formatted_date = yesterday.strftime('%Y-%m-%d')
+    # Load player boxscores
+    df = pd.read_csv("playerboxes/player_box_2025.csv")
+    df["game_date_time"] = pd.to_datetime(df["game_date_time"])
 
+    # Convert prop date
+    props_date = datetime.strptime(player["game_date"], "%Y-%m-%d")
+    
+    # Create a 2-day window to handle next-day boxscore issue
+    window_end = props_date + timedelta(days=1)
+    
+    # Filter games for that player within this window
+    candidate_games = df[(df["player_name"] == player["name"]) &
+                         (df["game_date_time"] >= props_date) &
+                         (df["game_date_time"] <= window_end)]
+    
+    if candidate_games.empty:
+        print(f"{player['name']} likely DNP for props on {props_date.date()}")
+        return None
+
+    # Use the matched game date for analysis
+    matched_game_date = candidate_games.sort_values("game_date_time").iloc[0]["game_date_time"]
+    formatted_date = matched_game_date.strftime('%Y-%m-%d')
+
+    # Run analyzer
     analyzer = WNBACyclicalPatternDetector()
     results = analyzer.analyze_player(player["name"], [formatted_date])
 
+    # Extract predictions
     if results is not None and hasattr(analyzer, 'prediction_results'):
         pred_df = analyzer.prediction_results.get('predictions')
         if pred_df is not None and not pred_df.empty:
             predicted_points = float(pred_df['predicted_points'].iloc[0])
             over_line = float(player['over_line'])
             under_line = float(player['under_line'])
-
             bet = "OVER" if predicted_points > over_line else "UNDER"
 
             return {
