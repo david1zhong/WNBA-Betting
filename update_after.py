@@ -5,10 +5,10 @@ import psycopg2
 import json
 
 conn = psycopg2.connect(
-    dbname="DB_NAME",
-    user="DB_USER",
-    password="DB_PASSWORD",
-    host="DB_HOST",
+    dbname=os.getenv("DB_NAME"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    host=os.getenv("DB_HOST"),
     port=5432
 )
 cur = conn.cursor()
