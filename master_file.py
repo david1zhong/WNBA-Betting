@@ -36,26 +36,28 @@ with engine.begin() as conn:
             conn.execute(
                 text("""
                     INSERT INTO predictions
-                        (player_name, model_name,
+                        (player_name, model_name, date,
                          predicted_pts, over_line, under_line,
                          over_odds, under_odds, bet)
                     VALUES
-                        (:player_name, :model_name,
+                        (:player_name, :model_name, :date,
                          :predicted_pts, :over_line, :under_line,
                          :over_odds, :under_odds, :bet)
-                    ON CONFLICT (player_name, model_name) DO NOTHING
+                    ON CONFLICT (player_name, model_name, date) DO NOTHING
                 """),
                 {
-                    "player_name": player["name"],
-                    "model_name": model_name,
-                    "predicted_pts": predicted_pts,
-                    "over_line": result["over_line"],
-                    "under_line": result["under_line"],
-                    "over_odds": player["over_odds"],
-                    "under_odds": player["under_odds"],
-                    "bet": bet,
+                    'player_name': player_name,
+                    'model_name': model_name,
+                    'date': player['date'],
+                    'predicted_pts': predicted_pts,
+                    'over_line': over_line,
+                    'under_line': under_line,
+                    'over_odds': over_odds,
+                    'under_odds': under_odds,
+                    'bet': bet
                 }
             )
+
 
 print("Predictions added to database.")
 
