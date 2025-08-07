@@ -1,5 +1,6 @@
 import requests
 import json
+import pytz
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from bs4 import BeautifulSoup
@@ -14,6 +15,7 @@ data = []
 eastern = ZoneInfo("America/New_York")
 now_et = datetime.now(eastern)
 timestamp = now_et.strftime("%Y-%m-%d %H:%M %Z")
+current_date_est = datetime.now(eastern).strftime('%Y-%m-%d')
 
 for player in players:
     name_tag = player.select_one("div.props-name span")
@@ -41,6 +43,7 @@ for player in players:
 
     data.append({
         "name": name,
+        "date": current_date_est,
         "over_line": over_line,
         "over_odds": over_odds,
         "under_line": under_line,
