@@ -276,7 +276,7 @@ def predict(player):
 
     eastern = pytz.timezone('US/Eastern')
     
-    props_date = datetime.strptime(player["game_date"], "%Y-%m-%d")
+    props_date = datetime.strptime(player["date"], "%Y-%m-%d")
     props_date_est = eastern.localize(props_date)
     props_date_utc = props_date_est.astimezone(pytz.UTC)
     
