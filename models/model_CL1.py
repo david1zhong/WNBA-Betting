@@ -274,16 +274,19 @@ def predict(player):
     df = pd.read_csv("playerboxes/player_box_2025.csv")
     df["game_date_time"] = pd.to_datetime(df["game_date_time"])
 
-    # Convert prop date
-    props_date = datetime.strptime(player["date"], "%Y-%m-%d")
+    eastern = pytz.timezone('US/Eastern')
     
-    # Create a 2-day window to handle next-day boxscore issue
+    props_date = datetime.strptime(player["game_date"], "%Y-%m-%d")
+    props_date_est = eastern.localize(props_date)
+    props_date_utc = props_date_est.astimezone(pytz.UTC)
+    
     window_end = props_date + timedelta(days=1)
+    window_end_est = eastern.localize(window_end)
+    window_end_utc = window_end_est.astimezone(pytz.UTC)
     
-    # Filter games for that player within this window
-    candidate_games = df[(df["athlete_display_name"] == player["name"]) &
-                         (df["game_date_time"] >= props_date) &
-                         (df["game_date_time"] <= window_end)]
+    candidate_games = df[(df["player_name"] == player["name"]) &
+                         (df["game_date_time"] >= props_date_utc) &
+                         (df["game_date_time"] <= window_end_utc)]
     
     if candidate_games.empty:
         print(f"{player['name']} likely DNP for props on {props_date.date()}")
