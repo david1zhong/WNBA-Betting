@@ -220,7 +220,7 @@ def predict(player):
     - 'under_line': betting under line
     """
     player_name = player['name']
-    game_date = player['game_date']
+    game_date = player['date']
     over_line = float(player['over_line'])
     under_line = float(player['under_line'])
 
