@@ -224,13 +224,14 @@ def predict(player):
     over_line = float(player['over_line'])
     under_line = float(player['under_line'])
 
-    print(f"--- Running prediction for {player_name} on {game_date} ---")
+    print(f"\n--- CL2: Running prediction for {player['name']} on {player['date']} ---")
 
     # Load and analyze player data
     player_data = load_player_data(player_name)
     if player_data is None:
         print(f"{player_name} not found in data")
         print(f"Prediction not generated for {player_name}")
+        print()
         return None  # Skip player if no data
 
     # Calculate performance metrics
@@ -242,6 +243,7 @@ def predict(player):
     if not cycle_patterns or cycle_patterns['cycle_count'] < 3:
         print(f"{player_name} not in dip results")
         print(f"Prediction not generated for {player_name}")
+        print()
         return None  # Skip player if no clear cyclical pattern
 
     # Get baseline prediction (season average)
@@ -283,6 +285,7 @@ def predict(player):
     bet = "OVER" if predicted_points > over_line else "UNDER"
 
     print(f"Prediction successful for {player_name}: {round(predicted_points)} pts")
+    print()
 
     return {
         "predicted_points": round(predicted_points),
