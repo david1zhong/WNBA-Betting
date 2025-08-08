@@ -57,10 +57,15 @@ st.dataframe(
     height=600
 )
 
+
 st.subheader("Wins and Losses per Model")
-result_counts = df[df["result"].isin(["WON", "LOST"])] \
-    .groupby(["model_name", "result"]).size().unstack(fill_value=0)
-st.bar_chart(result_counts)
+filtered = df[df["result"].isin(["WON", "LOST"])]
+counts = filtered.groupby(["model_name", "result"]).size().unstack(fill_value=0)
+totals = counts.sum(axis=1)
+percent_df = counts.div(totals, axis=0).multiply(100).round(1).astype(str) + "%"
+combined = counts.astype(str) + " (" + percent_df + ")"
+st.table(combined)
+st.bar_chart(counts)
 
 
 st.subheader("Average Model Accuracy (PTS Differential)")
