@@ -272,7 +272,8 @@ class WNBACyclicalPatternDetector:
 
 
 def predict(player):
-    print(f"\n--- Running prediction for {player['name']} on {player['date']} ---")
+    print(f"\n--- CL1: Running prediction for {player['name']} on {player['date']} ---")
+    
     analyzer = WNBACyclicalPatternDetector()
     results = analyzer.analyze_player(player["name"], [player["date"]])
 
@@ -281,6 +282,7 @@ def predict(player):
         if pred_df is not None and not pred_df.empty:
             predicted_points = int(round(float(pred_df['predicted_points'].iloc[0])))
             print(f"Prediction successful for {player['name']}: {predicted_points} pts")
+            print()
             performance_note = pred_df['category'].iloc[0]
             over_line = float(player['over_line'])
             under_line = float(player['under_line'])
@@ -295,9 +297,11 @@ def predict(player):
             }
         else:
             print(f"Prediction empty or invalid for {player['name']}")
+            print()
 
     else:
         print(f"Prediction not generated for {player['name']}")
+        print()
 
     return None
 
