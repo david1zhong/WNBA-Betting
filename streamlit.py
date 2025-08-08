@@ -57,6 +57,12 @@ st.dataframe(
     height=600
 )
 
+st.subheader("Wins and Losses per Model")
+result_counts = df[df["result"].isin(["WON", "LOST"])] \
+    .groupby(["model_name", "result"]).size().unstack(fill_value=0)
+st.bar_chart(result_counts)
+
+
 st.subheader("Average Model Accuracy (PTS Differential)")
 accuracy = df.groupby("model_name")["pts_differential"].mean().reset_index()
 accuracy["pts_differential"] = accuracy["pts_differential"].round(2)
