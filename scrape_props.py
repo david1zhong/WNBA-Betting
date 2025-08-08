@@ -72,9 +72,9 @@ for player in players:
     data.append({
         "name": name,
         "date": current_date_est,
-        "over_line": over_line,
+        "over_line": over_line[1:],
         "over_odds": over_odds,
-        "under_line": under_line,
+        "under_line": under_line[1:],
         "under_odds": under_odds
     })
 
