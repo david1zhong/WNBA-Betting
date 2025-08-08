@@ -61,6 +61,7 @@ st.dataframe(
 st.subheader("Wins and Losses per Model")
 filtered = df[df["result"].isin(["WON", "LOST"])]
 counts = filtered.groupby(["model_name", "result"]).size().unstack(fill_value=0)
+counts = counts[["WON", "LOST"]]
 totals = counts.sum(axis=1)
 percent_df = counts.div(totals, axis=0).multiply(100).round(1).astype(str) + "%"
 combined = counts.astype(str) + " (" + percent_df + ")"
