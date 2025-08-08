@@ -27,13 +27,41 @@ for player in players:
     if len(odds_containers) < 2:
         continue
 
-    over_line = odds_containers[0].select_one("span.data-moneyline").get_text(strip=True)
-    over_line = over_line[1:]
-    over_odds = odds_containers[0].select_one("small.data-odds").get_text(strip=True)
+    over_line_raw = odds_containers[0].select_one("span.data-moneyline")
+    under_line_raw = odds_containers[1].select_one("span.data-moneyline")
 
-    under_line = odds_containers[1].select_one("span.data-moneyline").get_text(strip=True)
-    under_line = under_line[1:]
-    under_odds = odds_containers[1].select_one("small.data-odds").get_text(strip=True)
+    over_line = over_line_raw.get_text(strip=True) if over_line_raw else None
+    under_line = under_line_raw.get_text(strip=True) if under_line_raw else None
+
+    def is_probably_an_odd(val):
+        return val is not None and val.lstrip("+-").isdigit()
+
+
+    if is_probably_an_odd(over_line):
+        over_line = None
+    if is_probably_an_odd(under_line):
+        under_line = None
+
+    if over_line is None and under_line is None:
+        continue
+
+    if over_line is None:
+        over_line = "o" + under_line[1:]
+    if under_line is None:
+        under_line = "u" + over_line[1:]
+
+    over_odds_raw = odds_containers[0].select_one("small.data-odds.best")
+    under_odds_raw = odds_containers[1].select_one("small.data-odds.best")
+
+    over_odds = over_odds_raw.get_text(strip=True) if over_odds_raw else None
+    under_odds = under_odds_raw.get_text(strip=True) if under_odds_raw else None
+
+    if over_odds is None and under_odds is None:
+        over_odds = under_odds = "-120"
+    elif over_odds is None:
+        over_odds = under_odds
+    elif under_odds is None:
+        under_odds = over_odds
 
     if over_odds == "even":
         over_odds = under_odds
