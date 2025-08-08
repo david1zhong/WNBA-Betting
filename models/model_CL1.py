@@ -267,7 +267,7 @@ class WNBACyclicalPatternDetector:
             predictions = self.get_predictions_only(df, player_name, player_baselines, dip_results)
             return predictions
         else:
-            print(f"{player["name"]} not in dip results")
+            print(f"{player['name']} not in dip results")
             return None
 
 
