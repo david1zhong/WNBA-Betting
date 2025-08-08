@@ -203,54 +203,57 @@ class WNBAPerformancePredictor:
 
         return False, 0
 
-    def predict(self, player_info):
+    def predict(player):
         """
         Main prediction function
-        player_info should contain:
+        player should contain:
         - 'name': player name
         - 'game_date': date of the game to predict
         - 'over_line': betting over line
         - 'under_line': betting under line
         """
-        player_name = player_info['name']
-        game_date = player_info['game_date']
-        over_line = float(player_info['over_line'])
-        under_line = float(player_info['under_line'])
+        # Create instance to access methods
+        predictor = WNBAPerformancePredictor()
+        
+        player_name = player['name']
+        game_date = player['game_date']
+        over_line = float(player['over_line'])
+        under_line = float(player['under_line'])
 
         print(f"--- Running prediction for {player_name} on {game_date} ---")
 
         # Load and analyze player data
-        if not self.load_player_data(player_name):
+        if not predictor.load_player_data(player_name):
             print(f"{player_name} not found in data")
             print(f"Prediction not generated for {player_name}")
             return None  # Skip player if no data
 
         # Calculate performance metrics
-        self.calculate_rolling_averages()
-        self.identify_performance_dips()
-        self.find_cyclical_patterns()
+        predictor.calculate_rolling_averages()
+        predictor.identify_performance_dips()
+        predictor.find_cyclical_patterns()
 
         # Check if we found a clear menstrual pattern
-        if not self.cycle_patterns or self.cycle_patterns['cycle_count'] < 3:
+        if not predictor.cycle_patterns or predictor.cycle_patterns['cycle_count'] < 3:
             print(f"{player_name} not in dip results")
             print(f"Prediction not generated for {player_name}")
             return None  # Skip player if no clear cyclical pattern
 
         # Get baseline prediction (season average)
-        season_avg_points = self.player_data['points'].mean()
-        recent_avg_points = self.player_data['points'].tail(10).mean()  # Last 10 games
+        season_avg_points = predictor.player_data['points'].mean()
+        recent_avg_points = predictor.player_data['points'].tail(10).mean()  # Last 10 games
         baseline_prediction = (season_avg_points + recent_avg_points) / 2
 
         # Check if game date is in predicted dip window
-        in_dip_window, proximity = self.is_in_predicted_dip_window(game_date)
+        in_dip_window, proximity = predictor.is_in_predicted_dip_window(game_date)
 
-        if in_dip_window and self.cycle_patterns:
+        if in_dip_window and predictor.cycle_patterns:
             # Adjust prediction based on typical dip performance
-            dip_games = self.cycle_patterns['dip_games']
+            dip_games = predictor.cycle_patterns['dip_games']
             avg_dip_performance = dip_games['points'].mean()
 
             # Weight the adjustment by proximity to dip center and pattern confidence
-            confidence = min(1.0, self.cycle_patterns['cycle_count'] / 5)  # Max confidence at 5+ cycles
+            confidence = min(1.0, predictor.cycle_patterns['cycle_count'] / 5)  # Max confidence at 5+ cycles
             adjustment_factor = proximity * confidence * 0.7  # Max 70% adjustment
 
             predicted_points = (baseline_prediction * (1 - adjustment_factor) +
@@ -263,7 +266,7 @@ class WNBAPerformancePredictor:
             predicted_points = baseline_prediction
 
             # Determine performance note based on recent form
-            recent_performance = self.player_data['performance_score'].tail(5).mean()
+            recent_performance = predictor.player_data['performance_score'].tail(5).mean()
             if recent_performance > 0.5:
                 performance_note = "good game"
             elif recent_performance > 0:
