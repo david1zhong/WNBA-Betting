@@ -266,7 +266,7 @@ def predict(player):
         predicted_points = (baseline_prediction * (1 - adjustment_factor) +
                             avg_dip_performance * adjustment_factor)
 
-        performance_note = "period game" if proximity > 0.7 else "below average"
+        performance_note = "Period Game" if proximity > 0.7 else "Below Average"
 
     else:
         # No cyclical pattern or outside dip window
@@ -275,11 +275,11 @@ def predict(player):
         # Determine performance note based on recent form
         recent_performance = player_data['performance_score'].tail(5).mean()
         if recent_performance > 0.5:
-            performance_note = "good game"
+            performance_note = "Good Game"
         elif recent_performance > 0:
-            performance_note = "average game"
+            performance_note = "Average Game"
         else:
-            performance_note = "below average"
+            performance_note = "Below Average"
 
     # Make betting decision
     bet = "OVER" if predicted_points > over_line else "UNDER"
