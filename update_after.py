@@ -77,30 +77,30 @@ for player in data["players"]:
         props_date.date()
     ))
 
-    
     cur.execute("""
         UPDATE predictions
         SET profit = CASE
             WHEN amount IS NULL THEN NULL
-
+    
             WHEN result = 'WON' AND bet = 'OVER' THEN
                 CASE 
-                    WHEN over_odds > 0 THEN ROUND(amount * (over_odds / 100.0), 2)
-                    ELSE ROUND(amount * (100.0 / ABS(over_odds)), 2)
+                    WHEN over_odds > 0 THEN ROUND((amount * (over_odds / 100.0))::numeric, 2)
+                    ELSE ROUND((amount * (100.0 / ABS(over_odds)))::numeric, 2)
                 END
-
+    
             WHEN result = 'WON' AND bet = 'UNDER' THEN
                 CASE 
-                    WHEN under_odds > 0 THEN ROUND(amount * (under_odds / 100.0), 2)
-                    ELSE ROUND(amount * (100.0 / ABS(under_odds)), 2)
+                    WHEN under_odds > 0 THEN ROUND((amount * (under_odds / 100.0))::numeric, 2)
+                    ELSE ROUND((amount * (100.0 / ABS(under_odds)))::numeric, 2)
                 END
-
+    
             WHEN result = 'LOST' THEN -amount
-
+    
             ELSE 0
         END
         WHERE player_name = %s AND date = %s;
     """, (player_name, props_date.date()))
+
 
     print(f"Updated {player_name}: {actual_points} points, team {player_team}")
 
