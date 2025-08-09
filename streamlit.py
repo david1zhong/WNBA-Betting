@@ -58,7 +58,37 @@ st.dataframe(
 )
 
 
-st.subheader("Wins and Losses per Model")
+st.subheader("Wins and Losses per Model Yesterday")
+
+eastern = pytz.timezone("US/Eastern")
+yesterday_date = (datetime.now(eastern) - timedelta(days=1)).date()
+
+yesterday_df = df[
+    (pd.to_datetime(df["date"]).dt.date == yesterday_date) &
+    (df["result"].isin(["WON", "LOST"]))
+]
+
+if yesterday_df.empty:
+    model_names = df["model_name"].unique()
+    counts_yesterday = pd.DataFrame({"model_name": model_names, "WON": 0, "LOST": 0})
+    counts_yesterday = counts_yesterday.set_index("model_name")
+else:
+    counts_yesterday = (
+        yesterday_df.groupby(["model_name", "result"])
+        .size()
+        .unstack(fill_value=0)
+    )
+
+    for col in ["WON", "LOST"]:
+        if col not in counts_yesterday.columns:
+            counts_yesterday[col] = 0
+    counts_yesterday = counts_yesterday[["WON", "LOST"]]
+
+st.table(counts_yesterday)
+st.bar_chart(counts_yesterday)
+
+
+st.subheader("Wins and Losses per Model Total")
 filtered = df[df["result"].isin(["WON", "LOST"])]
 counts = filtered.groupby(["model_name", "result"]).size().unstack(fill_value=0)
 counts = counts[["WON", "LOST"]]
