@@ -210,6 +210,71 @@ def is_in_predicted_dip_window(game_date, cycle_patterns):
     return False, 0
 
 
+def calculate_betting_confidence(player_data, cycle_patterns, predicted_points, over_line, under_line, 
+                               in_dip_window, proximity):
+    """Calculate confidence score for betting and determine bet amount"""
+    confidence_factors = {}
+    
+    # 1. Pattern strength (0-1): How strong is the cyclical pattern?
+    if cycle_patterns and cycle_patterns['cycle_count'] >= 3:
+        pattern_strength = min(1.0, cycle_patterns['cycle_count'] / 6)  # Max at 6+ cycles
+        confidence_factors['pattern_strength'] = pattern_strength * 0.3
+    else:
+        confidence_factors['pattern_strength'] = 0
+    
+    # 2. Proximity to predicted dip (0-1): How close to the center of dip window?
+    if in_dip_window:
+        confidence_factors['proximity'] = proximity * 0.25
+    else:
+        confidence_factors['proximity'] = 0
+    
+    # 3. Prediction margin (0-1): How far is prediction from betting line?
+    line_used = over_line if predicted_points > over_line else under_line
+    margin = abs(predicted_points - line_used)
+    player_avg = player_data['points'].mean()
+    player_std = player_data['points'].std()
+    
+    # Normalize margin by player's typical variation
+    if player_std > 0:
+        normalized_margin = min(1.0, margin / (player_std * 2))  # 2 std devs = max confidence
+        confidence_factors['margin'] = normalized_margin * 0.2
+    else:
+        confidence_factors['margin'] = 0
+    
+    # 4. Recent form consistency (0-1): How consistent has recent performance been?
+    recent_games = player_data.tail(10)
+    recent_std = recent_games['points'].std()
+    if recent_std > 0 and player_std > 0:
+        consistency = max(0, 1 - (recent_std / player_std))  # Lower std = higher consistency
+        confidence_factors['consistency'] = consistency * 0.15
+    else:
+        confidence_factors['consistency'] = 0
+    
+    # 5. Sample size (0-1): More games = higher confidence
+    total_games = len(player_data)
+    sample_confidence = min(1.0, total_games / 100)  # Max at 100+ games
+    confidence_factors['sample_size'] = sample_confidence * 0.1
+    
+    # Calculate total confidence score
+    total_confidence = sum(confidence_factors.values())
+    
+    # Convert confidence to bet amount ($1-$5)
+    if total_confidence >= 0.8:
+        amount = 5
+    elif total_confidence >= 0.6:
+        amount = 4
+    elif total_confidence >= 0.4:
+        amount = 3
+    elif total_confidence >= 0.25:
+        amount = 2
+    elif total_confidence >= 0.15:
+        amount = 1
+    else:
+        amount = None  # Not confident enough to bet
+    
+    return amount, total_confidence, confidence_factors
+
+
 def predict(player):
     """
     Main prediction function
@@ -284,7 +349,17 @@ def predict(player):
     # Make betting decision
     bet = "OVER" if predicted_points > over_line else "UNDER"
 
+    # Calculate betting confidence and amount
+    amount, confidence_score, confidence_factors = calculate_betting_confidence(
+        player_data, cycle_patterns, predicted_points, over_line, under_line, 
+        in_dip_window, proximity
+    )
+
     print(f"Prediction successful for {player_name}: {round(predicted_points)} pts")
+    if amount:
+        print(f"Betting confidence: {confidence_score:.2f}, Amount: ${amount}")
+    else:
+        print(f"Betting confidence too low: {confidence_score:.2f}, No bet recommended")
     print()
 
     return {
@@ -292,7 +367,8 @@ def predict(player):
         "bet": bet,
         "over_line": over_line,
         "under_line": under_line,
-        "note": performance_note
+        "note": performance_note,
+        "amount": amount
     }
 
 
@@ -327,6 +403,7 @@ if __name__ == "__main__":
             if result is not None:
                 print(f"{player['name']} predicted points: {result['predicted_points']}")
                 print(f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
+                print(f"Bet Amount: ${result['amount']}" if result['amount'] else "No bet recommended")
                 print()
 
     except FileNotFoundError:
