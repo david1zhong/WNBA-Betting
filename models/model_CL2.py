@@ -215,59 +215,66 @@ def calculate_betting_confidence(player_data, cycle_patterns, predicted_points, 
     """Calculate confidence score for betting and determine bet amount"""
     confidence_factors = {}
     
-    # 1. Pattern strength (0-1): How strong is the cyclical pattern?
+    # 1. Pattern strength (0-1): Much stricter requirements for cyclical patterns
     if cycle_patterns and cycle_patterns['cycle_count'] >= 3:
-        pattern_strength = min(1.0, cycle_patterns['cycle_count'] / 6)  # Max at 6+ cycles
-        confidence_factors['pattern_strength'] = pattern_strength * 0.3
+        # Require more cycles for high confidence, penalize high variance
+        cycle_consistency = 1.0 / (1.0 + cycle_patterns['cycle_std'] / cycle_patterns['average_cycle_days'])
+        pattern_strength = min(1.0, (cycle_patterns['cycle_count'] / 10) * cycle_consistency)  # Max at 10+ cycles
+        confidence_factors['pattern_strength'] = pattern_strength * 0.4  # Increased weight
     else:
         confidence_factors['pattern_strength'] = 0
     
-    # 2. Proximity to predicted dip (0-1): How close to the center of dip window?
+    # 2. Proximity to predicted dip (0-1): Must be very close to center for high confidence
     if in_dip_window:
-        confidence_factors['proximity'] = proximity * 0.25
+        # Use exponential scaling - only very close to center gets high scores
+        proximity_score = proximity ** 2  # Square it to make it more selective
+        confidence_factors['proximity'] = proximity_score * 0.3
     else:
         confidence_factors['proximity'] = 0
     
-    # 3. Prediction margin (0-1): How far is prediction from betting line?
+    # 3. Prediction margin (0-1): Much stricter margin requirements
     line_used = over_line if predicted_points > over_line else under_line
     margin = abs(predicted_points - line_used)
     player_avg = player_data['points'].mean()
     player_std = player_data['points'].std()
     
-    # Normalize margin by player's typical variation
-    if player_std > 0:
-        normalized_margin = min(1.0, margin / (player_std * 2))  # 2 std devs = max confidence
+    # Require larger margins for confidence, normalize more strictly
+    if player_std > 0 and margin > 1.0:  # Must have at least 1 point margin
+        # Require margin to be significant portion of player's standard deviation
+        normalized_margin = min(1.0, (margin - 1.0) / (player_std * 1.5))  # Subtract baseline 1 pt
         confidence_factors['margin'] = normalized_margin * 0.2
     else:
         confidence_factors['margin'] = 0
     
-    # 4. Recent form consistency (0-1): How consistent has recent performance been?
-    recent_games = player_data.tail(10)
-    recent_std = recent_games['points'].std()
-    if recent_std > 0 and player_std > 0:
-        consistency = max(0, 1 - (recent_std / player_std))  # Lower std = higher consistency
-        confidence_factors['consistency'] = consistency * 0.15
+    # 4. Dip game performance vs line: How well do dip games perform relative to the line?
+    if cycle_patterns and len(cycle_patterns['dip_games']) > 0:
+        dip_performances = cycle_patterns['dip_games']['points']
+        line_used = under_line if predicted_points < over_line else over_line
+        
+        # What percentage of dip games would have hit our bet?
+        if predicted_points < over_line:  # We're betting UNDER
+            hit_rate = (dip_performances <= under_line).mean()
+        else:  # We're betting OVER
+            hit_rate = (dip_performances >= over_line).mean()
+        
+        # Only confident if high hit rate
+        confidence_factors['historical_accuracy'] = max(0, (hit_rate - 0.6) / 0.4) * 0.1  # Need 60%+ hit rate
     else:
-        confidence_factors['consistency'] = 0
-    
-    # 5. Sample size (0-1): More games = higher confidence
-    total_games = len(player_data)
-    sample_confidence = min(1.0, total_games / 100)  # Max at 100+ games
-    confidence_factors['sample_size'] = sample_confidence * 0.1
+        confidence_factors['historical_accuracy'] = 0
     
     # Calculate total confidence score
     total_confidence = sum(confidence_factors.values())
     
-    # Convert confidence to bet amount ($1-$5)
-    if total_confidence >= 0.8:
+    # Much stricter thresholds for bet amounts
+    if total_confidence >= 0.85:  # Very rare, need nearly perfect conditions
         amount = 5
-    elif total_confidence >= 0.6:
+    elif total_confidence >= 0.70:  # High confidence, strong pattern + close proximity + good margin
         amount = 4
-    elif total_confidence >= 0.4:
+    elif total_confidence >= 0.50:  # Moderate confidence, decent pattern + some proximity
         amount = 3
-    elif total_confidence >= 0.25:
+    elif total_confidence >= 0.30:  # Low-moderate confidence, weak pattern or poor timing
         amount = 2
-    elif total_confidence >= 0.15:
+    elif total_confidence >= 0.15:  # Minimal confidence, very weak signal
         amount = 1
     else:
         amount = None  # Not confident enough to bet
