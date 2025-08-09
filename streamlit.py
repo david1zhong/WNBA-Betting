@@ -80,14 +80,20 @@ else:
         .size()
         .unstack(fill_value=0)
     )
-
     for col in ["WON", "LOST"]:
         if col not in counts_yesterday.columns:
             counts_yesterday[col] = 0
     counts_yesterday = counts_yesterday[["WON", "LOST"]]
 
-st.table(counts_yesterday)
+totals_yesterday = counts_yesterday.sum(axis=1)
+percent_df_yesterday = counts_yesterday.div(totals_yesterday, axis=0).multiply(100)
+percent_df_yesterday = percent_df_yesterday.round(1).astype(str) + "%"
+
+combined_yesterday = counts_yesterday.astype(str) + " (" + percent_df_yesterday + ")"
+
+st.table(combined_yesterday)
 st.bar_chart(counts_yesterday)
+
 
 
 st.subheader("Wins and Losses per Model Total")
