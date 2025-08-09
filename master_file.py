@@ -30,20 +30,21 @@ with engine.begin() as conn:
             if result is None:
                 continue
 
-            predicted_pts = result["predicted_points"]
-            bet = result["bet"]
-            note = result["note"]
+            predicted_pts = result.get("predicted_points")
+            bet = result.get("bet")
+            note = result.get("note")
+            amount = result.get("amount", None)
 
             conn.execute(
                 text("""
                     INSERT INTO predictions
                         (player_name, model_name, date,
                          predicted_pts, over_line, under_line,
-                         over_odds, under_odds, bet, note)
+                         over_odds, under_odds, bet, note, amount)
                     VALUES
                         (:player_name, :model_name, :date,
                          :predicted_pts, :over_line, :under_line,
-                         :over_odds, :under_odds, :bet, :note)
+                         :over_odds, :under_odds, :bet, :note, :amount)
                     ON CONFLICT (player_name, model_name, date) DO NOTHING
                 """),
                 {
@@ -56,7 +57,8 @@ with engine.begin() as conn:
                     'over_odds': player['over_odds'],
                     'under_odds': player['under_odds'],
                     'bet': bet,
-                    'note': note
+                    'note': note,
+                    'amount': amount
                 }
             )
 
