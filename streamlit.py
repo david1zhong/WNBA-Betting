@@ -61,15 +61,36 @@ def calc_profit(row):
     return 0
 
 df['profit'] = df.apply(calc_profit, axis=1)
-total_net_profit = df['profit'].sum()
+
+df['winnings'] = df['profit'].apply(lambda x: x if x > 0 else 0)
+df['losses'] = df['profit'].apply(lambda x: -x if x < 0 else 0)
+
+total_winnings = df['winnings'].sum()
+total_losses = df['losses'].sum()
+total_net_profit = total_winnings - total_losses
+
 df['year_month'] = pd.to_datetime(df['date']).dt.to_period("M").astype(str)
-monthly_net_profit = df.groupby('year_month')['profit'].sum().reset_index()
+monthly_stats = df.groupby('year_month').agg({
+    'winnings': 'sum',
+    'losses': 'sum',
+    'profit': 'sum'
+}).reset_index()
 
 st.subheader("Net Profit Overview")
-st.metric("Total Net Profit ($)", f"{total_net_profit:.2f}")
-st.subheader("Monthly Net Profit ($)")
-st.dataframe(monthly_net_profit)
-st.bar_chart(monthly_net_profit.set_index('year_month'))
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Winnings ($)", f"{total_winnings:.2f}")
+col2.metric("Total Losses ($)", f"{total_losses:.2f}")
+col3.metric("Net Profit ($)", f"{total_net_profit:.2f}")
+
+st.subheader("Monthly Winnings, Losses, and Net Profit ($)")
+st.dataframe(monthly_stats.rename(columns={
+    'winnings': 'Winnings ($)',
+    'losses': 'Losses ($)',
+    'profit': 'Net Profit ($)',
+    'year_month': 'Month'
+}))
+
+st.bar_chart(monthly_stats.set_index('year_month')[['winnings', 'losses', 'profit']])
 
 st.subheader("Wins and Losses per Model")
 filtered = df[df["result"].isin(["WON", "LOST"])]
