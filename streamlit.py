@@ -135,16 +135,16 @@ def summarize(df_input):
     styled_df = grouped.style.format({col: currency for col in numeric_cols})
 
     def highlight_positive(val):
-        return 'color: green' if val > 0 else ''
+        return "color: green; font-weight: bold;" if val > 0 else ''
 
     def highlight_negative(val):
-        return 'color: red' if val < 0 else ''
+        return "color: red; font-weight: bold;" if val < 0 else ''
 
     def highlight_profit(val):
         if val > 0:
-            return 'color: green'
+            return "color: green; font-weight: bold;"
         elif val < 0:
-            return 'color: red'
+            return "color: red; font-weight: bold;"
         return ''
 
     styled_df = styled_df.map(highlight_positive, subset=['winnings_amount'])
@@ -178,19 +178,32 @@ for col in ["WON", "LOST"]:
         ou_counts[col] = 0
 
 ou_counts["TOTAL"] = ou_counts["WON"] + ou_counts["LOST"]
-ou_counts["WON %"] = (ou_counts["WON"] / ou_counts["TOTAL"] * 100).round(1).astype(str) + "%"
-ou_counts["LOST %"] = (ou_counts["LOST"] / ou_counts["TOTAL"] * 100).round(1).astype(str) + "%"
-ou_counts = ou_counts[["WON", "WON %", "LOST", "LOST %", "TOTAL"]]
-ou_counts = ou_counts.reset_index()
-over_summary = ou_counts[ou_counts["bet"] == "OVER"].set_index("model_name").drop(columns=["bet"])
-under_summary = ou_counts[ou_counts["bet"] == "UNDER"].set_index("model_name").drop(columns=["bet"])
+ou_counts["WON %"] = (ou_counts["WON"] / ou_counts["TOTAL"] * 100).round(1)
+over_summary = ou_counts.loc[pd.IndexSlice[:, "OVER"], :].reset_index(level=1, drop=True)
+under_summary = ou_counts.loc[pd.IndexSlice[:, "UNDER"], :].reset_index(level=1, drop=True)
 
-combined_ou = pd.concat(
-    [over_summary.add_prefix("OVER_"), under_summary.add_prefix("UNDER_")],
-    axis=1
-).fillna("0")
+summary_df = pd.DataFrame({
+    "Number of Overs": over_summary["TOTAL"],
+    "Number of Unders": under_summary["TOTAL"],
+    "Over Won": over_summary["WON"],
+    "Under Won": under_summary["WON"],
+    "Over Lost": over_summary["LOST"],
+    "Under Lost": under_summary["LOST"],
+    "Over Won %": over_summary["WON %"].map(lambda x: f"{x:.1f}%" if pd.notna(x) else "0%"),
+    "Under Won %": under_summary["WON %"].map(lambda x: f"{x:.1f}%" if pd.notna(x) else "0%"),
+})
 
-st.table(combined_ou)
+summary_df = summary_df.fillna(0).astype({
+    "Number of Overs": int,
+    "Number of Unders": int,
+    "Over Won": int,
+    "Under Won": int,
+    "Over Lost": int,
+    "Under Lost": int,
+})
+
+st.table(summary_df)
+
 
 
 
