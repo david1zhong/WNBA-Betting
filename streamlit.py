@@ -222,5 +222,22 @@ st.bar_chart(accuracy.set_index("model_name"))
 
 
 
-df["abs_error"] = abs(df["predicted_points"] - df["actual_points"])
-mae = df.groupby("model_name")["abs_error"].mean()
+metrics_df = df.groupby("model_name").apply(lambda x: pd.Series({
+    "MAE": np.mean(np.abs(x["pts_differential"])),
+    "RMSE": np.sqrt(np.mean((x["pts_differential"])**2)),
+    "STD": np.std(x["pts_differential"])
+})).reset_index()
+
+metrics_df = metrics_df.round(3)
+
+st.subheader("Model Error Metrics (Points Differential)")
+st.dataframe(metrics_df)
+
+st.subheader("Mean Absolute Error (MAE)")
+st.bar_chart(metrics_df.set_index("model_name")["MAE"])
+
+st.subheader("Root Mean Squared Error (RMSE)")
+st.bar_chart(metrics_df.set_index("model_name")["RMSE"])
+
+st.subheader("Standard Deviation (STD)")
+st.bar_chart(metrics_df.set_index("model_name")["STD"])
