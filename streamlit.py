@@ -109,13 +109,22 @@ st.bar_chart(counts)
 
 
 df['profit'] = df['profit'].fillna(0)
+df['amount'] = df['amount'].fillna(0)
 df['date'] = pd.to_datetime(df['date'])
 yesterday = datetime.now().date() - timedelta(days=1)
 df_yesterday = df[df['date'].dt.date == yesterday]
-profit_per_model_yesterday = df_yesterday.groupby('model_name')['profit'].sum().reset_index()
-profit_per_model_yesterday = profit_per_model_yesterday.sort_values(by='profit', ascending=False)
-profit_per_model_total = df.groupby('model_name')['profit'].sum().reset_index()
-profit_per_model_total = profit_per_model_total.sort_values(by='profit', ascending=False)
+
+def summarize(df_input):
+    grouped = df_input.groupby('model_name').agg(
+        total_amount=('amount', 'sum'),
+        total_profit=('profit', 'sum'),
+        total_wins=('profit', lambda x: x[x > 0].sum()),
+        total_losses=('profit', lambda x: x[x < 0].sum())
+    ).reset_index()
+    return grouped.sort_values(by='total_profit', ascending=False)
+
+profit_per_model_yesterday = summarize(df_yesterday)
+profit_per_model_total = summarize(df)
 st.subheader(f"Profit Per Model - {yesterday}")
 st.dataframe(profit_per_model_yesterday)
 st.subheader("Profit Per Model - All Time")
