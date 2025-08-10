@@ -167,6 +167,7 @@ st.dataframe(profit_per_model_total)
 st.subheader("Daily Profit per Model")
 df['date'] = pd.to_datetime(df['date'])
 daily_profit = df.groupby(["model_name", "date"])["profit"].sum().reset_index()
+daily_profit = daily_profit[daily_profit["profit"] != 0]
 
 for model in daily_profit["model_name"].unique():
     model_data = daily_profit[daily_profit["model_name"] == model].sort_values("date")
