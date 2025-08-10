@@ -124,11 +124,11 @@ def summarize(df_input):
 
     grouped = grouped[['model_name', 'total_bet_amount', 'winnings_amount', 'losses_amount', 'total_profit']]
 
-    dollar_cols = ['total_amount', 'total_wins', 'total_losses', 'total_profit']
-    grouped[dollar_cols] = grouped[dollar_cols].applymap(lambda x: f"${x:,.2f}")
+    money_cols = ['total_amount', 'total_wins', 'total_losses', 'total_profit']
+    grouped[money_cols] = grouped[money_cols].applymap(lambda x: f"${x:,.2f}")
     
     return grouped
-
+    
 profit_per_model_yesterday = summarize(df_yesterday)
 profit_per_model_total = summarize(df)
 st.subheader(f"Profit Per Model - {yesterday}")
