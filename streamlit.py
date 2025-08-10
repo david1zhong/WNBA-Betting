@@ -166,43 +166,35 @@ st.dataframe(profit_per_model_total)
 
 st.subheader("Over/Under Bets Summary per Model")
 ou_df = df[(df["bet"].isin(["OVER", "UNDER"])) & (df["result"].isin(["WON", "LOST"]))]
+counts = ou_df.groupby(["model_name", "bet"]).size().unstack(fill_value=0)
+counts = counts.rename(columns={"OVER": "Overs", "UNDER": "Unders"})
+counts["Total"] = counts["Overs"] + counts["Unders"]
 
-ou_counts = (
-    ou_df.groupby(["model_name", "bet", "result"])
-    .size()
+win_rates = (
+    ou_df.groupby(["model_name", "bet", "result"]).size()
     .unstack(fill_value=0)
 )
 
 for col in ["WON", "LOST"]:
-    if col not in ou_counts.columns:
-        ou_counts[col] = 0
+    if col not in win_rates.columns:
+        win_rates[col] = 0
 
-ou_counts["TOTAL"] = ou_counts["WON"] + ou_counts["LOST"]
-ou_counts["WON %"] = (ou_counts["WON"] / ou_counts["TOTAL"] * 100).round(1)
-over_summary = ou_counts.loc[pd.IndexSlice[:, "OVER"], :].reset_index(level=1, drop=True)
-under_summary = ou_counts.loc[pd.IndexSlice[:, "UNDER"], :].reset_index(level=1, drop=True)
+over_win_pct = (win_rates.loc[pd.IndexSlice[:, "OVER"], "WON"] /
+                win_rates.loc[pd.IndexSlice[:, "OVER"], ["WON", "LOST"]].sum(axis=1) * 100).round(1)
+
+under_win_pct = (win_rates.loc[pd.IndexSlice[:, "UNDER"], "WON"] /
+                 win_rates.loc[pd.IndexSlice[:, "UNDER"], ["WON", "LOST"]].sum(axis=1) * 100).round(1)
 
 summary_df = pd.DataFrame({
-    "Number of Overs": over_summary["TOTAL"],
-    "Number of Unders": under_summary["TOTAL"],
-    "Over Won": over_summary["WON"],
-    "Under Won": under_summary["WON"],
-    "Over Lost": over_summary["LOST"],
-    "Under Lost": under_summary["LOST"],
-    "Over Won %": over_summary["WON %"].map(lambda x: f"{x:.1f}%" if pd.notna(x) else "0%"),
-    "Under Won %": under_summary["WON %"].map(lambda x: f"{x:.1f}%" if pd.notna(x) else "0%"),
+    "Number of Unders": counts["Unders"],
+    "Number of Overs": counts["Overs"],
+    "Unders % of All Bets": (counts["Unders"] / counts["Total"] * 100).round(1).astype(str) + "%",
+    "Overs % of All Bets": (counts["Overs"] / counts["Total"] * 100).round(1).astype(str) + "%",
+    "Over Win %": over_win_pct.astype(str) + "%",
+    "Under Win %": under_win_pct.astype(str) + "%"
 })
 
-summary_df = summary_df.fillna(0).astype({
-    "Number of Overs": int,
-    "Number of Unders": int,
-    "Over Won": int,
-    "Under Won": int,
-    "Over Lost": int,
-    "Under Lost": int,
-})
-
-st.table(summary_df)
+st.table(summary_df.fillna("0%"))
 
 
 
