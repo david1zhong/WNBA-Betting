@@ -48,7 +48,7 @@ def smart_format(x):
     
 styled_df = (
     df.style
-    .applymap(highlight_result, subset=["result"])
+    .map(highlight_result, subset=["result"])
     .format({col: smart_format for col in num_cols})
     .hide(axis="index")
 )
@@ -147,9 +147,9 @@ def summarize(df_input):
             return 'color: red'
         return ''
 
-    styled_df = styled_df.applymap(highlight_positive, subset=['winnings_amount'])
-    styled_df = styled_df.applymap(highlight_negative, subset=['losses_amount'])
-    styled_df = styled_df.applymap(highlight_profit, subset=['total_profit'])
+    styled_df = styled_df.map(highlight_positive, subset=['winnings_amount'])
+    styled_df = styled_df.map(highlight_negative, subset=['losses_amount'])
+    styled_df = styled_df.map(highlight_profit, subset=['total_profit'])
 
     return styled_df
 
