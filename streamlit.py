@@ -135,18 +135,25 @@ def summarize(df_input):
     styled_df = grouped.style.format({col: currency for col in numeric_cols})
 
     def highlight_positive(val):
-        color = 'green' if val > 0 else ''
-        return f'color: {color}'
+        return 'color: green' if val > 0 else ''
 
     def highlight_negative(val):
-        color = 'red' if val < 0 else ''
-        return f'color: {color}'
+        return 'color: red' if val < 0 else ''
 
-    styled_df = styled_df.applymap(highlight_positive, subset=['total_wins', 'total_profit'])
-    styled_df = styled_df.applymap(highlight_negative, subset=['total_losses', 'total_profit'])
+    def highlight_profit(val):
+        if val > 0:
+            return 'color: green'
+        elif val < 0:
+            return 'color: red'
+        return ''
+
+    styled_df = styled_df.applymap(highlight_positive, subset=['total_wins'])
+    styled_df = styled_df.applymap(highlight_negative, subset=['total_losses'])
+    styled_df = styled_df.applymap(highlight_profit, subset=['total_profit'])
 
     return styled_df
-    
+
+
 profit_per_model_yesterday = summarize(df_yesterday)
 profit_per_model_total = summarize(df)
 st.subheader(f"Profit Per Model - {yesterday}")
