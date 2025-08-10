@@ -116,11 +116,13 @@ df_yesterday = df[df['date'].dt.date == yesterday]
 
 def summarize(df_input):
     grouped = df_input.groupby('model_name').agg(
-        total_amount=('amount', 'sum'),
+        total_bet_amount=('amount', 'sum'),
         total_profit=('profit', 'sum'),
-        total_wins=('profit', lambda x: x[x > 0].sum()),
-        total_losses=('profit', lambda x: x[x < 0].sum())
+        winnings_amount=('profit', lambda x: x[x > 0].sum()),
+        losses_amount=('profit', lambda x: x[x < 0].sum())
     ).reset_index()
+
+    grouped = group[['model_name', 'total_bet_amount', 'winnings_amount', 'losses_amount', 'total_profit']]
     return grouped.sort_values(by='total_profit', ascending=False)
 
 profit_per_model_yesterday = summarize(df_yesterday)
