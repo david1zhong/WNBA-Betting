@@ -163,6 +163,38 @@ st.dataframe(profit_per_model_total)
 
 
 
+
+st.subheader("Over/Under Bets Summary per Model")
+ou_df = df[(df["bet"].isin(["OVER", "UNDER"])) & (df["result"].isin(["WON", "LOST"]))]
+
+ou_counts = (
+    ou_df.groupby(["model_name", "bet", "result"])
+    .size()
+    .unstack(fill_value=0)
+)
+
+for col in ["WON", "LOST"]:
+    if col not in ou_counts.columns:
+        ou_counts[col] = 0
+
+ou_counts["TOTAL"] = ou_counts["WON"] + ou_counts["LOST"]
+ou_counts["WON %"] = (ou_counts["WON"] / ou_counts["TOTAL"] * 100).round(1).astype(str) + "%"
+ou_counts["LOST %"] = (ou_counts["LOST"] / ou_counts["TOTAL"] * 100).round(1).astype(str) + "%"
+ou_counts = ou_counts[["WON", "WON %", "LOST", "LOST %", "TOTAL"]]
+ou_counts = ou_counts.reset_index()
+over_summary = ou_counts[ou_counts["bet"] == "OVER"].set_index("model_name").drop(columns=["bet"])
+under_summary = ou_counts[ou_counts["bet"] == "UNDER"].set_index("model_name").drop(columns=["bet"])
+
+combined_ou = pd.concat(
+    [over_summary.add_prefix("OVER_"), under_summary.add_prefix("UNDER_")],
+    axis=1
+).fillna("0")
+
+st.table(combined_ou)
+
+
+
+
 st.subheader("Average Model Accuracy (PTS Differential)")
 accuracy = df.groupby("model_name")["pts_differential"].mean().reset_index()
 accuracy["pts_differential"] = accuracy["pts_differential"].round(2)
