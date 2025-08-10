@@ -164,6 +164,22 @@ st.dataframe(profit_per_model_total)
 
 
 
+st.subheader("Daily Profit per Model")
+df['date'] = pd.to_datetime(df['date'])
+daily_profit = df.groupby(["model_name", "date"])["profit"].sum().reset_index()
+
+for model in daily_profit["model_name"].unique():
+    model_data = daily_profit[daily_profit["model_name"] == model].sort_values("date")
+    
+    st.write(f"**{model}**")
+    st.line_chart(
+        model_data.set_index("date")["profit"],
+        use_container_width=True
+    )
+
+
+
+
 st.subheader("Over/Under Bets Summary per Model")
 ou_df = df[(df["bet"].isin(["OVER", "UNDER"])) & (df["result"].isin(["WON", "LOST"]))]
 counts = ou_df.groupby(["model_name", "bet"]).size().unstack(fill_value=0)
