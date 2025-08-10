@@ -122,8 +122,12 @@ def summarize(df_input):
         losses_amount=('profit', lambda x: x[x < 0].sum())
     ).reset_index()
 
-    grouped = grouped[['model_name', '$' + 'total_bet_amount', 'winnings_amount', 'losses_amount', 'total_profit']]
-    return grouped.sort_values(by='total_profit', ascending=False)
+    grouped = grouped[['model_name', 'total_bet_amount', 'winnings_amount', 'losses_amount', 'total_profit']]
+
+    dollar_cols = ['total_amount', 'total_wins', 'total_losses', 'total_profit']
+    grouped[dollar_cols] = grouped[dollar_cols].applymap(lambda x: f"${x:,.2f}")
+    
+    return grouped
 
 profit_per_model_yesterday = summarize(df_yesterday)
 profit_per_model_total = summarize(df)
