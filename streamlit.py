@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import pytz
-import np
+import numpy as np
 from datetime import datetime, timedelta
 import os
 from sqlalchemy import create_engine
