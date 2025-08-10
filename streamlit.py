@@ -107,6 +107,22 @@ st.table(combined)
 st.bar_chart(counts)
 
 
+
+df['profit'] = df['profit'].fillna(0)
+df['date'] = pd.to_datetime(df['date'])
+yesterday = datetime.now().date() - timedelta(days=1)
+df_yesterday = df[df['date'].dt.date == yesterday]
+profit_per_model_yesterday = df_yesterday.groupby('model_name')['profit'].sum().reset_index()
+profit_per_model_yesterday = profit_per_model_yesterday.sort_values(by='profit', ascending=False)
+profit_per_model_total = df.groupby('model_name')['profit'].sum().reset_index()
+profit_per_model_total = profit_per_model_total.sort_values(by='profit', ascending=False)
+st.subheader(f"Profit Per Model - {yesterday}")
+st.dataframe(profit_per_model_yesterday)
+st.subheader("Profit Per Model - All Time")
+st.dataframe(profit_per_model_total)
+
+
+
 st.subheader("Average Model Accuracy (PTS Differential)")
 accuracy = df.groupby("model_name")["pts_differential"].mean().reset_index()
 accuracy["pts_differential"] = accuracy["pts_differential"].round(2)
