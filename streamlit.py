@@ -218,3 +218,9 @@ st.subheader("Average Model Accuracy (PTS Differential)")
 accuracy = df.groupby("model_name")["pts_differential"].mean().reset_index()
 accuracy["pts_differential"] = accuracy["pts_differential"].round(2)
 st.bar_chart(accuracy.set_index("model_name"))
+
+
+
+
+df["abs_error"] = abs(df["predicted_points"] - df["actual_points"])
+mae = df.groupby("model_name")["abs_error"].mean()
