@@ -116,22 +116,22 @@ df_yesterday = df[df['date'].dt.date == yesterday]
 
 def summarize(df_input):
     grouped = df_input.groupby('model_name').agg(
-        total_amount=('amount', 'sum'),
-        total_wins=('profit', lambda x: x[x > 0].sum()),
-        total_losses=('profit', lambda x: x[x < 0].sum()),
+        bet_amount=('amount', 'sum'),
+        winnings_amount=('profit', lambda x: x[x > 0].sum()),
+        losses_amount=('profit', lambda x: x[x < 0].sum()),
         total_profit=('profit', 'sum')
     ).reset_index()
 
-    for col in ['total_amount', 'total_wins', 'total_losses', 'total_profit']:
+    for col in ['bet_amount', 'winnings_amount', 'losses_amount', 'total_profit']:
         if col not in grouped.columns:
             grouped[col] = 0
 
-    grouped = grouped[['model_name', 'total_amount', 'total_wins', 'total_losses', 'total_profit']]
+    grouped = grouped[['model_name', 'bet_amount', 'winnings_amount', 'losses_amount', 'total_profit']]
 
     def currency(x):
         return f"${x:,.2f}"
 
-    numeric_cols = ['total_amount', 'total_wins', 'total_losses', 'total_profit']
+    numeric_cols = ['bet_amount', 'winnings_amount', 'losses_amount', 'total_profit']
     styled_df = grouped.style.format({col: currency for col in numeric_cols})
 
     def highlight_positive(val):
@@ -147,8 +147,8 @@ def summarize(df_input):
             return 'color: red'
         return ''
 
-    styled_df = styled_df.applymap(highlight_positive, subset=['total_wins'])
-    styled_df = styled_df.applymap(highlight_negative, subset=['total_losses'])
+    styled_df = styled_df.applymap(highlight_positive, subset=['winnings_amount'])
+    styled_df = styled_df.applymap(highlight_negative, subset=['losses_amount'])
     styled_df = styled_df.applymap(highlight_profit, subset=['total_profit'])
 
     return styled_df
