@@ -52,6 +52,10 @@ for player in data["players"]:
         """, (player_name, props_date.date()))
         continue
 
+    if candidate_games.empty or pd.isna(candidate_games['points'].values[0]):
+        print(f"Skipping {player_name}, no game data")
+    continue
+
     actual_points = int(candidate_games['points'].values[0])
     player_team = candidate_games['team_name'].values[0]
 
