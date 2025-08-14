@@ -182,27 +182,27 @@ for model in daily_profit["model_name"].unique():
 
 
 
-df_valid = df[df['result'].isin(['WON', 'LOST'])]
-player_stats = (
-    df_valid.groupby(['model_name', 'player_name'])
-    .agg(
-        correct_bets=('result', lambda x: (x == 'WON').sum()),
-        total_bets=('result', 'count')
-    )
-    .reset_index()
-)
+result_df = df[df["result"].isin(["WON", "LOST"])]
+grouped = result_df.groupby(["model_name", "player_name"])["result"].agg(
+    total_bets="count",
+    correct_bets=lambda x: (x == "WON").sum()
+).reset_index()
 
-player_stats['accuracy'] = player_stats['correct_bets'] / player_stats['total_bets']
-player_stats = player_stats.sort_values('accuracy', ascending=False)
-st.subheader("Most Accurate Players per Model (Correct Bets / Total Bets)")
+grouped["accuracy"] = grouped["correct_bets"] / grouped["total_bets"]
+grouped = grouped.sort_values("accuracy", ascending=False)
+grouped["label"] = grouped["correct_bets"].astype(str) + " / " + grouped["total_bets"].astype(str)
+st.subheader("Most Correct Bet Players per Model")
 
-for model in player_stats['model_name'].unique():
-    model_df = player_stats[player_stats['model_name'] == model]
-    st.write(f"### {model}")
+for model in grouped["model_name"].unique():
+    model_df = grouped[grouped["model_name"] == model]
+
+    st.write(f"**Model: {model}**")
     st.bar_chart(
-        model_df.set_index('player_name')['accuracy'],
-        use_container_width=True
+        model_df.set_index("player_name")[["accuracy"]],
+        height=300
     )
+
+    st.dataframe(model_df[["player_name", "correct_bets", "total_bets", "accuracy", "label"]])
 
 
 
