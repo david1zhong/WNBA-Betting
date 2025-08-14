@@ -182,22 +182,25 @@ for model in daily_profit["model_name"].unique():
 
 
 
-won_df = df[df["result"] == "WON"]
-correct_counts = (
-    won_df.groupby(["model_name", "player_name"])
-    .size()
-    .reset_index(name="correct_bets")
+df_valid = df[df['result'].isin(['WON', 'LOST'])]
+player_stats = (
+    df_valid.groupby(['model_name', 'player_name'])
+    .agg(
+        correct_bets=('result', lambda x: (x == 'WON').sum()),
+        total_bets=('result', 'count')
+    )
+    .reset_index()
 )
 
-top_players_per_model = correct_counts.groupby("model_name").apply(
-    lambda g: g.nlargest(5, "correct_bets")
-).reset_index(drop=True)
+player_stats['accuracy'] = player_stats['correct_bets'] / player_stats['total_bets']
+player_stats = player_stats.sort_values('accuracy', ascending=False)
+st.subheader("Most Accurate Players per Model (Correct Bets / Total Bets)")
 
-st.subheader("Most Correct Bet Players Per Model")
-for model in top_players_per_model["model_name"].unique():
-    model_data = top_players_per_model[top_players_per_model["model_name"] == model]
+for model in player_stats['model_name'].unique():
+    model_df = player_stats[player_stats['model_name'] == model]
+    st.write(f"### {model}")
     st.bar_chart(
-        data=model_data.set_index("player_name")["correct_bets"],
+        model_df.set_index('player_name')['accuracy'],
         use_container_width=True
     )
 
