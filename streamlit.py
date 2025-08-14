@@ -182,6 +182,29 @@ for model in daily_profit["model_name"].unique():
 
 
 
+won_df = df[df["result"] == "WON"]
+correct_counts = (
+    won_df.groupby(["model_name", "player_name"])
+    .size()
+    .reset_index(name="correct_bets")
+)
+
+top_players_per_model = correct_counts.groupby("model_name").apply(
+    lambda g: g.nlargest(5, "correct_bets")
+).reset_index(drop=True)
+
+st.subheader("Most Correct Bet Players Per Model")
+for model in top_players_per_model["model_name"].unique():
+    model_data = top_players_per_model[top_players_per_model["model_name"] == model]
+    st.bar_chart(
+        data=model_data.set_index("player_name")["correct_bets"],
+        use_container_width=True
+    )
+
+
+
+
+
 st.subheader("Over/Under Bets Summary per Model")
 ou_df = df[(df["bet"].isin(["OVER", "UNDER"])) & (df["result"].isin(["WON", "LOST"]))]
 counts = ou_df.groupby(["model_name", "bet"]).size().unstack(fill_value=0)
