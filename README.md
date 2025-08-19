@@ -9,11 +9,11 @@ Automated system predicting WNBA player performance by analyzing historical poin
 **THERE IS NO CREDIBLE OR PEER-REVIEWED SCIENTIFIC EVIDENCE ESTABLISHING ANY CORRELATION BETWEEN BASKETBALL PERFORMANCE AND THE MENSTRUAL CYCLE.**
 **THIS PROJECT IS PRESENTED SOLELY AS AN ACADEMIC EXPLORATION AND SHOULD NOT BE INTERPRETED AS ENDORSING, SUPPORTING, OR PROMOTING ANY SUCH PRACTICES.**
 
-## Features
-- Pulls NFL game information, including team matchups, start times, and betting odds (spread, moneyline, totals), by querying an AWS Lambda API with data cached in S3 every 12 hours.
-- Betting odds are from DraftKings US provided by The Odds API.
-- Users can place bets or parlays on games with a wager cap of $15k.
-- Bets are then recorded on a Google Sheet (had a MongoDB implentation but found that Google Sheets was more practical for my usage).
+## Actions
+- 7 AM EST: Last night's WNBA player statistics are downloaded from the [SportsDataVerse wehoop WNBA data GitHub repository](https://github.com/sportsdataverse/wehoop-wnba-data).
+- 8 AM EST: Python script goes through the playerbox, updating the player's points scored, team name, and updating fields such as result (won/lost), points differential (actual - predicted), and profit (+/-).
+- 10 AM EST: Today's WNBA player point props are scraped from [ScoresAndOdds.com](https://www.scoresandodds.com/wnba/props), and recorded in props.json.
+- 11 AM EST: Various AI generated prediction models will try and determine whether the player will score over or under the line set by the books. Their bet (over/under), performance note, and bet amount will be recorded along with the date, player name, model name, predicted points, actual points, over line, under line, over odds, and under odds.
 
 ## Technologies
 - React
