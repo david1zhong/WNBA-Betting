@@ -12,6 +12,8 @@ import os
 
 warnings.filterwarnings('ignore')
 
+load_dotenv()
+
 # Database connection setup
 USER = os.getenv("DB_USER")
 PASSWORD = os.getenv("DB_PASSWORD")
