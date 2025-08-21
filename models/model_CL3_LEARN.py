@@ -12,21 +12,18 @@ import os
 
 warnings.filterwarnings('ignore')
 
-load_dotenv()
-
-# Database connection setup
 USER = os.getenv("DB_MODEL_USER")
 PASSWORD = os.getenv("DB_MODEL_PASSWORD")
 HOST = os.getenv("DB_MODEL_HOST")
-PORT = os.getenv("DB_MODEL_PORT", "6543")
-PORT = "".join(filter(str.isdigit, PORT))
+PORT = os.getenv("DB_MODEL_PORT")
 DBNAME = os.getenv("DB_MODEL_NAME")
 
-DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
-print(f"DB URL: postgresql+psycopg2://{USER}:***@{HOST}:{PORT}/{DBNAME}?sslmode=require")
-engine = create_engine(DATABASE_URL)
+DATABASE_URL = (
+    f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}"
+    f"?sslmode=require&client_encoding=utf8"
+)
 
-
+engine = create_engine(DATABASE_URL, echo=False, future=True)
 
 
 class WNBALearningPatternDetector:
