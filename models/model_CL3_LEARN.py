@@ -23,7 +23,10 @@ PORT = "".join(filter(str.isdigit, PORT))
 DBNAME = os.getenv("DB_MODEL_NAME")
 
 DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
+print(f"DB URL: postgresql+psycopg2://{USER}:***@{HOST}:{PORT}/{DBNAME}?sslmode=require")
 engine = create_engine(DATABASE_URL)
+
+
 
 
 class WNBALearningPatternDetector:
