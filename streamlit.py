@@ -104,7 +104,6 @@ totals = counts.sum(axis=1)
 percent_df = counts.div(totals, axis=0).multiply(100).round(1).astype(str) + "%"
 combined = counts.astype(str) + " (" + percent_df + ")"
 st.table(combined)
-st.bar_chart(counts)
 
 
 
