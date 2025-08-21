@@ -93,7 +93,6 @@ percent_df_yesterday = percent_df_yesterday.round(1).astype(str) + "%"
 combined_yesterday = counts_yesterday.astype(str) + " (" + percent_df_yesterday + ")"
 
 st.table(combined_yesterday)
-st.bar_chart(counts_yesterday)
 
 
 
