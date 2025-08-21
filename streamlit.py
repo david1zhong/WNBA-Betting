@@ -196,12 +196,6 @@ st.subheader("Most Correct Bet Players per Model")
 for model in grouped["model_name"].unique():
     model_df = grouped[grouped["model_name"] == model]
 
-    st.write(f"**Model: {model}**")
-    st.bar_chart(
-        model_df.set_index("player_name")[["accuracy"]],
-        height=300
-    )
-
     st.dataframe(model_df[["player_name", "correct_bets", "total_bets", "accuracy", "label"]])
 
 
@@ -259,12 +253,3 @@ metrics_df = metrics_df.round(3)
 
 st.subheader("Model Error Metrics (Points Differential)")
 st.dataframe(metrics_df)
-
-st.subheader("Mean Absolute Error (MAE)")
-st.bar_chart(metrics_df.set_index("model_name")["MAE"])
-
-st.subheader("Root Mean Squared Error (RMSE)")
-st.bar_chart(metrics_df.set_index("model_name")["RMSE"])
-
-st.subheader("Standard Deviation (STD)")
-st.bar_chart(metrics_df.set_index("model_name")["STD"])
