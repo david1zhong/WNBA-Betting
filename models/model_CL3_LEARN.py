@@ -15,12 +15,11 @@ warnings.filterwarnings('ignore')
 load_dotenv()
 
 # Database connection setup
-USER = os.getenv("DB_USER")
-PASSWORD = os.getenv("DB_PASSWORD")
-HOST = os.getenv("DB_HOST")
-PORT = os.getenv("DB_PORT", "6543")
-PORT = PORT.strip("() ,")
-DBNAME = os.getenv("DB_NAME")
+USER = os.getenv("DB_MODEL_USER")
+PASSWORD = os.getenv("DB_MODEL_PASSWORD")
+HOST = os.getenv("DB_MODEL_HOST")
+PORT = os.getenv("DB_MODEL_PORT")
+DBNAME = os.getenv("DB_MODEL-NAME")
 
 DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}?sslmode=require"
 engine = create_engine(DATABASE_URL)
