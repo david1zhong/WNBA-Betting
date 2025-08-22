@@ -25,10 +25,9 @@ jobs:
 
       - name: Run master_file.py
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DB_MODEL_USER: ${{ secrets.DB_MODEL_USER }}
-          DB_MODEL_PASSWORD: ${{ secrets.DB_MODEL_PASSWORD }}
-          DB_MODEL_HOST: ${{ secrets.DB_MODEL_HOST }}
-          DB_MODEL_PORT: ${{ secrets.DB_MODEL_PORT }}
-          DB_MODEL_NAME: ${{ secrets.DB_MODEL_NAME }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
         run: python master_file.py
