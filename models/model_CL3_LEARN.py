@@ -5,25 +5,21 @@ import pytz
 import json
 import warnings
 import psycopg2
-from sqlalchemy import create_engine, text
 from collections import defaultdict
 from dotenv import load_dotenv
 import os
 
 warnings.filterwarnings('ignore')
 
-USER = os.getenv("DB_MODEL_USER")
-PASSWORD = os.getenv("DB_MODEL_PASSWORD")
-HOST = os.getenv("DB_MODEL_HOST")
-PORT = os.getenv("DB_MODEL_PORT")
-DBNAME = os.getenv("DB_MODEL_NAME")
-
-DATABASE_URL = (
-    f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}"
-    f"?sslmode=require&client_encoding=utf8"
+# Database connection setup
+conn = psycopg2.connect(
+    dbname=os.getenv("DB_NAME"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    host=os.getenv("DB_HOST"),
+    port=5432
 )
-
-engine = create_engine(DATABASE_URL, echo=False, future=True)
+cur = conn.cursor()
 
 
 class WNBALearningPatternDetector:
@@ -54,35 +50,38 @@ class WNBALearningPatternDetector:
     def get_historical_betting_data(self, player_name):
         """Fetch historical betting results for a specific player"""
         try:
-            with engine.connect() as connection:
-                # Query to get all bets for this player from previous models
-                query = text("""
-                    SELECT 
-                        model_name,
-                        bet as predicted_bet,
-                        result as actual_result,
-                        predicted_pts as predicted_points,
-                        actual_pts as actual_points,
-                        over_line,
-                        under_line,
-                        date
-                    FROM predictions 
-                    WHERE LOWER(TRIM(player_name)) = LOWER(TRIM(:player_name))
-                    AND model_name IN ('model_CL1', 'model_CL2')
-                    ORDER BY date DESC
-                """)
+            # Query to get all bets for this player from previous models
+            query = """
+                SELECT 
+                    model_name,
+                    bet as predicted_bet,
+                    result as actual_result,
+                    predicted_pts as predicted_points,
+                    actual_pts as actual_points,
+                    over_line,
+                    under_line,
+                    date
+                FROM predictions 
+                WHERE LOWER(TRIM(player_name)) = LOWER(TRIM(%s))
+                AND model_name IN ('model_CL1', 'model_CL2')
+                ORDER BY date DESC
+            """
 
-                result = connection.execute(query, {"player_name": player_name})
-                df = pd.DataFrame(result.fetchall(), columns=result.keys())
+            cur.execute(query, (player_name,))
+            results = cur.fetchall()
 
-                print(f"DEBUG: Found {len(df)} historical bets for {player_name}")
-                if not df.empty:
-                    print(
-                        f"DEBUG: Bet distribution - OVER: {sum(df['predicted_bet'] == 'OVER')}, UNDER: {sum(df['predicted_bet'] == 'UNDER')}")
-                    print(
-                        f"DEBUG: Result distribution - WON: {sum(df['actual_result'] == 'WON')}, LOST: {sum(df['actual_result'] == 'LOST')}")
+            # Get column names
+            columns = [desc[0] for desc in cur.description]
+            df = pd.DataFrame(results, columns=columns)
 
-                return df if not df.empty else None
+            print(f"DEBUG: Found {len(df)} historical bets for {player_name}")
+            if not df.empty:
+                print(
+                    f"DEBUG: Bet distribution - OVER: {sum(df['predicted_bet'] == 'OVER')}, UNDER: {sum(df['predicted_bet'] == 'UNDER')}")
+                print(
+                    f"DEBUG: Result distribution - WON: {sum(df['actual_result'] == 'WON')}, LOST: {sum(df['actual_result'] == 'LOST')}")
+
+            return df if not df.empty else None
 
         except Exception as e:
             print(f"Error fetching historical data for {player_name}: {e}")
@@ -842,7 +841,6 @@ def predict(player):
 
             print()
 
-
             return {
                 "predicted_points": round(final_predicted_points),
                 "bet": bet,
@@ -860,11 +858,20 @@ def predict(player):
         print(f"Prediction not generated for {player_name}")
         return None
 
+
+# Close database connections when done
+def close_db_connection():
+    """Close database connections"""
+    if cur:
+        cur.close()
+    if conn:
+        conn.close()
+
+
 """
 # Testing block
 if __name__ == "__main__":
     import json
-
 
     try:
         with open('props.json', 'r') as f:
@@ -878,15 +885,20 @@ if __name__ == "__main__":
             }
             result = predict(player_info)
 
-
             # Only print if we have a valid prediction (clear menstrual pattern found)
             if result is not None:
                 print(f"{player['name']} predicted points: {result['predicted_points']}")
                 print(f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
                 print(f"Bet Amount: ${result['amount']}" if result['amount'] else "No bet recommended")
                 print()
+
+        # Close database connection when done
+        close_db_connection()
+
     except FileNotFoundError:
         print("props.json file not found")
     except Exception as e:
         print(f"Error: {e}")
+    finally:
+        close_db_connection()
 """
