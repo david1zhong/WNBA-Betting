@@ -897,20 +897,20 @@ class PointPredictor:
         # Categorize performance
         if avg_pts >= 20:
             if stdev_pts <= 3:
-                return "consistently excellent"
+                return "Very Good Game"
             else:
-                return "high variance scoring"
+                return "Good game"
         elif avg_pts >= 15:
             if stdev_pts <= 4:
-                return "solid consistent"
+                return "Above Average Game"
             else:
-                return "average performance"
+                return "Average Game"
         elif avg_pts >= 10:
-            return "below average"
+            return "Below Average"
         elif avg_pts >= 5:
-            return "poor performance"
+            return "Bad Game"
         else:
-            return "very bad"
+            return "Very Bad Game"
 
 
 # -------------------------------------------------------------------------------------------------
