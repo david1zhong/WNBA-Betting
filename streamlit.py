@@ -298,7 +298,7 @@ sportsbook_metrics = sportsbook_metrics.round(3)
 sportsbook_metrics_df = pd.DataFrame([sportsbook_metrics])
 sportsbook_metrics_df.index = ['Sportsbook']
 
-#st.dataframe(sportsbook_metrics_df)
+st.dataframe(sportsbook_metrics_df)
 
 if len(odds_columns) >= 2:
     st.write(f"Average vig removed: {((df['total_prob'] - 1) * 100).mean():.1f}%")
