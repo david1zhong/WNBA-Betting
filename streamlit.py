@@ -251,3 +251,20 @@ metrics_df = metrics_df.round(3)
 
 st.subheader("Model Error Metrics (Points Differential)")
 st.dataframe(metrics_df)
+
+
+
+
+book_df = df.copy()
+book_df["book_pred"] = book_df["over_line"]
+book_df["book_error"] = book_df["actual_pts"] - book_df["book_pred"]
+
+book_metrics = pd.Series({
+    "MAE": np.mean(np.abs(book_df["book_error"])),
+    "RMSE": np.sqrt(np.mean(book_df["book_error"]**2)),
+    "STD": np.std(book_df["book_error"]),
+    "Bias (Mean Error)": np.mean(book_df["book_error"])
+}).round(3)
+
+st.subheader("Sportsbook Error Metrics (Points Differential)")
+st.write(book_metrics.to_frame("Value"))
