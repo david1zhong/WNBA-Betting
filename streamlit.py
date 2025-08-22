@@ -255,34 +255,62 @@ st.dataframe(metrics_df)
 
 
 
-if {"over_line", "under_line", "actual_pts", "over_odds", "under_odds"}.issubset(df.columns):
-    actual = df["actual_pts"].astype(float)
-    line = df["over_line"].astype(float)
-    over_odds = df["over_odds"].astype(float)
-    under_odds = df["under_odds"].astype(float)
 
-    def american_to_prob(odds):
-        if odds < 0:
-            return (-odds) / ((-odds) + 100)
-        else:
-            return 100 / (odds + 100)
+st.subheader("Sportsbook Error Metrics (Points Differential)")
 
-    p_over = over_odds.apply(american_to_prob)
-    p_under = under_odds.apply(american_to_prob)
-    total = p_over + p_under
-    p_over = p_over / total
-    p_under = p_under / total
-    adjustment = (p_over - p_under) * 0.5
-    book_pred = line + adjustment
-    book_error = actual - book_pred
+def american_odds_to_probability(odds):
+    if odds > 0:
+        return 100 / (odds + 100)
+    else:
+        return abs(odds) / (abs(odds) + 100)
 
-    book_metrics = pd.DataFrame({
-        "MAE": [np.mean(np.abs(book_error))],
-        "RMSE": [np.sqrt(np.mean(book_error**2))],
-        "STD": [np.std(book_error)],
-        "Bias (Mean Error)": [np.mean(book_error)]
-    }).round(3)
+odds_columns = [col for col in df.columns if 'odds' in col.lower()]
 
-    st.subheader("Sportsbook Error Metrics (Shaded Lines)")
-    st.dataframe(book_metrics, use_container_width=True)
+if len(odds_columns) >= 2:
+    over_odds_col = [col for col in odds_columns if 'over' in col.lower()][0]
+    under_odds_col = [col for col in odds_columns if 'under' in col.lower()][0]
+    
+    df['over_prob'] = df[over_odds_col].apply(american_odds_to_probability)
+    df['under_prob'] = df[under_odds_col].apply(american_odds_to_probability)
+    
+    df['total_prob'] = df['over_prob'] + df['under_prob']
+    df['over_prob_no_vig'] = df['over_prob'] / df['total_prob']
+    df['under_prob_no_vig'] = df['under_prob'] / df['total_prob']
+    
+    df['sportsbook_prediction'] = (df['over_line'] * df['under_prob_no_vig'] + 
+                                   df['under_line'] * df['over_prob_no_vig'])
+    
+    st.write("*Using odds-adjusted sportsbook predictions*")
+    
+elif 'over_line' in df.columns and 'under_line' in df.columns:
+    df['sportsbook_prediction'] = (df['over_line'] + df['under_line']) / 2
+    
 
+df['sportsbook_differential'] = df['sportsbook_prediction'] - df['actual_pts']
+
+sportsbook_metrics = pd.Series({
+    "MAE": np.mean(np.abs(df["sportsbook_differential"])),
+    "RMSE": np.sqrt(np.mean((df["sportsbook_differential"])**2)),
+    "STD": np.std(df["sportsbook_differential"])
+})
+
+sportsbook_metrics = sportsbook_metrics.round(3)
+sportsbook_metrics_df = pd.DataFrame([sportsbook_metrics])
+sportsbook_metrics_df.index = ['Sportsbook']
+
+st.dataframe(sportsbook_metrics_df)
+
+if len(odds_columns) >= 2:
+    st.write(f"Average vig removed: {((df['total_prob'] - 1) * 100).mean():.1f}%")
+
+st.subheader("Model vs Sportsbook Error Comparison")
+comparison_df = metrics_df.copy()
+sportsbook_row = pd.DataFrame({
+    'model_name': ['Sportsbook'],
+    'MAE': [sportsbook_metrics['MAE']],
+    'RMSE': [sportsbook_metrics['RMSE']],
+    'STD': [sportsbook_metrics['STD']]
+})
+comparison_df = pd.concat([comparison_df, sportsbook_row], ignore_index=True)
+comparison_df = comparison_df.sort_values('MAE')
+st.dataframe(comparison_df)
