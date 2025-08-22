@@ -255,16 +255,41 @@ st.dataframe(metrics_df)
 
 
 
+def american_to_prob(odds):
+    if odds < 0:
+        return (-odds) / ((-odds) + 100)
+    else:
+        return 100 / (odds + 100)
+
+def remove_vig(p_over, p_under):
+    total = p_over + p_under
+    return p_over / total, p_under / total
+
 book_df = df.copy()
-book_df["book_pred"] = book_df["over_line"]
-book_df["book_error"] = book_df["actual_pts"] - book_df["book_pred"]
 
-book_metrics = pd.Series({
-    "MAE": np.mean(np.abs(book_df["book_error"])),
-    "RMSE": np.sqrt(np.mean(book_df["book_error"]**2)),
-    "STD": np.std(book_df["book_error"]),
-    "Bias (Mean Error)": np.mean(book_df["book_error"])
-}).round(3)
+if {"over_line", "actual_pts"}.issubset(df.columns):
+    book_df["book_pred"] = book_df["over_line"].astype(float)
 
-st.subheader("Sportsbook Error Metrics (Points Differential)")
-st.write(book_metrics.to_frame("Value"))
+    if {"over_odds", "under_odds"}.issubset(df.columns):
+        book_df["p_over"] = book_df["over_odds"].astype(float).apply(american_to_prob)
+        book_df["p_under"] = book_df["under_odds"].astype(float).apply(american_to_prob)
+
+        book_df[["p_over", "p_under"]] = book_df.apply(
+            lambda x: pd.Series(remove_vig(x["p_over"], x["p_under"])), axis=1
+        )
+
+        book_df["adjustment"] = (book_df["p_over"] - book_df["p_under"]) * 0.5
+        book_df["book_pred"] = book_df["book_pred"] + book_df["adjustment"]
+
+    book_df["book_error"] = book_df["actual_pts"].astype(float) - book_df["book_pred"]
+
+    book_metrics = pd.DataFrame({
+        "MAE": [np.mean(np.abs(book_df["book_error"]))],
+        "RMSE": [np.sqrt(np.mean(book_df["book_error"]**2))],
+        "STD": [np.std(book_df["book_error"])],
+        "Bias (Mean Error)": [np.mean(book_df["book_error"])]
+    }).round(3)
+
+    st.subheader("Sportsbook Error Metrics (Points Differential)")
+    st.dataframe(book_metrics, use_container_width=True)
+
