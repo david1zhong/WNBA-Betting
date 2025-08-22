@@ -240,7 +240,7 @@ st.bar_chart(accuracy.set_index("model_name"))
 
 
 
-
+"""
 metrics_df = df.groupby("model_name").apply(lambda x: pd.Series({
     "MAE": np.mean(np.abs(x["pts_differential"])),
     "RMSE": np.sqrt(np.mean((x["pts_differential"])**2)),
@@ -251,7 +251,7 @@ metrics_df = metrics_df.round(3)
 
 st.subheader("Model Error Metrics (Points Differential)")
 st.dataframe(metrics_df)
-
+"""
 
 
 
@@ -298,7 +298,7 @@ sportsbook_metrics = sportsbook_metrics.round(3)
 sportsbook_metrics_df = pd.DataFrame([sportsbook_metrics])
 sportsbook_metrics_df.index = ['Sportsbook']
 
-st.dataframe(sportsbook_metrics_df)
+#st.dataframe(sportsbook_metrics_df)
 
 if len(odds_columns) >= 2:
     st.write(f"Average vig removed: {((df['total_prob'] - 1) * 100).mean():.1f}%")
