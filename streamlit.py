@@ -300,8 +300,10 @@ sportsbook_metrics_df.index = ['Sportsbook']
 
 #st.dataframe(sportsbook_metrics_df)
 
+"""
 if len(odds_columns) >= 2:
     st.write(f"Average sportsbook edge removed: {((df['total_prob'] - 1) * 100).mean():.1f}%")
+"""
 
 st.subheader("Model vs Sportsbook Error Comparison")
 comparison_df = metrics_df.copy()
