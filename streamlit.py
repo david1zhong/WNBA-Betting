@@ -257,7 +257,7 @@ st.dataframe(metrics_df)
 
 
 
-st.subheader("Sportsbook Error Metrics (Points Differential)")
+#st.subheader("Sportsbook Error Metrics (Points Differential)")
 
 def american_odds_to_probability(odds):
     if odds > 0:
@@ -281,7 +281,6 @@ if len(odds_columns) >= 2:
     df['sportsbook_prediction'] = (df['over_line'] * df['under_prob_no_vig'] + 
                                    df['under_line'] * df['over_prob_no_vig'])
     
-    st.write("*Using odds-adjusted sportsbook predictions*")
     
 elif 'over_line' in df.columns and 'under_line' in df.columns:
     df['sportsbook_prediction'] = (df['over_line'] + df['under_line']) / 2
@@ -302,7 +301,7 @@ sportsbook_metrics_df.index = ['Sportsbook']
 #st.dataframe(sportsbook_metrics_df)
 
 if len(odds_columns) >= 2:
-    st.write(f"Average vig removed: {((df['total_prob'] - 1) * 100).mean():.1f}%")
+    st.write(f"Average sportsbook edge removed: {((df['total_prob'] - 1) * 100).mean():.1f}%")
 
 st.subheader("Model vs Sportsbook Error Comparison")
 comparison_df = metrics_df.copy()
