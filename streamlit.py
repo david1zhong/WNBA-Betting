@@ -255,37 +255,34 @@ st.dataframe(metrics_df)
 
 
 
-book_df = df.copy()
+if {"over_line", "under_line", "actual_pts", "over_odds", "under_odds"}.issubset(df.columns):
+    actual = df["actual_pts"].astype(float)
+    line = df["over_line"].astype(float)
+    over_odds = df["over_odds"].astype(float)
+    under_odds = df["under_odds"].astype(float)
 
-if {"over_line", "actual_pts"}.issubset(book_df.columns):
-    book_df["book_pred"] = book_df["over_line"].astype(float)
+    def american_to_prob(odds):
+        if odds < 0:
+            return (-odds) / ((-odds) + 100)
+        else:
+            return 100 / (odds + 100)
 
-    if {"over_odds", "under_odds"}.issubset(book_df.columns):
-        def american_to_prob(odds):
-            odds = float(odds)
-            if odds < 0:
-                return (-odds) / ((-odds) + 100)
-            else:
-                return 100 / (odds + 100)
-
-        def remove_vig(p_over, p_under):
-            total = p_over + p_under
-            return p_over / total, p_under / total
-
-        p = book_df.apply(lambda x: remove_vig(american_to_prob(x["over_odds"]), american_to_prob(x["under_odds"])), axis=1)
-        book_df["p_over"], book_df["p_under"] = zip(*p)
-
-        book_df["adjustment"] = (book_df["p_over"] - book_df["p_under"]) * 0.5
-        book_df["book_pred"] += book_df["adjustment"]
-
-    book_df["book_error"] = book_df["actual_pts"].astype(float) - book_df["book_pred"]
+    p_over = over_odds.apply(american_to_prob)
+    p_under = under_odds.apply(american_to_prob)
+    total = p_over + p_under
+    p_over = p_over / total
+    p_under = p_under / total
+    adjustment = (p_over - p_under) * 0.5
+    book_pred = line + adjustment
+    book_error = actual - book_pred
 
     book_metrics = pd.DataFrame({
-        "MAE": [np.mean(np.abs(book_df["book_error"]))],
-        "RMSE": [np.sqrt(np.mean(book_df["book_error"]**2))],
-        "STD": [np.std(book_df["book_error"])],
-        "Bias (Mean Error)": [np.mean(book_df["book_error"])]
+        "MAE": [np.mean(np.abs(book_error))],
+        "RMSE": [np.sqrt(np.mean(book_error**2))],
+        "STD": [np.std(book_error)],
+        "Bias (Mean Error)": [np.mean(book_error)]
     }).round(3)
 
-    st.subheader("Sportsbook Error Metrics (Points Differential)")
+    st.subheader("Sportsbook Error Metrics (Shaded Lines)")
     st.dataframe(book_metrics, use_container_width=True)
+
