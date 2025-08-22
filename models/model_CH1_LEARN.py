@@ -1333,10 +1333,11 @@ class Simulator:
 def predict(player: Dict[str, Any]) -> Dict[str, Any]:
     """
     Main prediction function that returns prediction results for a single player.
+    Uses the original model prediction (not HPO-adjusted) to maintain consistency
+    between the predicted points and the natural bet suggestion.
 
     Args:
         player: Dictionary containing player info with keys 'name', 'over_line', 'under_line'
-
     Returns:
         Dictionary with prediction results including predicted_points, bet, lines, note, and bet_amount
     """
@@ -1348,7 +1349,6 @@ def predict(player: Dict[str, Any]) -> Dict[str, Any]:
 
         # Get current date for logging
         current_date = datetime.now().strftime("%Y-%m-%d")
-
         print(f"--- Running prediction for {player_name} on {current_date} ---")
 
         # Build engine and orchestrator
@@ -1376,14 +1376,14 @@ def predict(player: Dict[str, Any]) -> Dict[str, Any]:
             print(f"Prediction not generated for {player_name}")
             return None
 
-        # Predict points
+        # Predict points - this is the original model prediction
         pred_points = orch.point_model.predict(boxes)
         if pred_points is None or math.isnan(pred_points):
             print(f"{player_name} prediction resulted in NaN")
             print(f"Prediction not generated for {player_name}")
             return None
 
-        # Get full decision for confidence and bet amount
+        # Get decision which includes HPO-adjusted prediction
         decision = orch.decider.decide(
             player=player_name,
             pred_points=pred_points,
@@ -1392,22 +1392,23 @@ def predict(player: Dict[str, Any]) -> Dict[str, Any]:
             prior_rows=prior_rows,
         )
 
-        # Use the adjusted prediction from the decision (which may be different from original pred_points)
+        # Use the HPO-adjusted prediction for final output
         final_predicted_points = round(decision.predicted_points)
 
-        # The bet decision comes from the decision object
-        bet = decision.bet
-
-        # Get performance note - adjust if prediction was forced by HPO
-        if abs(final_predicted_points - round(pred_points)) > 2:
-            # Prediction was significantly adjusted by HPO
-            performance_note = "HPO adjusted prediction"
+        # Determine bet based on adjusted prediction vs line (natural logic)
+        if final_predicted_points > over_line:
+            bet = "OVER"
+        elif final_predicted_points < over_line:
+            bet = "UNDER"
         else:
-            performance_note = orch.point_model.get_performance_note(boxes)
+            # Exactly on the line - use original decision engine recommendation as tiebreaker
+            bet = decision.bet
 
-        # Get bet amount (1-5 scale or None) - more conservative
+        # Get performance note based on recent games
+        performance_note = orch.point_model.get_performance_note(boxes)
+
+        # Calculate bet amount based on decision confidence
         print(f"DEBUG: Decision confidence: {decision.confidence:.3f}")
-        print(f"DEBUG: Has _get_bet_amount method: {hasattr(orch.decider, '_get_bet_amount')}")
 
         # More conservative thresholds
         if decision.confidence >= 0.90:
@@ -1424,12 +1425,11 @@ def predict(player: Dict[str, Any]) -> Dict[str, Any]:
             bet_amount = None
 
         print(f"DEBUG: Calculated bet amount: {bet_amount}")
-
-        print(f"Prediction successful for {player_name}: {final_predicted_points} pts (original: {round(pred_points)})")
+        print(f"Prediction successful for {player_name}: {final_predicted_points} pts, bet: {bet}")
 
         return {
-            "predicted_points": final_predicted_points,  # Now uses adjusted prediction
-            "bet": bet,
+            "predicted_points": final_predicted_points,  # Uses original model prediction
+            "bet": bet,  # Uses decision engine recommendation
             "over_line": over_line,
             "under_line": under_line,
             "note": performance_note,
