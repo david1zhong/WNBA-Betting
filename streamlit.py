@@ -182,20 +182,15 @@ for model in daily_profit["model_name"].unique():
 
 
 
-st.subheader("Residual Plots with Confidence Bands")
+st.subheader("Residual Funnel Plots")
 
 for model in df["model_name"].unique():
     model_df = df[df["model_name"] == model].copy()
     model_df = model_df.sort_values("date")
     model_df["residual"] = model_df["actual_pts"] - model_df["predicted_pts"]
-    window = 10
-    model_df["rolling_std"] = model_df["residual"].rolling(window=window, min_periods=1).std()
-    model_df["upper_band"] = 2 * model_df["rolling_std"]
-    model_df["lower_band"] = -2 * model_df["rolling_std"]
-    chart_df = model_df[["date", "residual", "upper_band", "lower_band"]]
-    chart_df = chart_df.set_index("date")
-    st.write(f"### Residuals with Confidence Bands — {model}")
-    st.line_chart(chart_df)
+    chart_df = model_df[["date", "residual"]].set_index("date")
+    st.write(f"### Residual Funnel — {model}")
+    st.scatter_chart(chart_df)
 
 
 
