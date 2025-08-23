@@ -1,173 +1,173 @@
 {
-  "_comment": "21 player props as of 2025-08-22 10:09 EDT",
+  "_comment": "21 player props as of 2025-08-23 10:07 EDT",
   "players": [
     {
-      "name": "Kelsey Mitchell",
-      "date": "2025-08-22",
-      "over_line": "20.5",
-      "over_odds": "-115",
-      "under_line": "20.5",
-      "under_odds": "-110"
+      "name": "A'ja Wilson",
+      "date": "2025-08-23",
+      "over_line": "22.5",
+      "over_odds": "-125",
+      "under_line": "23.5",
+      "under_odds": "-120"
     },
     {
-      "name": "Paige Bueckers",
-      "date": "2025-08-22",
-      "over_line": "19.5",
-      "over_odds": "+105",
-      "under_line": "19.5",
+      "name": "Allisha Gray",
+      "date": "2025-08-23",
+      "over_line": "17.5",
+      "over_odds": "-125",
+      "under_line": "17.5",
       "under_odds": "-125"
     },
     {
-      "name": "Napheesa Collier",
-      "date": "2025-08-22",
-      "over_line": "18.5",
-      "over_odds": "-115",
-      "under_line": "18.5",
-      "under_odds": "-110"
-    },
-    {
-      "name": "Nneka Ogwumike",
-      "date": "2025-08-22",
+      "name": "Sabrina Ionescu",
+      "date": "2025-08-23",
       "over_line": "17.5",
-      "over_odds": "-114",
+      "over_odds": "-106",
       "under_line": "17.5",
-      "under_odds": "-114"
+      "under_odds": "-120"
     },
     {
-      "name": "Satou Sabally",
-      "date": "2025-08-22",
+      "name": "Jonquel Jones",
+      "date": "2025-08-23",
       "over_line": "16.5",
       "over_odds": "-120",
       "under_line": "16.5",
       "under_odds": "-120"
     },
     {
-      "name": "Alyssa Thomas",
-      "date": "2025-08-22",
+      "name": "Ariel Atkins",
+      "date": "2025-08-23",
       "over_line": "15.5",
-      "over_odds": "-105",
+      "over_odds": "-118",
       "under_line": "15.5",
-      "under_odds": "-120"
+      "under_odds": "-118"
     },
     {
-      "name": "Skylar Diggins",
-      "date": "2025-08-22",
-      "over_line": "14.5",
-      "over_odds": "-108",
-      "under_line": "14.5",
-      "under_odds": "-115"
-    },
-    {
-      "name": "Maddy Siegrist",
-      "date": "2025-08-22",
-      "over_line": "14.5",
-      "over_odds": "-105",
-      "under_line": "14.5",
-      "under_odds": "-115"
-    },
-    {
-      "name": "Aliyah Boston",
-      "date": "2025-08-22",
-      "over_line": "14.5",
-      "over_odds": "-125",
-      "under_line": "14.5",
-      "under_odds": "-125"
-    },
-    {
-      "name": "Kayla McBride",
-      "date": "2025-08-22",
-      "over_line": "14.5",
-      "over_odds": "-125",
-      "under_line": "14.5",
-      "under_odds": "-125"
-    },
-    {
-      "name": "Brittney Sykes",
-      "date": "2025-08-22",
-      "over_line": "13.5",
+      "name": "Rhyne Howard",
+      "date": "2025-08-23",
+      "over_line": "15.5",
       "over_odds": "-120",
-      "under_line": "13.5",
-      "under_odds": "-104"
+      "under_line": "15.5",
+      "under_odds": "+105"
     },
     {
-      "name": "Courtney Williams",
-      "date": "2025-08-22",
+      "name": "Sonia Citron",
+      "date": "2025-08-23",
+      "over_line": "15.5",
+      "over_odds": "-110",
+      "under_line": "15.5",
+      "under_odds": "-115"
+    },
+    {
+      "name": "Angel Reese",
+      "date": "2025-08-23",
+      "over_line": "14.5",
+      "over_odds": "-125",
+      "under_line": "14.5",
+      "under_odds": "-125"
+    },
+    {
+      "name": "Shakira Austin",
+      "date": "2025-08-23",
+      "over_line": "11.5",
+      "over_odds": "-130",
+      "under_line": "12.5",
+      "under_odds": "-132"
+    },
+    {
+      "name": "Jackie Young",
+      "date": "2025-08-23",
+      "over_line": "14.5",
+      "over_odds": "-125",
+      "under_line": "14.5",
+      "under_odds": "+102"
+    },
+    {
+      "name": "Marina Mabrey",
+      "date": "2025-08-23",
+      "over_line": "14.5",
+      "over_odds": "-113",
+      "under_line": "14.5",
+      "under_odds": "-113"
+    },
+    {
+      "name": "Emma Meesseman",
+      "date": "2025-08-23",
+      "over_line": "14.5",
+      "over_odds": "+105",
+      "under_line": "14.5",
+      "under_odds": "-130"
+    },
+    {
+      "name": "Tina Charles",
+      "date": "2025-08-23",
       "over_line": "13.5",
       "over_odds": "-115",
       "under_line": "13.5",
-      "under_odds": "-110"
-    },
-    {
-      "name": "Natasha Howard",
-      "date": "2025-08-22",
-      "over_line": "11.5",
-      "over_odds": "-128",
-      "under_line": "12.5",
-      "under_odds": "-125"
-    },
-    {
-      "name": "Veronica Burton",
-      "date": "2025-08-22",
-      "over_line": "11.5",
-      "over_odds": "-125",
-      "under_line": "11.5",
-      "under_odds": "-125"
-    },
-    {
-      "name": "Janelle Salaun",
-      "date": "2025-08-22",
-      "over_line": "11.5",
-      "over_odds": "-115",
-      "under_line": "11.5",
       "under_odds": "-105"
     },
     {
-      "name": "Odyssey Sims",
-      "date": "2025-08-22",
-      "over_line": "11.5",
-      "over_odds": "-105",
-      "under_line": "11.5",
-      "under_odds": "-114"
+      "name": "Kiki Iriafen",
+      "date": "2025-08-23",
+      "over_line": "12.5",
+      "over_odds": "-122",
+      "under_line": "12.5",
+      "under_odds": "-105"
     },
     {
-      "name": "Tiffany Hayes",
-      "date": "2025-08-22",
-      "over_line": "11.5",
-      "over_odds": "-110",
-      "under_line": "11.5",
-      "under_odds": "-114"
+      "name": "Kamilla Cardoso",
+      "date": "2025-08-23",
+      "over_line": "12.5",
+      "over_odds": "-120",
+      "under_line": "12.5",
+      "under_odds": "+105"
     },
     {
-      "name": "Gabby Williams",
-      "date": "2025-08-22",
+      "name": "Jewell Loyd",
+      "date": "2025-08-23",
       "over_line": "10.5",
-      "over_odds": "-128",
+      "over_odds": "-120",
       "under_line": "10.5",
-      "under_odds": "+110"
+      "under_odds": "-105"
     },
     {
-      "name": "Alanna Smith",
-      "date": "2025-08-22",
+      "name": "Brionna Jones",
+      "date": "2025-08-23",
       "over_line": "9.5",
+      "over_odds": "-125",
+      "under_line": "10.5",
+      "under_odds": "-130"
+    },
+    {
+      "name": "Chelsea Gray",
+      "date": "2025-08-23",
+      "over_line": "10.5",
       "over_odds": "+105",
+      "under_line": "10.5",
+      "under_odds": "-125"
+    },
+    {
+      "name": "Natasha Cloud",
+      "date": "2025-08-23",
+      "over_line": "9.5",
+      "over_odds": "-125",
+      "under_line": "9.5",
+      "under_odds": "-102"
+    },
+    {
+      "name": "Leila Lacan",
+      "date": "2025-08-23",
+      "over_line": "9.5",
+      "over_odds": "-110",
       "under_line": "9.5",
       "under_odds": "-120"
     },
     {
-      "name": "Luisa Geiselsoder",
-      "date": "2025-08-22",
-      "over_line": "8.5",
-      "over_odds": "-115",
-      "under_line": "8.5",
-      "under_odds": "-110"
-    },
-    {
-      "name": "Ezi Magbegor",
-      "date": "2025-08-22",
-      "over_line": "7.5",
-      "over_odds": "-130",
-      "under_line": "7.5",
-      "under_odds": "+105"
+      "name": "Leonie Fiebich",
+      "date": "2025-08-23",
+      "over_line": "9.5",
+      "over_odds": "+125",
+      "under_line": "9.5",
+      "under_odds": "-160"
     }
   ]
 }
