@@ -180,6 +180,40 @@ for model in daily_profit["model_name"].unique():
 
 
 
+
+
+st.subheader("Residual Plots with Confidence Bands")
+
+for model in df["model_name"].unique():
+    model_df = df[df["model_name"] == model].copy()
+    model_df = model_df.sort_values("date")
+    model_df["residual"] = model_df["actual_pts"] - model_df["predicted_pts"]
+    window = 10
+    model_df["rolling_std"] = model_df["residual"].rolling(window=window, min_periods=1).std()
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(model_df["date"], model_df["residual"], marker="o", linestyle="-", color="blue", alpha=0.6, label="Residuals")
+
+    ax.fill_between(
+        model_df["date"],
+        -2 * model_df["rolling_std"],
+        2 * model_df["rolling_std"],
+        color="orange",
+        alpha=0.2,
+        label="±2σ band"
+    )
+
+    ax.axhline(0, color="black", linestyle="--", linewidth=1)
+    ax.set_title(f"Residuals with Confidence Bands — {model}")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Residual (Actual - Predicted)")
+    ax.legend()
+
+    st.pyplot(fig)
+
+
+
+
+
 result_df = df[df["result"].isin(["WON", "LOST"])]
 grouped = result_df.groupby(["model_name", "player_name"])["result"].agg(
     total_bets="count",
