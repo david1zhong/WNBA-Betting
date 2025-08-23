@@ -54,6 +54,11 @@ for player in data["players"]:
 
     if candidate_games.empty or pd.isna(candidate_games['points'].values[0]):
         print(f"Skipping {player_name}, no game data")
+        cur.execute("""
+            UPDATE predictions
+            SET actual_pts = NULL, result = 'DNP', profit = NULL
+            WHERE player_name = %s AND date = %s;
+        """, (player_name, props_date.date()))
         continue
 
     actual_points = int(candidate_games['points'].values[0])
