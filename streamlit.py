@@ -180,22 +180,6 @@ for model in daily_profit["model_name"].unique():
 
 
 
-
-
-st.subheader("Residual Funnel Plots")
-
-for model in df["model_name"].unique():
-    model_df = df[df["model_name"] == model].copy()
-    model_df = model_df.sort_values("date")
-    model_df["residual"] = model_df["actual_pts"] - model_df["predicted_pts"]
-    chart_df = model_df[["date", "residual"]].set_index("date")
-    st.write(f"### Residual Funnel — {model}")
-    st.scatter_chart(chart_df)
-
-
-
-
-
 result_df = df[df["result"].isin(["WON", "LOST"])]
 grouped = result_df.groupby(["model_name", "player_name"])["result"].agg(
     total_bets="count",
