@@ -45,3 +45,4 @@ To explore whether advanced AI models can identify meaningful patterns and gener
 ## Future Features
 - Imagine you placed $1 on every bet placed. How much profit would you make?
 - Launch models to investigate the opposite. Investigate and predict the correlation between higher points and the late follicular phase.
+- Have other variables affect the model's predictions, such as the book odds, opponent strength, home/away, etc.
