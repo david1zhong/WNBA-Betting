@@ -189,11 +189,12 @@ grouped = result_df.groupby(["model_name", "player_name"])["result"].agg(
 grouped["accuracy"] = grouped["correct_bets"] / grouped["total_bets"]
 grouped = grouped.sort_values("accuracy", ascending=False)
 grouped["label"] = grouped["correct_bets"].astype(str) + " / " + grouped["total_bets"].astype(str)
-st.subheader("Most Correct Bet Players per Model")
+st.subheader("Most Correct Bet Players Across All Models")
+st.dataframe(grouped[["model_name", "player_name", "correct_bets", "total_bets", "accuracy", "label"]])
 
+st.subheader("Most Correct Bet Players per Model")
 for model in grouped["model_name"].unique():
     model_df = grouped[grouped["model_name"] == model]
-
     st.dataframe(model_df[["player_name", "correct_bets", "total_bets", "accuracy", "label"]])
 
 
