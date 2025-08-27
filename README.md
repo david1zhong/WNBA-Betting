@@ -37,7 +37,7 @@ The pattern recognition component of the models is to load all of the player's h
 
 
 ## Bet List (as of 26/08/25)
-# Bet at own discretion; small sample sizes
+### Bet at own discretion; small sample sizes
 
 Bet (OVER):
 - A'ja Wilson (7/8, 88%)
