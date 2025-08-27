@@ -182,13 +182,16 @@ for model in daily_profit["model_name"].unique():
 
 
 result_df = df[df["result"].isin(["WON", "LOST"])]
+dedup = result_df.drop_duplicates(subset=["player_name", "game_date"])
 
-grouped = result_df.groupby(["model_name", "player_name"]).apply(
+grouped = dedup.groupby("player_name").apply(
     lambda g: pd.Series({
-        "total_bets": len(g),
+        "total_games": len(g),
         "correct_bets": (g["result"] == "WON").sum(),
+
         "over_bets": (g["bet"] == "OVER").sum(),
         "under_bets": (g["bet"] == "UNDER").sum(),
+
         "over_win_rate": (
             (g[g["bet"] == "OVER"]["result"] == "WON").mean()
             if (g["bet"] == "OVER").any() else None
@@ -200,11 +203,9 @@ grouped = result_df.groupby(["model_name", "player_name"]).apply(
     })
 ).reset_index()
 
-grouped["accuracy"] = (grouped["correct_bets"] / grouped["total_bets"]).apply(
+grouped["accuracy"] = (grouped["correct_bets"] / grouped["total_games"]).apply(
     lambda x: f"{x*100:.2f}%" if pd.notnull(x) else "-"
 )
-
-grouped["label"] = grouped["correct_bets"].astype(str) + " / " + grouped["total_bets"].astype(str)
 
 grouped["over_win_rate"] = grouped["over_win_rate"].apply(
     lambda x: f"{x*100:.2f}%" if pd.notnull(x) else "-"
@@ -213,22 +214,15 @@ grouped["under_win_rate"] = grouped["under_win_rate"].apply(
     lambda x: f"{x*100:.2f}%" if pd.notnull(x) else "-"
 )
 
-grouped["over_bets"] = grouped["over_bets"].astype(str) + " / " + grouped["total_bets"].astype(str)
-grouped["under_bets"] = grouped["under_bets"].astype(str) + " / " + grouped["total_bets"].astype(str)
+grouped["over_bets"] = grouped["over_bets"].astype(str) + " / " + grouped["total_games"].astype(str)
+grouped["under_bets"] = grouped["under_bets"].astype(str) + " / " + grouped["total_games"].astype(str)
 
-st.subheader("Most Correct Bet Players Across All Models")
+st.subheader("Most Correct Bet Players (No Duplicate Games)")
 st.dataframe(grouped[
-    ["model_name", "player_name", "correct_bets", "total_bets", "accuracy",
-     "over_bets", "under_bets", "over_win_rate", "under_win_rate", "label"]
+    ["player_name", "correct_bets", "total_games", "accuracy",
+     "over_bets", "under_bets", "over_win_rate", "under_win_rate"]
 ])
 
-st.subheader("Most Correct Bet Players per Model")
-for model in grouped["model_name"].unique():
-    model_df = grouped[grouped["model_name"] == model]
-    st.dataframe(model_df[
-        ["player_name", "correct_bets", "total_bets", "accuracy",
-         "over_bets", "under_bets", "over_win_rate", "under_win_rate", "label"]
-    ])
 
 
 
