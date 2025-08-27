@@ -5,8 +5,8 @@
 Automated system predicting WNBA player performance by analyzing historical points and menstrual/cyclical patterns, generating betting picks, and storing results in a database.
 
 ## Disclaimer
-**THE SUBJECT MATTER OF THIS PROJECT INVOLVES CONCEPTS THAT ARE INHERENTLY UNETHICAL, INVASIVE, AND POTENTIALLY INAPPROPRIATE.**
-**THERE IS NO CREDIBLE OR PEER-REVIEWED SCIENTIFIC EVIDENCE ESTABLISHING ANY CORRELATION BETWEEN BASKETBALL PERFORMANCE AND THE MENSTRUAL CYCLE.**
+**THE SUBJECT MATTER OF THIS PROJECT INVOLVES CONCEPTS THAT ARE POTENTIALLY UNETHICAL, INVASIVE, AND POTENTIALLY INAPPROPRIATE.**
+**THERE IS CURRENTLY NO DEFINITIVE OR UNIVERSALLY ACCEPTED SCIENTIFIC CONCLUSION ESTABLISHING A CLEAR CORRELATION BETWEEN BASKETBALL PERFORMANCE AND THE PHASES OF THE MENSTRUAL CYCLE.**
 **THIS PROJECT IS PRESENTED SOLELY AS AN ACADEMIC EXPLORATION AND SHOULD NOT BE INTERPRETED AS ENDORSING, SUPPORTING, OR PROMOTING ANY SUCH PRACTICES.**
 
 This project operates on the simplifying assumption that performance may decrease during menstruation. This is a potentially harmful stereotype that is not supported by credible scientific consensus. In fact, some research indicates that performance may improve during the late follicular phase of the menstrual cycle (see [Article 1](https://pubmed.ncbi.nlm.nih.gov/38059487/), [Article 2](https://pmc.ncbi.nlm.nih.gov/articles/PMC10047984/)). Any patterns observed in this project should therefore be understood as artifacts of the modeling exercise, not reflections of real player physiology. Perhaps an extension of the project could be to test the opposite; instead of predicting the lows, perhaps it is more supported to predict the highs.
