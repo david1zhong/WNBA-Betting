@@ -200,7 +200,10 @@ grouped = result_df.groupby(["model_name", "player_name"]).apply(
     })
 ).reset_index()
 
-grouped["accuracy"] = grouped["correct_bets"] / grouped["total_bets"]
+grouped["accuracy"] = (grouped["correct_bets"] / grouped["total_bets"]).apply(
+    lambda x: f"{x*100:.2f}%" if pd.notnull(x) else "-"
+)
+
 grouped["label"] = grouped["correct_bets"].astype(str) + " / " + grouped["total_bets"].astype(str)
 
 grouped["over_win_rate"] = grouped["over_win_rate"].apply(
