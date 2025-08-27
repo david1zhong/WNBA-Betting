@@ -181,21 +181,44 @@ for model in daily_profit["model_name"].unique():
 
 
 result_df = df[df["result"].isin(["WON", "LOST"])]
-grouped = result_df.groupby(["model_name", "player_name"])["result"].agg(
-    total_bets="count",
-    correct_bets=lambda x: (x == "WON").sum()
+
+def win_rate(x, bet_type):
+    subset = x[x["bet"] == bet_type]
+    if len(subset) == 0:
+        return 0.0
+    return (subset["result"] == "WON").mean()
+
+def sample_size(x, bet_type):
+    return (x["bet"] == bet_type).sum()
+
+grouped = result_df.groupby(["model_name", "player_name"]).apply(
+    lambda g: pd.Series({
+        "total_bets": len(g),
+        "correct_bets": (g["result"] == "WON").sum(),
+        "over_win_rate": win_rate(g, "over"),
+        "under_win_rate": win_rate(g, "under"),
+        "over_bets": sample_size(g, "over"),
+        "under_bets": sample_size(g, "under"),
+    })
 ).reset_index()
 
 grouped["accuracy"] = grouped["correct_bets"] / grouped["total_bets"]
 grouped = grouped.sort_values("accuracy", ascending=False)
 grouped["label"] = grouped["correct_bets"].astype(str) + " / " + grouped["total_bets"].astype(str)
+
 st.subheader("Most Correct Bet Players Across All Models")
-st.dataframe(grouped[["model_name", "player_name", "correct_bets", "total_bets", "accuracy", "label"]])
+st.dataframe(grouped[
+    ["model_name", "player_name", "correct_bets", "total_bets", "accuracy",
+     "over_win_rate", "under_win_rate", "over_bets", "under_bets", "label"]
+])
 
 st.subheader("Most Correct Bet Players per Model")
 for model in grouped["model_name"].unique():
     model_df = grouped[grouped["model_name"] == model]
-    st.dataframe(model_df[["player_name", "correct_bets", "total_bets", "accuracy", "label"]])
+    st.dataframe(model_df[
+        ["player_name", "correct_bets", "total_bets", "accuracy",
+         "over_win_rate", "under_win_rate", "over_bets", "under_bets", "label"]
+    ])
 
 
 
