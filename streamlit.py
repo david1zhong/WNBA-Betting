@@ -182,7 +182,7 @@ for model in daily_profit["model_name"].unique():
 
 
 result_df = df[df["result"].isin(["WON", "LOST"])]
-dedup = result_df.drop_duplicates(subset=["player_name", "game_date"])
+dedup = result_df.drop_duplicates(subset=["player_name", "date"])
 
 grouped = dedup.groupby("player_name").apply(
     lambda g: pd.Series({
