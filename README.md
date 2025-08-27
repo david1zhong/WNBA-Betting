@@ -47,7 +47,7 @@ Bet (OVER):
 
 Bet (UNDER):
 - Sabrina Ionescu (7/7, 100%)
-- Britnney Sykes (6/6, 100%)
+- Brittney Sykes (6/6, 100%)
 - Naz Hillmon (4/4, 100%)
 - Haley Jones (4/4, 100%)
 - Jessica Shephard (3/3, 100%)
