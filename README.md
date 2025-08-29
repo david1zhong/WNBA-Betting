@@ -88,3 +88,4 @@ Bet (UNDER):
 - Launch models to investigate the opposite. Investigate and predict the correlation between higher points and the late follicular phase.
 - Have other variables affect the model's predictions, such as the book odds, opponent strength, home/away, etc.
 - Potentially use mathematical models instead of pattern recognition based models to compare model strength.
+- Investigate the factors that contribute to inconsistencies. For example I've noticed it's always positive profits then negative profits, repeat. Would be interesting to see which common factors may be influencing the ups and downs.
