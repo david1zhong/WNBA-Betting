@@ -274,78 +274,93 @@ st.subheader("Period Game Analysis")
 
 period_games = df[df["note"].str.contains("Period Game", na=False)].copy()
 
-if period_games.empty:
-    st.write("No Period Game entries found.")
-else:
-    period_games["date"] = period_games["date"].dt.date.astype(str)
+period_games["date"] = period_games["date"].dt.date.astype(str)
 
-    today = datetime.now().date()
-    period_games.loc[
-        (period_games["profit"] == 0) & (pd.to_datetime(period_games["date"]) > pd.Timestamp(today)),
-        "profit"
-    ] = None
+today = datetime.now().date()
+period_games.loc[
+    (period_games["profit"] == 0) & (pd.to_datetime(period_games["date"]) > pd.Timestamp(today)),
+    "profit"
+] = None
 
-    def highlight_pg_result(val):
-        if val == "WON":
-            return "color: green; font-weight: bold;"
-        elif val == "LOST":
-            return "color: red; font-weight: bold;"
-        elif val == "DNP":
-            return "color: gray; font-weight: bold;"
+def highlight_pg_result(val):
+    if val == "WON":
+        return "color: green; font-weight: bold;"
+    elif val == "LOST":
+        return "color: red; font-weight: bold;"
+    elif val == "DNP":
+        return "color: gray; font-weight: bold;"
+    return ""
+
+def smart_int_format(x):
+    if pd.isna(x):
         return ""
+    if isinstance(x, (int, np.integer)):
+        return str(x)
+    try:
+        if float(x).is_integer():
+            return str(int(x))
+    except:
+        return str(x)
+    return str(x)
 
-    styled_period_games = period_games.style.map(highlight_pg_result, subset=["result"])
+styled_period_games = (
+    period_games.style
+    .map(highlight_pg_result, subset=["result"])
+    .format(smart_int_format)
+)
 
-    st.write("### Period Game Entries")
-    st.dataframe(styled_period_games, use_container_width=True, height=400)
+st.write("### Period Game Entries")
+st.dataframe(styled_period_games, use_container_width=True, height=400)
 
-    results_pg = period_games[period_games["result"].isin(["WON", "LOST"])]
+results_pg = period_games[period_games["result"].isin(["WON", "LOST"])]
 
-    won_count = (results_pg["result"] == "WON").sum()
-    lost_count = (results_pg["result"] == "LOST").sum()
-    total_played = won_count + lost_count
+won_count = (results_pg["result"] == "WON").sum()
+lost_count = (results_pg["result"] == "LOST").sum()
+total_played = won_count + lost_count
 
-    won_pct = (won_count / total_played * 100) if total_played > 0 else 0
-    lost_pct = (lost_count / total_played * 100) if total_played > 0 else 0
+won_pct = (won_count / total_played * 100) if total_played > 0 else 0
+lost_pct = (lost_count / total_played * 100) if total_played > 0 else 0
 
-    total_bet = period_games["amount"].sum()
-    total_winnings = period_games.loc[period_games["profit"] > 0, "profit"].sum()
-    total_losses = period_games.loc[period_games["profit"] < 0, "profit"].sum()
-    net_profit = period_games["profit"].sum()
+total_bet = period_games["amount"].sum()
+total_winnings = period_games.loc[period_games["profit"] > 0, "profit"].sum()
+total_losses = period_games.loc[period_games["profit"] < 0, "profit"].sum()
+net_profit = period_games["profit"].sum()
 
-    mae = np.mean(np.abs(period_games["pts_differential"]))
-    rmse = np.sqrt(np.mean(period_games["pts_differential"]**2))
-    std = np.std(period_games["pts_differential"])
+mae = np.mean(np.abs(period_games["pts_differential"]))
+rmse = np.sqrt(np.mean(period_games["pts_differential"]**2))
+std = np.std(period_games["pts_differential"])
 
-    stats = pd.DataFrame({
-        "WON": [f"{won_count} ({won_pct:.1f}%)"],
-        "LOST": [f"{lost_count} ({lost_pct:.1f}%)"],
-        "Total Bet Amount": [f"${total_bet:,.2f}"],
-        "Winnings": [f"${total_winnings:,.2f}"],
-        "Losses": [f"${total_losses:,.2f}"],
-        "Net Profit": [f"${net_profit:,.2f}"],
-        "MAE": [round(mae, 3)],
-        "RMSE": [round(rmse, 3)],
-        "STD": [round(std, 3)]
-    })
+stats = pd.DataFrame({
+    "WON": [f"{won_count} ({won_pct:.1f}%)"],
+    "LOST": [f"{lost_count} ({lost_pct:.1f}%)"],
+    "Total Bet Amount": [f"${total_bet:,.0f}"],
+    "Winnings": [f"${total_winnings:,.0f}"],
+    "Losses": [f"${total_losses:,.0f}"],
+    "Net Profit": [f"${net_profit:,.0f}"],
+    "MAE": [round(mae, 3)],
+    "RMSE": [round(rmse, 3)],
+    "STD": [round(std, 3)]
+})
 
-    def highlight_money(val, positive_green=False):
+def highlight_money(val, force_profit=False):
+    if isinstance(val, str) and val.startswith("$"):
         try:
-            num = float(str(val).replace("$", "").replace(",", ""))
+            num = float(val.replace("$", "").replace(",", ""))
         except:
             return ""
-        if num > 0:
-            return "color: green; font-weight: bold;" if positive_green or "Net" in str(val) else ""
-        elif num < 0:
-            return "color: red; font-weight: bold;"
+    else:
         return ""
+    if num > 0:
+        return "color: green; font-weight: bold;"
+    elif num < 0:
+        return "color: red; font-weight: bold;"
+    return ""
 
-    styled_stats = stats.style.map(lambda v: highlight_money(v, positive_green=True), subset=["Winnings"])
-    styled_stats = styled_stats.map(highlight_money, subset=["Losses"])
-    styled_stats = styled_stats.map(highlight_money, subset=["Net Profit"])
+styled_stats = stats.style.map(highlight_money, subset=["Winnings", "Losses", "Net Profit"])
 
-    st.write("### Period Game Stats")
-    st.dataframe(styled_stats, use_container_width=True)
+st.write("### Period Game Stats")
+st.dataframe(styled_stats, use_container_width=True)
+
 
 
 
