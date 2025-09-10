@@ -275,13 +275,6 @@ st.subheader("Period Game Stats")
 period_games = df[df["note"].str.contains("Period Game", case=False, na=False)].copy()
 period_games["date"] = pd.to_datetime(period_games["date"]).dt.date
 
-def highlight_pg_result(val):
-    if val == "WON":
-        return "color: green; font-weight: bold;"
-    elif val == "LOST":
-        return "color: red; font-weight: bold;"
-    return ""
-
 def smart_num_format(x, col=None):
     if pd.isna(x):
         return ""
@@ -303,7 +296,6 @@ fmt_dict = {col: (lambda x, c=col: smart_num_format(x, c)) for col in numeric_co
 
 styled_period_games = (
     period_games_display.style
-    .map(highlight_pg_result, subset=["result"])
     .format(fmt_dict)
 )
 
@@ -342,9 +334,7 @@ def format_float_max3(x):
 styled_stats = (
     stats.reset_index(drop=True)
     .style
-    .applymap(lambda v: "color: green; font-weight: bold;" if isinstance(v, str) and v.startswith(str(won_count)) else "", subset=["WON"])
-    .applymap(lambda v: "color: red; font-weight: bold;" if isinstance(v, str) and v.startswith(str(lost_count)) else "", subset=["LOST"])
-    .applymap(lambda v: "color: green; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v > 0) else ("color: red; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v < 0) else ""), subset=["Net Profit"])
+    .applymap(lambda v: "color: green; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v > 0) else ("color: red; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v < 0) else ""), subset=["Winnings", "Losses", "Net Profit"])
     .format({
         "Total Bet Amount": format_currency_2,
         "Winnings": format_currency_2,
@@ -358,6 +348,7 @@ styled_stats = (
 
 st.write("### Period Game Stats")
 st.dataframe(styled_stats, use_container_width=True)
+
 
 
 
