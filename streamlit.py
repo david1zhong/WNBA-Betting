@@ -275,6 +275,13 @@ st.subheader("Period Game Stats")
 period_games = df[df["note"].str.contains("Period Game", case=False, na=False)].copy()
 period_games["date"] = pd.to_datetime(period_games["date"]).dt.date
 
+def highlight_pg_result(val):
+    if val == "WON":
+        return "color: green; font-weight: bold;"
+    elif val == "LOST":
+        return "color: red; font-weight: bold;"
+    return ""
+
 def smart_num_format(x, col=None):
     if pd.isna(x):
         return ""
@@ -296,6 +303,7 @@ fmt_dict = {col: (lambda x, c=col: smart_num_format(x, c)) for col in numeric_co
 
 styled_period_games = (
     period_games_display.style
+    .map(highlight_pg_result, subset=["result"])
     .format(fmt_dict)
 )
 
@@ -348,6 +356,7 @@ styled_stats = (
 
 st.write("### Period Game Stats")
 st.dataframe(styled_stats, use_container_width=True)
+
 
 
 
