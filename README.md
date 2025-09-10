@@ -18,6 +18,7 @@ To explore whether advanced AI models can identify meaningful patterns and gener
 - There is no clear correlation between the menstrual cycle and basketball performance.
 - Some players may not menstruate regularly, or at all, due to intense physical training and other physiological factors.
 - This is most likely not profitable due to inconsistent results and sportsbook company's edge. It is very difficult to beat the books.
+- However, betting on games where players may be feeling the effects of menstruation, could potentially be profitable. Reference Period Game Stats.
 - For some players, it really is a 50/50, and should probably not bet on if you're looking to make a profit. However, some players, the books consistenly account for incorrectly. See bet list.
 
 ## GitHub Actions
