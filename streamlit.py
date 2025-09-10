@@ -269,6 +269,52 @@ st.bar_chart(accuracy.set_index("model_name"))
 
 
 
+
+st.subheader("Period Game Analysis")
+
+period_games = df[df["note"].str.contains("Period Game", na=False)]
+
+if period_games.empty:
+    st.write("No Period Game entries found.")
+else:
+    st.write("### Period Game Entries")
+    st.dataframe(period_games, use_container_width=True, height=400)
+
+    results_pg = period_games[period_games["result"].isin(["WON", "LOST"])]
+
+    won_count = (results_pg["result"] == "WON").sum()
+    lost_count = (results_pg["result"] == "LOST").sum()
+    total_played = won_count + lost_count
+    win_pct = (won_count / total_played * 100) if total_played > 0 else 0
+
+    total_bet = period_games["amount"].sum()
+    total_winnings = period_games.loc[period_games["profit"] > 0, "profit"].sum()
+    total_losses = period_games.loc[period_games["profit"] < 0, "profit"].sum()
+    net_profit = period_games["profit"].sum()
+
+    mae = np.mean(np.abs(period_games["pts_differential"]))
+    rmse = np.sqrt(np.mean(period_games["pts_differential"]**2))
+    std = np.std(period_games["pts_differential"])
+
+    stats = pd.DataFrame({
+        "WON": [f"{won_count} ({win_pct:.1f}%)"],
+        "LOST": [str(lost_count)],
+        "Total Bet Amount": [f"${total_bet:,.2f}"],
+        "Winnings": [f"${total_winnings:,.2f}"],
+        "Losses": [f"${total_losses:,.2f}"],
+        "Net Profit": [f"${net_profit:,.2f}"],
+        "MAE": [round(mae, 3)],
+        "RMSE": [round(rmse, 3)],
+        "STD": [round(std, 3)]
+    })
+
+    st.write("### Period Game Stats")
+    st.table(stats)
+
+
+
+
+
 metrics_df = df.groupby("model_name").apply(lambda x: pd.Series({
     "MAE": np.mean(np.abs(x["pts_differential"])),
     "RMSE": np.sqrt(np.mean((x["pts_differential"])**2)),
