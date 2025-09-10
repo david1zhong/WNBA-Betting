@@ -270,40 +270,39 @@ st.bar_chart(accuracy.set_index("model_name"))
 
 
 
-st.subheader("Period Game Analysis")
+st.subheader("Period Game Stats")
 
-period_games = df[df["note"].str.contains("Period Game", na=False)].copy()
-
-period_games["date"] = pd.to_datetime(period_games["date"])
-today = datetime.now().date()
-mask_future_zero = (period_games["profit"] == 0) & (period_games["date"].dt.date > today)
-period_games.loc[mask_future_zero, "profit"] = np.nan
-
-period_games_display = period_games.copy()
-period_games_display["date"] = period_games_display["date"].dt.date.astype(str)
-
-def smart_int_format(x):
-    if pd.isna(x):
-        return ""
-    try:
-        return str(int(round(float(x))))
-    except Exception:
-        return str(x)
-
-numeric_cols = period_games_display.select_dtypes(include=[np.number]).columns.tolist()
-fmt_dict = {col: smart_int_format for col in numeric_cols}
+period_games = df[df["note"].str.contains("Period Game", case=False, na=False)].copy()
+period_games["date"] = pd.to_datetime(period_games["date"]).dt.date
 
 def highlight_pg_result(val):
     if val == "WON":
         return "color: green; font-weight: bold;"
     elif val == "LOST":
         return "color: red; font-weight: bold;"
-    elif val == "DNP":
-        return "color: gray; font-weight: bold;"
     return ""
 
+def smart_num_format(x, col=None):
+    if pd.isna(x):
+        return ""
+    try:
+        val = float(x)
+        if col in ["over_line", "under_line"]:
+            if val.is_integer():
+                return str(int(val))
+            else:
+                return str(val)
+        else:
+            return str(int(round(val)))
+    except Exception:
+        return str(x)
+
+period_games_display = period_games.copy()
+numeric_cols = period_games_display.select_dtypes(include=[np.number]).columns.tolist()
+fmt_dict = {col: (lambda x, c=col: smart_num_format(x, c)) for col in numeric_cols}
+
 styled_period_games = (
-    period_games_display.reset_index(drop=True).style
+    period_games_display.style
     .map(highlight_pg_result, subset=["result"])
     .format(fmt_dict)
 )
@@ -311,56 +310,41 @@ styled_period_games = (
 st.write("### Period Game Entries")
 st.dataframe(styled_period_games, use_container_width=True, height=400)
 
-results_pg = period_games[period_games["result"].isin(["WON", "LOST"])]
-won_count = (results_pg["result"] == "WON").sum()
-lost_count = (results_pg["result"] == "LOST").sum()
+pg_filtered = period_games[period_games["result"].isin(["WON", "LOST"])]
+won_count = (pg_filtered["result"] == "WON").sum()
+lost_count = (pg_filtered["result"] == "LOST").sum()
 total_played = won_count + lost_count
-won_pct = (won_count / total_played * 100) if total_played > 0 else 0
-lost_pct = (lost_count / total_played * 100) if total_played > 0 else 0
-
-total_bet = period_games["amount"].sum(skipna=True)
-total_winnings = period_games.loc[period_games["profit"] > 0, "profit"].sum(skipna=True)
-total_losses = period_games.loc[period_games["profit"] < 0, "profit"].sum(skipna=True)
-net_profit = period_games["profit"].sum(skipna=True)
-
-pts = period_games["pts_differential"].dropna()
-mae = np.mean(np.abs(pts)) if not pts.empty else np.nan
-rmse = np.sqrt(np.mean(pts ** 2)) if not pts.empty else np.nan
-std = np.std(pts) if not pts.empty else np.nan
+win_pct = (won_count / total_played * 100) if total_played > 0 else 0
+loss_pct = (lost_count / total_played * 100) if total_played > 0 else 0
 
 stats = pd.DataFrame({
-    "WON": [f"{won_count} ({won_pct:.0f}%)"],
-    "LOST": [f"{lost_count} ({lost_pct:.0f}%)"],
-    "Total Bet Amount": [total_bet],
-    "Winnings": [total_winnings],
-    "Losses": [total_losses],
-    "Net Profit": [net_profit],
-    "MAE": [mae],
-    "RMSE": [rmse],
-    "STD": [std]
+    "WON": [f"{won_count} ({win_pct:.1f}%)"],
+    "LOST": [f"{lost_count} ({loss_pct:.1f}%)"],
+    "Total Bet Amount": [period_games["amount"].sum()],
+    "Winnings": [period_games.loc[period_games["profit"] > 0, "profit"].sum()],
+    "Losses": [period_games.loc[period_games["profit"] < 0, "profit"].sum()],
+    "Net Profit": [period_games["profit"].sum() if not period_games.empty else None],
+    "MAE": [np.mean(np.abs(period_games["pts_differential"])) if not period_games.empty else None],
+    "RMSE": [np.sqrt(np.mean(period_games["pts_differential"]**2)) if not period_games.empty else None],
+    "STD": [np.std(period_games["pts_differential"]) if not period_games.empty else None]
 })
 
 def format_currency_2(x):
     if pd.isna(x):
-        return ""
+        return "—"
     return f"${x:,.2f}"
 
 def format_float_max3(x):
     if pd.isna(x):
-        return ""
-    s = f"{x:.3f}"
-    s = s.rstrip("0").rstrip(".")
-    return s
+        return "—"
+    return f"{x:.3f}"
 
 styled_stats = (
-    stats.reset_index(drop=True).style
-    .applymap(lambda v: "color: green; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v > 0) else "", subset=["Winnings"])
-    .applymap(lambda v: "color: red; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v < 0) else "", subset=["Losses"])
-    .applymap(
-        lambda v: "color: green; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v > 0)
-        else ("color: red; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v < 0) else ""),
-        subset=["Net Profit"]
-    )
+    stats.reset_index(drop=True)
+    .style
+    .applymap(lambda v: "color: green; font-weight: bold;" if isinstance(v, str) and v.startswith(str(won_count)) else "", subset=["WON"])
+    .applymap(lambda v: "color: red; font-weight: bold;" if isinstance(v, str) and v.startswith(str(lost_count)) else "", subset=["LOST"])
+    .applymap(lambda v: "color: green; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v > 0) else ("color: red; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v < 0) else ""), subset=["Net Profit"])
     .format({
         "Total Bet Amount": format_currency_2,
         "Winnings": format_currency_2,
@@ -374,6 +358,7 @@ styled_stats = (
 
 st.write("### Period Game Stats")
 st.dataframe(styled_stats, use_container_width=True)
+
 
 
 
