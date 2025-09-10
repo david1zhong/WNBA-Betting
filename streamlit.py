@@ -272,20 +272,41 @@ st.bar_chart(accuracy.set_index("model_name"))
 
 st.subheader("Period Game Analysis")
 
-period_games = df[df["note"].str.contains("Period Game", na=False)]
+period_games = df[df["note"].str.contains("Period Game", na=False)].copy()
 
 if period_games.empty:
     st.write("No Period Game entries found.")
 else:
+    period_games["date"] = period_games["date"].dt.date.astype(str)
+
+    today = datetime.now().date()
+    period_games.loc[
+        (period_games["profit"] == 0) & (pd.to_datetime(period_games["date"]) > pd.Timestamp(today)),
+        "profit"
+    ] = None
+
+    def highlight_pg_result(val):
+        if val == "WON":
+            return "color: green; font-weight: bold;"
+        elif val == "LOST":
+            return "color: red; font-weight: bold;"
+        elif val == "DNP":
+            return "color: gray; font-weight: bold;"
+        return ""
+
+    styled_period_games = period_games.style.map(highlight_pg_result, subset=["result"])
+
     st.write("### Period Game Entries")
-    st.dataframe(period_games, use_container_width=True, height=400)
+    st.dataframe(styled_period_games, use_container_width=True, height=400)
 
     results_pg = period_games[period_games["result"].isin(["WON", "LOST"])]
 
     won_count = (results_pg["result"] == "WON").sum()
     lost_count = (results_pg["result"] == "LOST").sum()
     total_played = won_count + lost_count
-    win_pct = (won_count / total_played * 100) if total_played > 0 else 0
+
+    won_pct = (won_count / total_played * 100) if total_played > 0 else 0
+    lost_pct = (lost_count / total_played * 100) if total_played > 0 else 0
 
     total_bet = period_games["amount"].sum()
     total_winnings = period_games.loc[period_games["profit"] > 0, "profit"].sum()
@@ -297,8 +318,8 @@ else:
     std = np.std(period_games["pts_differential"])
 
     stats = pd.DataFrame({
-        "WON": [f"{won_count} ({win_pct:.1f}%)"],
-        "LOST": [str(lost_count)],
+        "WON": [f"{won_count} ({won_pct:.1f}%)"],
+        "LOST": [f"{lost_count} ({lost_pct:.1f}%)"],
         "Total Bet Amount": [f"${total_bet:,.2f}"],
         "Winnings": [f"${total_winnings:,.2f}"],
         "Losses": [f"${total_losses:,.2f}"],
@@ -308,8 +329,24 @@ else:
         "STD": [round(std, 3)]
     })
 
+    def highlight_money(val, positive_green=False):
+        try:
+            num = float(str(val).replace("$", "").replace(",", ""))
+        except:
+            return ""
+        if num > 0:
+            return "color: green; font-weight: bold;" if positive_green or "Net" in str(val) else ""
+        elif num < 0:
+            return "color: red; font-weight: bold;"
+        return ""
+
+    styled_stats = stats.style.map(lambda v: highlight_money(v, positive_green=True), subset=["Winnings"])
+    styled_stats = styled_stats.map(highlight_money, subset=["Losses"])
+    styled_stats = styled_stats.map(highlight_money, subset=["Net Profit"])
+
     st.write("### Period Game Stats")
-    st.table(stats)
+    st.dataframe(styled_stats, use_container_width=True)
+
 
 
 
