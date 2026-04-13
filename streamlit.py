@@ -342,7 +342,7 @@ def format_float_max3(x):
 styled_stats = (
     stats.reset_index(drop=True)
     .style
-    .applymap(lambda v: "color: green; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v > 0) else ("color: red; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v < 0) else ""), subset=["Winnings", "Losses", "Net Profit"])
+    .map(lambda v: "color: green; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v > 0) else ("color: red; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v < 0) else ""), subset=["Winnings", "Losses", "Net Profit"])
     .format({
         "Total Bet Amount": format_currency_2,
         "Winnings": format_currency_2,
