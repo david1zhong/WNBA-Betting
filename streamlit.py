@@ -37,28 +37,39 @@ st.title("WNBA Betting")
 if "id" in df.columns:
     df = df.drop(columns=["id"])
 
-st.subheader("All Predictions")
-
-
 def smart_format(x):
     if pd.isna(x):
         return ""
     if float(x).is_integer():
         return str(int(x))
     return str(x)
-    
-styled_df = (
-    df.style
-    .map(highlight_result, subset=["result"])
-    .format({col: smart_format for col in num_cols})
-    .hide(axis="index")
-)
 
-st.dataframe(
-    styled_df,
-    use_container_width=True,
-    height=600
-)
+
+def render_season_table(season_df):
+    styled = (
+        season_df.style
+        .map(highlight_result, subset=["result"])
+        .format({col: smart_format for col in num_cols})
+        .hide(axis="index")
+    )
+    st.dataframe(styled, use_container_width=True, height=600)
+
+
+_years = pd.to_datetime(df["date"]).dt.year
+df_2026 = df[_years == 2026]
+df_2025 = df[_years == 2025]
+
+st.subheader("2026 Season")
+if df_2026.empty:
+    st.write("No predictions yet.")
+else:
+    render_season_table(df_2026)
+
+st.subheader("2025 Season")
+if df_2025.empty:
+    st.write("No predictions yet.")
+else:
+    render_season_table(df_2025)
 
 
 st.subheader("Wins and Losses per Model Yesterday")
