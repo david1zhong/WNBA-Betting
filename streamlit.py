@@ -69,9 +69,9 @@ _today_overs = int((_today_df["bet"] == "OVER").sum())
 _today_wagered = float(pd.to_numeric(_today_df["amount"], errors="coerce").fillna(0).sum())
 
 _today_summary = (
-    f" [Today: {_today_rows} rows, {_today_players} players, "
-    f"{_today_unders} unders, {_today_overs} overs, "
-    f"${_today_wagered:,.2f} wagered]"
+    f" [Today: {_today_rows} Rows | {_today_players} Players | "
+    f"{_today_unders} Unders | {_today_overs} Overs | "
+    f"${_today_wagered:,.2f} Wagered]"
 )
 
 st.subheader("2026 Season" + _today_summary)
