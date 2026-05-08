@@ -10,6 +10,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 
 model_files = [f[:-3] for f in os.listdir(MODEL_DIR) if f.endswith(".py") and f != "__init__.py"]
+model_files.sort(key=lambda n: (1 if "LEARN" in n else 0, n))
 
 models = {}
 for mf in model_files:
