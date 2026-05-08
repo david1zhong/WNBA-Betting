@@ -107,14 +107,38 @@ st.table(combined_yesterday)
 
 
 
-st.subheader("Wins and Losses per Model Total")
-filtered = df[df["result"].isin(["WON", "LOST"])]
-counts = filtered.groupby(["model_name", "result"]).size().unstack(fill_value=0)
-counts = counts[["WON", "LOST"]]
-totals = counts.sum(axis=1)
-percent_df = counts.div(totals, axis=0).multiply(100).round(1).astype(str) + "%"
-combined = counts.astype(str) + " (" + percent_df + ")"
-st.table(combined)
+st.subheader("Wins and Losses per Model")
+
+_wl_filtered = df[df["result"].isin(["WON", "LOST"])].copy()
+_wl_filtered["_year"] = pd.to_datetime(_wl_filtered["date"]).dt.year
+_wl_models = sorted(_wl_filtered["model_name"].unique())
+
+
+def _wl_breakdown(season_df, models_index):
+    counts = (
+        season_df.groupby(["model_name", "result"])
+        .size()
+        .unstack(fill_value=0)
+        .reindex(models_index, fill_value=0)
+    )
+    for col in ["WON", "LOST"]:
+        if col not in counts.columns:
+            counts[col] = 0
+    counts = counts[["WON", "LOST"]]
+    totals = counts.sum(axis=1).replace(0, pd.NA)
+    pct = (counts.div(totals, axis=0) * 100).round(1).fillna(0).astype(str) + "%"
+    return counts.astype(str) + " (" + pct + ")"
+
+
+_wl_combined = pd.concat(
+    {
+        "2026": _wl_breakdown(_wl_filtered[_wl_filtered["_year"] == 2026], _wl_models),
+        "2025": _wl_breakdown(_wl_filtered[_wl_filtered["_year"] == 2025], _wl_models),
+        "Total": _wl_breakdown(_wl_filtered, _wl_models),
+    },
+    axis=1,
+)
+st.table(_wl_combined)
 
 
 
@@ -165,11 +189,79 @@ def summarize(df_input):
 
 
 profit_per_model_yesterday = summarize(df_yesterday)
-profit_per_model_total = summarize(df)
 st.subheader(f"Profit Per Model - {yesterday}")
 st.dataframe(profit_per_model_yesterday)
-st.subheader("Profit Per Model - All Time")
-st.dataframe(profit_per_model_total)
+
+
+def _profit_raw(season_df, models_idx):
+    cols = ["bet_amount", "winnings_amount", "losses_amount", "total_profit"]
+    if season_df.empty:
+        return pd.DataFrame(
+            0.0,
+            index=pd.Index(models_idx, name="model_name"),
+            columns=cols,
+        )
+    g = season_df.groupby("model_name").agg(
+        bet_amount=("amount", "sum"),
+        winnings_amount=("profit", lambda x: x[x > 0].sum()),
+        losses_amount=("profit", lambda x: x[x < 0].sum()),
+        total_profit=("profit", "sum"),
+    )
+    g = g.reindex(models_idx, fill_value=0.0)
+    g.index.name = "model_name"
+    return g[cols]
+
+
+_models_idx = sorted(df["model_name"].unique())
+_year_series = df["date"].dt.year
+
+_profit_combined = pd.concat(
+    {
+        "2026": _profit_raw(df[_year_series == 2026], _models_idx),
+        "2025": _profit_raw(df[_year_series == 2025], _models_idx),
+        "Total": _profit_raw(df, _models_idx),
+    },
+    axis=1,
+)
+
+
+def _currency(v):
+    if not isinstance(v, (int, float, np.floating)) or pd.isna(v):
+        return "—"
+    return f"${v:,.2f}"
+
+
+def _hl_pos(v):
+    return "color: green; font-weight: bold;" if isinstance(v, (int, float, np.floating)) and v > 0 else ""
+
+
+def _hl_neg(v):
+    return "color: red; font-weight: bold;" if isinstance(v, (int, float, np.floating)) and v < 0 else ""
+
+
+def _hl_profit(v):
+    if not isinstance(v, (int, float, np.floating)) or pd.isna(v):
+        return ""
+    if v > 0:
+        return "color: green; font-weight: bold;"
+    if v < 0:
+        return "color: red; font-weight: bold;"
+    return ""
+
+
+_winnings_cols = [c for c in _profit_combined.columns if c[1] == "winnings_amount"]
+_losses_cols = [c for c in _profit_combined.columns if c[1] == "losses_amount"]
+_profit_cols = [c for c in _profit_combined.columns if c[1] == "total_profit"]
+
+_styled_profit = (
+    _profit_combined.style
+    .format(_currency)
+    .map(_hl_pos, subset=_winnings_cols)
+    .map(_hl_neg, subset=_losses_cols)
+    .map(_hl_profit, subset=_profit_cols)
+)
+st.subheader("Profit Per Model")
+st.dataframe(_styled_profit, use_container_width=True)
 
 
 
@@ -240,32 +332,61 @@ st.dataframe(grouped[
 
 
 st.subheader("Over/Under Bets Summary per Model")
-ou_df = df[(df["bet"].isin(["OVER", "UNDER"])) & (df["result"].isin(["WON", "LOST"]))]
-counts = ou_df.groupby(["model_name", "bet"]).size().unstack(fill_value=0)
-counts = counts.rename(columns={"OVER": "Overs", "UNDER": "Unders"})
-counts["Total"] = counts["Overs"] + counts["Unders"]
 
-win_counts = (
-    ou_df[ou_df["result"] == "WON"]
-    .groupby(["model_name", "bet"])
-    .size()
-    .unstack(fill_value=0)
-    .rename(columns={"OVER": "Over_Wins", "UNDER": "Under_Wins"})
+_ou_df_all = df[(df["bet"].isin(["OVER", "UNDER"])) & (df["result"].isin(["WON", "LOST"]))].copy()
+_ou_year = _ou_df_all["date"].dt.year
+_ou_models = sorted(_ou_df_all["model_name"].unique()) if not _ou_df_all.empty else _models_idx
+
+
+def _ou_breakdown(season_df, models_idx):
+    cols = ["Unders", "Overs", "U %", "O %", "O Win %", "U Win %"]
+    if season_df.empty:
+        return pd.DataFrame(
+            {c: ["0" if c in ("Unders", "Overs") else "0.0%"] * len(models_idx) for c in cols},
+            index=pd.Index(models_idx, name="model_name"),
+        )
+    counts = season_df.groupby(["model_name", "bet"]).size().unstack(fill_value=0)
+    counts = counts.rename(columns={"OVER": "Overs", "UNDER": "Unders"})
+    for c in ["Overs", "Unders"]:
+        if c not in counts.columns:
+            counts[c] = 0
+    counts = counts[["Overs", "Unders"]].reindex(models_idx, fill_value=0)
+    total = counts.sum(axis=1)
+
+    win_counts = (
+        season_df[season_df["result"] == "WON"]
+        .groupby(["model_name", "bet"]).size()
+        .unstack(fill_value=0)
+        .rename(columns={"OVER": "Over_Wins", "UNDER": "Under_Wins"})
+        .reindex(models_idx, fill_value=0)
+    )
+    for c in ["Over_Wins", "Under_Wins"]:
+        if c not in win_counts.columns:
+            win_counts[c] = 0
+
+    over_pct = (win_counts["Over_Wins"] / counts["Overs"].replace(0, pd.NA) * 100).round(1).fillna(0)
+    under_pct = (win_counts["Under_Wins"] / counts["Unders"].replace(0, pd.NA) * 100).round(1).fillna(0)
+    total_safe = total.replace(0, pd.NA)
+
+    return pd.DataFrame({
+        "Unders": counts["Unders"].astype(int).astype(str),
+        "Overs": counts["Overs"].astype(int).astype(str),
+        "U %": (counts["Unders"] / total_safe * 100).round(1).fillna(0).astype(str) + "%",
+        "O %": (counts["Overs"] / total_safe * 100).round(1).fillna(0).astype(str) + "%",
+        "O Win %": over_pct.astype(str) + "%",
+        "U Win %": under_pct.astype(str) + "%",
+    })
+
+
+_ou_combined = pd.concat(
+    {
+        "2026": _ou_breakdown(_ou_df_all[_ou_year == 2026], _ou_models),
+        "2025": _ou_breakdown(_ou_df_all[_ou_year == 2025], _ou_models),
+        "Total": _ou_breakdown(_ou_df_all, _ou_models),
+    },
+    axis=1,
 )
-
-over_win_pct = (win_counts["Over_Wins"] / counts["Overs"].replace(0, pd.NA) * 100).round(1)
-under_win_pct = (win_counts["Under_Wins"] / counts["Unders"].replace(0, pd.NA) * 100).round(1)
-
-summary_df = pd.DataFrame({
-    "Number of Unders": counts["Unders"],
-    "Number of Overs": counts["Overs"],
-    "Unders % of All Bets": (counts["Unders"] / counts["Total"] * 100).round(1).astype(str) + "%",
-    "Overs % of All Bets": (counts["Overs"] / counts["Total"] * 100).round(1).astype(str) + "%",
-    "Over Win %": over_win_pct.fillna(0).astype(str) + "%",
-    "Under Win %": under_win_pct.fillna(0).astype(str) + "%"
-})
-
-st.table(summary_df)
+st.table(_ou_combined)
 
 
 
@@ -273,9 +394,22 @@ st.table(summary_df)
 
 
 st.subheader("Average Model Accuracy (PTS Differential)")
-accuracy = df.groupby("model_name")["pts_differential"].mean().reset_index()
-accuracy["pts_differential"] = accuracy["pts_differential"].round(2)
-st.bar_chart(accuracy.set_index("model_name"))
+_acc_year = df["date"].dt.year
+
+
+def _acc_series(season_df, models_idx):
+    if season_df.empty:
+        return pd.Series(0.0, index=pd.Index(models_idx, name="model_name"))
+    s = season_df.groupby("model_name")["pts_differential"].mean()
+    return s.reindex(models_idx, fill_value=0.0).round(2)
+
+
+_accuracy_combined = pd.DataFrame({
+    "2026": _acc_series(df[_acc_year == 2026], _models_idx),
+    "2025": _acc_series(df[_acc_year == 2025], _models_idx),
+    "Total": _acc_series(df, _models_idx),
+})
+st.bar_chart(_accuracy_combined)
 
 
 
@@ -284,6 +418,7 @@ st.bar_chart(accuracy.set_index("model_name"))
 st.subheader("Low Output Stats")
 
 low_output_games = df[df["note"].str.contains("Low Output", case=False, na=False)].copy()
+low_output_games["_year"] = pd.to_datetime(low_output_games["date"]).dt.year
 low_output_games["date"] = pd.to_datetime(low_output_games["date"]).dt.date
 
 def highlight_pg_result(val):
@@ -308,7 +443,7 @@ def smart_num_format(x, col=None):
     except Exception:
         return str(x)
 
-low_output_display = low_output_games.copy()
+low_output_display = low_output_games.drop(columns=["_year"]).copy()
 numeric_cols = low_output_display.select_dtypes(include=[np.number]).columns.tolist()
 fmt_dict = {col: (lambda x, c=col: smart_num_format(x, c)) for col in numeric_cols}
 
@@ -319,26 +454,60 @@ styled_low_output = (
 )
 
 st.write("### Low Output Entries")
-st.dataframe(styled_low_output, use_container_width=True, height=400)
+_lo_filter = st.radio(
+    "Filter entries by season:",
+    ("All", "2026", "2025"),
+    horizontal=True,
+    key="low_output_entries_filter",
+)
+_lo_view = low_output_display
+if _lo_filter == "2026":
+    _lo_view = low_output_display[low_output_games["_year"] == 2026]
+elif _lo_filter == "2025":
+    _lo_view = low_output_display[low_output_games["_year"] == 2025]
 
-pg_filtered = low_output_games[low_output_games["result"].isin(["WON", "LOST"])]
-won_count = (pg_filtered["result"] == "WON").sum()
-lost_count = (pg_filtered["result"] == "LOST").sum()
-total_played = won_count + lost_count
-win_pct = (won_count / total_played * 100) if total_played > 0 else 0
-loss_pct = (lost_count / total_played * 100) if total_played > 0 else 0
+_styled_lo_view = (
+    _lo_view.style
+    .map(highlight_pg_result, subset=["result"])
+    .format(fmt_dict)
+)
+st.dataframe(_styled_lo_view, use_container_width=True, height=400)
 
-stats = pd.DataFrame({
-    "WON": [f"{won_count} ({win_pct:.1f}%)"],
-    "LOST": [f"{lost_count} ({loss_pct:.1f}%)"],
-    "Total Bet Amount": [low_output_games["amount"].sum()],
-    "Winnings": [low_output_games.loc[low_output_games["profit"] > 0, "profit"].sum()],
-    "Losses": [low_output_games.loc[low_output_games["profit"] < 0, "profit"].sum()],
-    "Net Profit": [low_output_games["profit"].sum() if not low_output_games.empty else None],
-    "MAE": [np.mean(np.abs(low_output_games["pts_differential"])) if not low_output_games.empty else None],
-    "RMSE": [np.sqrt(np.mean(low_output_games["pts_differential"]**2)) if not low_output_games.empty else None],
-    "STD": [np.std(low_output_games["pts_differential"]) if not low_output_games.empty else None]
-})
+
+def _lo_stats_row(season_df):
+    if season_df.empty:
+        return {
+            "WON": "0 (0.0%)", "LOST": "0 (0.0%)",
+            "Total Bet Amount": 0.0, "Winnings": 0.0, "Losses": 0.0,
+            "Net Profit": None, "MAE": None, "RMSE": None, "STD": None,
+        }
+    graded = season_df[season_df["result"].isin(["WON", "LOST"])]
+    w = (graded["result"] == "WON").sum()
+    l = (graded["result"] == "LOST").sum()
+    n = w + l
+    wp = (w / n * 100) if n > 0 else 0.0
+    lp = (l / n * 100) if n > 0 else 0.0
+    return {
+        "WON": f"{w} ({wp:.1f}%)",
+        "LOST": f"{l} ({lp:.1f}%)",
+        "Total Bet Amount": season_df["amount"].sum(),
+        "Winnings": season_df.loc[season_df["profit"] > 0, "profit"].sum(),
+        "Losses": season_df.loc[season_df["profit"] < 0, "profit"].sum(),
+        "Net Profit": season_df["profit"].sum(),
+        "MAE": np.mean(np.abs(season_df["pts_differential"])),
+        "RMSE": np.sqrt(np.mean(season_df["pts_differential"] ** 2)),
+        "STD": np.std(season_df["pts_differential"]),
+    }
+
+
+stats = pd.DataFrame(
+    [
+        _lo_stats_row(low_output_games[low_output_games["_year"] == 2026]),
+        _lo_stats_row(low_output_games[low_output_games["_year"] == 2025]),
+        _lo_stats_row(low_output_games),
+    ],
+    index=["2026", "2025", "Total"],
+)
 
 def format_currency_2(x):
     if pd.isna(x):
@@ -351,8 +520,7 @@ def format_float_max3(x):
     return f"{x:.3f}"
 
 styled_stats = (
-    stats.reset_index(drop=True)
-    .style
+    stats.style
     .map(lambda v: "color: green; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v > 0) else ("color: red; font-weight: bold;" if (isinstance(v, (int, float, np.floating)) and v < 0) else ""), subset=["Winnings", "Losses", "Net Profit"])
     .format({
         "Total Bet Amount": format_currency_2,
@@ -444,13 +612,37 @@ sportsbook_metrics_df.index = ['Sportsbook']
 
 
 st.subheader("Model vs Sportsbook Error Comparison")
-comparison_df = metrics_df.copy()
-sportsbook_row = pd.DataFrame({
-    'model_name': ['Sportsbook'],
-    'MAE': [sportsbook_metrics['MAE']],
-    'RMSE': [sportsbook_metrics['RMSE']],
-    'STD': [sportsbook_metrics['STD']]
-})
-comparison_df = pd.concat([comparison_df, sportsbook_row], ignore_index=True)
-comparison_df = comparison_df.sort_values('MAE')
-st.dataframe(comparison_df)
+
+
+def _err_metrics(values):
+    if values.empty or values.dropna().empty:
+        return {"MAE": np.nan, "RMSE": np.nan, "STD": np.nan}
+    v = values.dropna()
+    return {
+        "MAE": float(np.mean(np.abs(v))),
+        "RMSE": float(np.sqrt(np.mean(v ** 2))),
+        "STD": float(np.std(v)),
+    }
+
+
+def _err_breakdown(season_df, models_idx):
+    rows = {}
+    for m in models_idx:
+        rows[m] = _err_metrics(season_df.loc[season_df["model_name"] == m, "pts_differential"])
+    rows["Sportsbook"] = _err_metrics(season_df["sportsbook_differential"])
+    return pd.DataFrame.from_dict(rows, orient="index")[["MAE", "RMSE", "STD"]].round(3)
+
+
+_err_year = df["date"].dt.year
+_err_combined = pd.concat(
+    {
+        "2026": _err_breakdown(df[_err_year == 2026], _models_idx),
+        "2025": _err_breakdown(df[_err_year == 2025], _models_idx),
+        "Total": _err_breakdown(df, _models_idx),
+    },
+    axis=1,
+)
+# Sort by Total MAE so the leaderboard is intuitive
+_err_combined = _err_combined.sort_values(("Total", "MAE"))
+_styled_err = _err_combined.style.format(lambda v: "—" if pd.isna(v) else f"{v:.3f}")
+st.dataframe(_styled_err, use_container_width=True)
