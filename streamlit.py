@@ -55,11 +55,26 @@ def render_season_table(season_df):
     st.dataframe(styled, use_container_width=True, height=600)
 
 
-_years = pd.to_datetime(df["date"]).dt.year
+_dates = pd.to_datetime(df["date"])
+_years = _dates.dt.year
 df_2026 = df[_years == 2026]
 df_2025 = df[_years == 2025]
 
-st.subheader("2026 Season")
+_today_date = datetime.now(pytz.timezone("US/Eastern")).date()
+_today_df = df[_dates.dt.date == _today_date]
+_today_rows = len(_today_df)
+_today_players = _today_df["player_name"].nunique()
+_today_unders = int((_today_df["bet"] == "UNDER").sum())
+_today_overs = int((_today_df["bet"] == "OVER").sum())
+_today_wagered = float(pd.to_numeric(_today_df["amount"], errors="coerce").fillna(0).sum())
+
+_today_summary = (
+    f" [Today: {_today_rows} rows, {_today_players} players, "
+    f"{_today_unders} unders, {_today_overs} overs, "
+    f"${_today_wagered:,.2f} wagered]"
+)
+
+st.subheader("2026 Season" + _today_summary)
 if df_2026.empty:
     st.write("No predictions yet.")
 else:
