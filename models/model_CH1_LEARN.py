@@ -901,7 +901,7 @@ class PointPredictor:
             if stdev_pts <= 3:
                 return "Very Good Game"
             else:
-                return "Good game"
+                return "Good Game"
         elif avg_pts >= 15:
             if stdev_pts <= 4:
                 return "Above Average Game"

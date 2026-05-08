@@ -310,14 +310,14 @@ def _recent_mean_std(player_df, target_date, n=10):
 
 def _categorize(deviation_pct):
     if deviation_pct <= -0.20:
-        return "very bad game"
+        return "Very Bad Game"
     if deviation_pct <= -0.08:
-        return "below average"
+        return "Below Average"
     if deviation_pct < 0.05:
-        return "average game"
+        return "Average Game"
     if deviation_pct < 0.15:
-        return "good game"
-    return "very good game"
+        return "Good Game"
+    return "Very Good Game"
 
 
 def _confidence_to_amount(confidence):

@@ -343,17 +343,17 @@ def _confidence_to_amount(confidence):
 
 def _categorize(predicted, career_mean):
     if career_mean <= 0:
-        return "average game"
+        return "Average Game"
     dev = (predicted - career_mean) / career_mean
     if dev <= -0.20:
-        return "very bad game"
+        return "Very Bad Game"
     if dev <= -0.08:
-        return "below average"
+        return "Below Average"
     if dev < 0.05:
-        return "average game"
+        return "Average Game"
     if dev < 0.15:
-        return "good game"
-    return "very good game"
+        return "Good Game"
+    return "Very Good Game"
 
 
 def _detect_monthly_dip(pdata, target_date, career_mean):
