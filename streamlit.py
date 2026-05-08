@@ -281,10 +281,10 @@ st.bar_chart(accuracy.set_index("model_name"))
 
 
 
-st.subheader("Period Game Stats")
+st.subheader("Low Output Stats")
 
-period_games = df[df["note"].str.contains("Period Game", case=False, na=False)].copy()
-period_games["date"] = pd.to_datetime(period_games["date"]).dt.date
+low_output_games = df[df["note"].str.contains("Low Output", case=False, na=False)].copy()
+low_output_games["date"] = pd.to_datetime(low_output_games["date"]).dt.date
 
 def highlight_pg_result(val):
     if val == "WON":
@@ -308,20 +308,20 @@ def smart_num_format(x, col=None):
     except Exception:
         return str(x)
 
-period_games_display = period_games.copy()
-numeric_cols = period_games_display.select_dtypes(include=[np.number]).columns.tolist()
+low_output_display = low_output_games.copy()
+numeric_cols = low_output_display.select_dtypes(include=[np.number]).columns.tolist()
 fmt_dict = {col: (lambda x, c=col: smart_num_format(x, c)) for col in numeric_cols}
 
-styled_period_games = (
-    period_games_display.style
+styled_low_output = (
+    low_output_display.style
     .map(highlight_pg_result, subset=["result"])
     .format(fmt_dict)
 )
 
-st.write("### Period Game Entries")
-st.dataframe(styled_period_games, use_container_width=True, height=400)
+st.write("### Low Output Entries")
+st.dataframe(styled_low_output, use_container_width=True, height=400)
 
-pg_filtered = period_games[period_games["result"].isin(["WON", "LOST"])]
+pg_filtered = low_output_games[low_output_games["result"].isin(["WON", "LOST"])]
 won_count = (pg_filtered["result"] == "WON").sum()
 lost_count = (pg_filtered["result"] == "LOST").sum()
 total_played = won_count + lost_count
@@ -331,13 +331,13 @@ loss_pct = (lost_count / total_played * 100) if total_played > 0 else 0
 stats = pd.DataFrame({
     "WON": [f"{won_count} ({win_pct:.1f}%)"],
     "LOST": [f"{lost_count} ({loss_pct:.1f}%)"],
-    "Total Bet Amount": [period_games["amount"].sum()],
-    "Winnings": [period_games.loc[period_games["profit"] > 0, "profit"].sum()],
-    "Losses": [period_games.loc[period_games["profit"] < 0, "profit"].sum()],
-    "Net Profit": [period_games["profit"].sum() if not period_games.empty else None],
-    "MAE": [np.mean(np.abs(period_games["pts_differential"])) if not period_games.empty else None],
-    "RMSE": [np.sqrt(np.mean(period_games["pts_differential"]**2)) if not period_games.empty else None],
-    "STD": [np.std(period_games["pts_differential"]) if not period_games.empty else None]
+    "Total Bet Amount": [low_output_games["amount"].sum()],
+    "Winnings": [low_output_games.loc[low_output_games["profit"] > 0, "profit"].sum()],
+    "Losses": [low_output_games.loc[low_output_games["profit"] < 0, "profit"].sum()],
+    "Net Profit": [low_output_games["profit"].sum() if not low_output_games.empty else None],
+    "MAE": [np.mean(np.abs(low_output_games["pts_differential"])) if not low_output_games.empty else None],
+    "RMSE": [np.sqrt(np.mean(low_output_games["pts_differential"]**2)) if not low_output_games.empty else None],
+    "STD": [np.std(low_output_games["pts_differential"]) if not low_output_games.empty else None]
 })
 
 def format_currency_2(x):
@@ -365,7 +365,7 @@ styled_stats = (
     })
 )
 
-st.write("### Period Game Stats")
+st.write("### Low Output Stats")
 st.dataframe(styled_stats, use_container_width=True)
 
 

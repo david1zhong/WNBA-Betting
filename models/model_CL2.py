@@ -340,7 +340,7 @@ def predict(player):
         predicted_points = (baseline_prediction * (1 - adjustment_factor) +
                             avg_dip_performance * adjustment_factor)
 
-        performance_note = "Period Game" if proximity > 0.7 else "Below Average"
+        performance_note = "Low Output" if proximity > 0.7 else "Below Average"
 
     else:
         # No cyclical pattern or outside dip window
