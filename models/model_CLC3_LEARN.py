@@ -8,6 +8,8 @@ import psycopg2
 from datetime import datetime
 from dotenv import load_dotenv
 
+
+TAG = "[CLC3_LEARN]"
 warnings.filterwarnings('ignore')
 
 np.random.seed(42)
@@ -383,29 +385,29 @@ def predict(player):
 
     box_df = _load_playerboxes()
     if box_df.empty:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     pdata = box_df[box_df["athlete_display_name"] == name].copy()
     target = pd.to_datetime(date_str)
     pdata = pdata[pdata["game_date"] < target].copy()
     if len(pdata) < MIN_CAREER_GAMES:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     feats = _player_features_at(box_df, name, date_str)
     if feats is None:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     conn = _get_db()
     if conn is None:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     pred_df = _fetch_player_predictions(conn, name)
     if pred_df.empty:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     # Phase-in: check GLOBAL graded prediction counts (across all players),
@@ -453,7 +455,7 @@ def predict(player):
         })
 
     if not contributions:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     weights = np.array([c["weight"] for c in contributions], dtype=float)
@@ -479,7 +481,7 @@ def predict(player):
 
     # Self-skip: drop if calibrated meta-confidence is too low
     if confidence < 0.55:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     bet = "OVER" if predicted_points > over_line else "UNDER"
@@ -519,12 +521,12 @@ if __name__ == "__main__":
             continue
         seen.add(key)
 
-        print(f"\n--- Running prediction for {player['name']} on {player['date']} ---")
+        print(TAG, f"\n--- Running prediction for {player['name']} on {player['date']} ---")
         result = predict(player)
         if result is None:
-            print(f"Prediction not generated for {player['name']}")
+            print(TAG, f"Prediction not generated for {player['name']}")
             continue
-        print(f"Prediction successful for {player['name']}: {result['predicted_points']} pts")
-        print(f"{player['name']} predicted points: {result['predicted_points']}")
-        print(f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
+        print(TAG, f"Prediction successful for {player['name']}: {result['predicted_points']} pts")
+        print(TAG, f"{player['name']} predicted points: {result['predicted_points']}")
+        print(TAG, f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
 """

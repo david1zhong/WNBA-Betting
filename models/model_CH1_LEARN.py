@@ -32,6 +32,8 @@ except Exception:  # pragma: no cover
 # -------------------------------------------------------------------------------------------------
 from dotenv import load_dotenv
 
+
+TAG = "[CH1_LEARN]"
 load_dotenv()
 
 conn = psycopg2.connect(
@@ -1123,12 +1125,12 @@ class Reporter:
         self.show_history_block = show_history_block
 
     def banner(self, title: str):
-        print(Style.MAGENTA + "=" * self.width + Style.RESET)
-        print(Style.BOLD + title.center(self.width) + Style.RESET)
-        print(Style.MAGENTA + "=" * self.width + Style.RESET)
+        print(TAG, Style.MAGENTA + "=" * self.width + Style.RESET)
+        print(TAG, Style.BOLD + title.center(self.width) + Style.RESET)
+        print(TAG, Style.MAGENTA + "=" * self.width + Style.RESET)
 
     def line(self, ch: str = "-"):
-        print(ch * self.width)
+        print(TAG, ch * self.width)
 
     def fmt_num(self, v: Optional[float], nd: int = 1) -> str:
         if v is None:
@@ -1138,23 +1140,19 @@ class Reporter:
     def print_history_block(self, hist: HistorySummary):
         if not self.show_history_block:
             return
-        print(Style.DIM + "  --- Historical Summary (CL1/CL2) ---" + Style.RESET)
-        print(
-            f"  OVER:  correct={hist.o_correct}, wrong={hist.o_wrong} "
+        print(TAG, Style.DIM + "  --- Historical Summary (CL1/CL2) ---" + Style.RESET)
+        print(TAG, f"  OVER:  correct={hist.o_correct}, wrong={hist.o_wrong} "
             f"| UNDER: correct={hist.u_correct}, wrong={hist.u_wrong} "
             f"| total={hist.total}"
         )
-        print(
-            f"  Side counts: OVER={hist.side_counts.get('OVER', 0)}, "
+        print(TAG, f"  Side counts: OVER={hist.side_counts.get('OVER', 0)}, "
             f"UNDER={hist.side_counts.get('UNDER', 0)}"
         )
-        print(
-            f"  Correct rates: OVER={hist.side_correct_rate.get('OVER', 0.0):.2f}, "
+        print(TAG, f"  Correct rates: OVER={hist.side_correct_rate.get('OVER', 0.0):.2f}, "
             f"UNDER={hist.side_correct_rate.get('UNDER', 0.0):.2f}"
         )
         if hist.suggested_override:
-            print(
-                Style.BOLD + f"  HPO Suggestion: {hist.suggested_override.value} ({hist.override_reason})" + Style.RESET)
+            print(TAG, Style.BOLD + f"  HPO Suggestion: {hist.suggested_override.value} ({hist.override_reason})" + Style.RESET)
 
     def print_player_summary(
             self,
@@ -1166,23 +1164,21 @@ class Reporter:
             prior_stats: Dict[str, Dict[str, int]],
             hist: Optional[HistorySummary] = None,
     ):
-        print(Style.CYAN + f"Player: {player}" + Style.RESET)
-        print(
-            f"  Predicted Points: {self.fmt_num(pred_points)}  |  Lines: O={self.fmt_num(over_line)}, U={self.fmt_num(under_line)}"
+        print(TAG, Style.CYAN + f"Player: {player}" + Style.RESET)
+        print(TAG, f"  Predicted Points: {self.fmt_num(pred_points)}  |  Lines: O={self.fmt_num(over_line)}, U={self.fmt_num(under_line)}"
         )
         o = prior_stats.get("OVER", {"correct": 0, "wrong": 0})
         u = prior_stats.get("UNDER", {"correct": 0, "wrong": 0})
-        print(
-            f"  CL1/CL2 OVER: correct={o['correct']}, wrong={o['wrong']}  |  UNDER: correct={u['correct']}, wrong={u['wrong']}"
+        print(TAG, f"  CL1/CL2 OVER: correct={o['correct']}, wrong={o['wrong']}  |  UNDER: correct={u['correct']}, wrong={u['wrong']}"
         )
         if hist is not None:
             self.print_history_block(hist)
         if decision is None:
-            print(Style.YELLOW + "  Decision: None (insufficient data)" + Style.RESET)
+            print(TAG, Style.YELLOW + "  Decision: None (insufficient data)" + Style.RESET)
         else:
             color = Style.GREEN if decision.bet == "OVER" else Style.RED
-            print(color + f"  Decision: {decision.bet}  (conf={decision.confidence:.2f})" + Style.RESET)
-            print("  Rationale: " + decision.rationale)
+            print(TAG, color + f"  Decision: {decision.bet}  (conf={decision.confidence:.2f})" + Style.RESET)
+            print(TAG, "  Rationale: " + decision.rationale)
         self.line()
 
 
@@ -1300,17 +1296,16 @@ class Simulator:
         prior_rows = self.o.db.fetch_player_history_for_models(player, ("model_CL1", "model_CL2"), limit=500)
         boxes = self.o.db.fetch_recent_playerboxes(player, limit=1)
         if not boxes or boxes[0].points is None:
-            print(f"No recent actual points available for {player}.")
+            print(TAG, f"No recent actual points available for {player}.")
             return
         pred_points = self.o.point_model.predict(self.o.db.fetch_recent_playerboxes(player, limit=20))
         if pred_points is None:
-            print(f"No prediction available for {player}.")
+            print(TAG, f"No prediction available for {player}.")
             return
         decision = self.o.decider.decide(player, pred_points, over_line, under_line, prior_rows)
         actual = float(boxes[0].points)
         res = self._decide_win(decision, actual)
-        print(
-            f"SIM {player}: bet={decision.bet} conf={decision.confidence:.2f} | pred={pred_points:.1f} line={over_line:.1f} | actual={actual} → {res.value}"
+        print(TAG, f"SIM {player}: bet={decision.bet} conf={decision.confidence:.2f} | pred={pred_points:.1f} line={over_line:.1f} | actual={actual} → {res.value}"
         )
 
 
@@ -1349,14 +1344,14 @@ def predict(player: Dict[str, Any]) -> Dict[str, Any]:
 
         # Get current date for logging
         current_date = datetime.now().strftime("%Y-%m-%d")
-        print(f"--- Running prediction for {player_name} on {current_date} ---")
+        print(TAG, f"--- Running prediction for {player_name} on {current_date} ---")
 
         # Build engine and orchestrator
         try:
             engine = build_engine()
         except Exception as e:
-            print(f"Database connection failed for {player_name}: {e}")
-            print(f"Prediction not generated for {player_name}")
+            print(TAG, f"Database connection failed for {player_name}: {e}")
+            print(TAG, f"Prediction not generated for {player_name}")
             return None
 
         orch = Orchestrator(
@@ -1372,15 +1367,15 @@ def predict(player: Dict[str, Any]) -> Dict[str, Any]:
 
         # Check if we have enough data
         if not boxes:
-            print(f"{player_name} not in dip results")
-            print(f"Prediction not generated for {player_name}")
+            print(TAG, f"{player_name} not in dip results")
+            print(TAG, f"Prediction not generated for {player_name}")
             return None
 
         # Predict points - this is the original model prediction
         pred_points = orch.point_model.predict(boxes)
         if pred_points is None or math.isnan(pred_points):
-            print(f"{player_name} prediction resulted in NaN")
-            print(f"Prediction not generated for {player_name}")
+            print(TAG, f"{player_name} prediction resulted in NaN")
+            print(TAG, f"Prediction not generated for {player_name}")
             return None
 
         # Get decision which includes HPO-adjusted prediction
@@ -1408,7 +1403,7 @@ def predict(player: Dict[str, Any]) -> Dict[str, Any]:
         performance_note = orch.point_model.get_performance_note(boxes)
 
         # Calculate bet amount based on decision confidence
-        print(f"DEBUG: Decision confidence: {decision.confidence:.3f}")
+        print(TAG, f"DEBUG: Decision confidence: {decision.confidence:.3f}")
 
         # More conservative thresholds
         if decision.confidence >= 0.90:
@@ -1424,8 +1419,8 @@ def predict(player: Dict[str, Any]) -> Dict[str, Any]:
         else:
             bet_amount = None
 
-        print(f"DEBUG: Calculated bet amount: {bet_amount}")
-        print(f"Prediction successful for {player_name}: {final_predicted_points} pts, bet: {bet}")
+        print(TAG, f"DEBUG: Calculated bet amount: {bet_amount}")
+        print(TAG, f"Prediction successful for {player_name}: {final_predicted_points} pts, bet: {bet}")
 
         return {
             "predicted_points": final_predicted_points,  # Uses original model prediction
@@ -1437,8 +1432,8 @@ def predict(player: Dict[str, Any]) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        print(f"Error processing {player.get('name', 'Unknown')}: {e}")
-        print(f"Prediction not generated for {player.get('name', 'Unknown')}")
+        print(TAG, f"Error processing {player.get('name', 'Unknown')}: {e}")
+        print(TAG, f"Prediction not generated for {player.get('name', 'Unknown')}")
         return None
 # -------------------------------------------------------------------------------------------------
 # MAIN / CLI

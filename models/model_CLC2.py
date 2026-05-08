@@ -5,6 +5,8 @@ from datetime import datetime
 import json
 import warnings
 
+
+TAG = "[CLC2]"
 warnings.filterwarnings('ignore')
 
 np.random.seed(42)
@@ -288,24 +290,24 @@ def predict(player):
 
     df, opp_pos_def, league_pos_avg, league_career_mean = _load_all_data()
     if df.empty:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     pdata = df[df["athlete_display_name"] == name].copy()
     if len(pdata) < MIN_CAREER_GAMES:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     target = pd.to_datetime(date_str)
     pdata = pdata[pdata["game_date"] < target].copy()
     if len(pdata) < MIN_CAREER_GAMES:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     train_data = pdata.tail(LOOKBACK_TRAIN_GAMES) if len(pdata) > LOOKBACK_TRAIN_GAMES else pdata
     X_train, y_train = _build_training_features(train_data, opp_pos_def, league_pos_avg)
     if X_train is None or len(X_train) < 10:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     pos_mode = pdata["pos"].mode()
@@ -332,7 +334,7 @@ def predict(player):
     x_today = _features_for_today(pdata, date_str, today_ha, today_opp, today_pos,
                                   opp_pos_def, league_pos_avg)
     if x_today is None:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     raw_pred = float(x_today @ beta)
@@ -403,12 +405,12 @@ if __name__ == "__main__":
             continue
         seen.add(key)
 
-        print(f"\n--- Running prediction for {player['name']} on {player['date']} ---")
+        print(TAG, f"\n--- Running prediction for {player['name']} on {player['date']} ---")
         result = predict(player)
         if result is None:
-            print(f"Prediction not generated for {player['name']}")
+            print(TAG, f"Prediction not generated for {player['name']}")
             continue
-        print(f"Prediction successful for {player['name']}: {result['predicted_points']} pts")
-        print(f"{player['name']} predicted points: {result['predicted_points']}")
-        print(f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
+        print(TAG, f"Prediction successful for {player['name']}: {result['predicted_points']} pts")
+        print(TAG, f"{player['name']} predicted points: {result['predicted_points']}")
+        print(TAG, f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
 """

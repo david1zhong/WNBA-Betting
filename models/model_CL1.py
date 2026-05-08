@@ -7,6 +7,8 @@ import warnings
 import psycopg2
 from sqlalchemy import create_engine, text
 
+
+TAG = "[CL1]"
 warnings.filterwarnings('ignore')
 
 
@@ -257,7 +259,7 @@ class WNBACyclicalPatternDetector:
         # Check if player exists - skip if not found
         available_players = df['athlete_display_name'].unique()
         if player_name not in available_players:
-            print(f"{player_name} not found")
+            print(TAG, f"{player_name} not found")
             return None
 
         player_baselines = self.calculate_weighted_baselines(df)
@@ -267,12 +269,12 @@ class WNBACyclicalPatternDetector:
             predictions = self.get_predictions_only(df, player_name, player_baselines, dip_results)
             return predictions
         else:
-            print(f"{player_name} not in dip results")
+            print(TAG, f"{player_name} not in dip results")
             return None
 
 
 def predict(player):
-    print(f"\n--- CL1: Running prediction for {player['name']} on {player['date']} ---")
+    print(TAG, f"\n--- CL1: Running prediction for {player['name']} on {player['date']} ---")
     
     analyzer = WNBACyclicalPatternDetector()
     results = analyzer.analyze_player(player["name"], [player["date"]])
@@ -281,7 +283,7 @@ def predict(player):
         pred_df = analyzer.prediction_results.get('predictions')
         if pred_df is not None and not pred_df.empty:
             predicted_points = int(round(float(pred_df['predicted_points'].iloc[0])))
-            print(f"Prediction successful for {player['name']}: {predicted_points} pts")
+            print(TAG, f"Prediction successful for {player['name']}: {predicted_points} pts")
             print()
             performance_note = pred_df['category'].iloc[0]
             over_line = float(player['over_line'])
@@ -296,11 +298,11 @@ def predict(player):
                 "note": performance_note
             }
         else:
-            print(f"Prediction empty or invalid for {player['name']}")
+            print(TAG, f"Prediction empty or invalid for {player['name']}")
             print()
 
     else:
-        print(f"Prediction not generated for {player['name']}")
+        print(TAG, f"Prediction not generated for {player['name']}")
         print()
 
     return None
@@ -314,8 +316,8 @@ if __name__ == "__main__":
     for player in data["players"]:
         pred = predict(player)
         if pred:
-            print(f"{player['name']} predicted points: {pred['predicted_points']:.1f}")
-            print(f"Bet: {pred['bet']}, Over line: {pred['over_line']}, Under line: {pred['under_line']}")
-            print(f"Performance Note: {pred['note']}")
+            print(TAG, f"{player['name']} predicted points: {pred['predicted_points']:.1f}")
+            print(TAG, f"Bet: {pred['bet']}, Over line: {pred['over_line']}, Under line: {pred['under_line']}")
+            print(TAG, f"Performance Note: {pred['note']}")
             print()
 """

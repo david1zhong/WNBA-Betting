@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import json
 import warnings
 
+
+TAG = "[CLC1]"
 warnings.filterwarnings('ignore')
 
 np.random.seed(42)
@@ -336,22 +338,22 @@ def predict(player):
 
     df, opp_pos_def, opp_pace_dict, league_pos_avg = _load_all_data()
     if df.empty:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     pdata = _player_history(df, name)
     if len(pdata) < MIN_CAREER_GAMES:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     baseline = _recency_weighted_baseline(pdata)
     if baseline <= 0:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     pattern_strength = _pattern_strength(pdata)
     if pattern_strength < 0.05:
-        print(f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results")
         return None
 
     opponent_name, today_ha = _find_todays_opponent(df, name, date_str)
@@ -435,12 +437,12 @@ if __name__ == "__main__":
             continue
         seen.add(key)
 
-        print(f"\n--- Running prediction for {player['name']} on {player['date']} ---")
+        print(TAG, f"\n--- Running prediction for {player['name']} on {player['date']} ---")
         result = predict(player)
         if result is None:
-            print(f"Prediction not generated for {player['name']}")
+            print(TAG, f"Prediction not generated for {player['name']}")
             continue
-        print(f"Prediction successful for {player['name']}: {result['predicted_points']} pts")
-        print(f"{player['name']} predicted points: {result['predicted_points']}")
-        print(f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
+        print(TAG, f"Prediction successful for {player['name']}: {result['predicted_points']} pts")
+        print(TAG, f"{player['name']} predicted points: {result['predicted_points']}")
+        print(TAG, f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
 """

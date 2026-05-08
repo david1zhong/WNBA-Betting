@@ -25,8 +25,15 @@ with open("props.json") as f:
 
 with engine.begin() as conn:
     for player in players:
+        print(f"\n{'#' * 60}")
+        print(f"# {player['name']} — {player['date']}")
+        print(f"{'#' * 60}")
+
         for model_name, model in models.items():
+            tag = getattr(model, "TAG", f"[{model_name}]")
+            print(f"\n=== {tag} {player['name']} on {player['date']} ===")
             result = model.predict(player)
+            print()  # blank-line separator after each model finishes
 
             if result is None:
                 continue

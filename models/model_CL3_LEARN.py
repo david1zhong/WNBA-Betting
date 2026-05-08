@@ -9,6 +9,8 @@ from collections import defaultdict
 from dotenv import load_dotenv
 import os
 
+TAG = "[CL3_LEARN]"
+
 warnings.filterwarnings('ignore')
 
 # Database connection setup
@@ -74,17 +76,15 @@ class WNBALearningPatternDetector:
             columns = [desc[0] for desc in cur.description]
             df = pd.DataFrame(results, columns=columns)
 
-            print(f"DEBUG: Found {len(df)} historical bets for {player_name}")
+            print(TAG, f"DEBUG: Found {len(df)} historical bets for {player_name}")
             if not df.empty:
-                print(
-                    f"DEBUG: Bet distribution - OVER: {sum(df['predicted_bet'] == 'OVER')}, UNDER: {sum(df['predicted_bet'] == 'UNDER')}")
-                print(
-                    f"DEBUG: Result distribution - WON: {sum(df['actual_result'] == 'WON')}, LOST: {sum(df['actual_result'] == 'LOST')}")
+                print(TAG, f"DEBUG: Bet distribution - OVER: {sum(df['predicted_bet'] == 'OVER')}, UNDER: {sum(df['predicted_bet'] == 'UNDER')}")
+                print(TAG, f"DEBUG: Result distribution - WON: {sum(df['actual_result'] == 'WON')}, LOST: {sum(df['actual_result'] == 'LOST')}")
 
             return df if not df.empty else None
 
         except Exception as e:
-            print(f"Error fetching historical data for {player_name}: {e}")
+            print(TAG, f"Error fetching historical data for {player_name}: {e}")
             return None
 
     def analyze_model_performance(self, historical_data):
@@ -152,8 +152,7 @@ class WNBALearningPatternDetector:
                                  key=lambda x: model_performance[x]['accuracy'] if model_performance[x][
                                                                                        'games_with_results'] >= 3 else 0)
                 analysis['best_model'] = best_model
-                print(
-                    f"DEBUG: Best performing model: {best_model} with accuracy {model_performance[best_model]['accuracy']:.2f}")
+                print(TAG, f"DEBUG: Best performing model: {best_model} with accuracy {model_performance[best_model]['accuracy']:.2f}")
 
             # Analyze bet distribution
             over_bets = historical_data[historical_data['predicted_bet'] == 'OVER']
@@ -182,16 +181,13 @@ class WNBALearningPatternDetector:
             # Check for betting bias - only if one bet type is 70%+ of total
             if under_games_with_results >= total_games_with_results * 0.7:
                 analysis['prediction_bias'] = 'UNDER'
-                print(
-                    f"DEBUG: Strong UNDER betting bias detected: {under_games_with_results}/{total_games_with_results} = {under_games_with_results / total_games_with_results:.2f}")
+                print(TAG, f"DEBUG: Strong UNDER betting bias detected: {under_games_with_results}/{total_games_with_results} = {under_games_with_results / total_games_with_results:.2f}")
             elif over_games_with_results >= total_games_with_results * 0.7:
                 analysis['prediction_bias'] = 'OVER'
-                print(
-                    f"DEBUG: Strong OVER betting bias detected: {over_games_with_results}/{total_games_with_results} = {over_games_with_results / total_games_with_results:.2f}")
+                print(TAG, f"DEBUG: Strong OVER betting bias detected: {over_games_with_results}/{total_games_with_results} = {over_games_with_results / total_games_with_results:.2f}")
             else:
                 analysis['prediction_bias'] = 'BALANCED'
-                print(
-                    f"DEBUG: Balanced betting pattern: OVER {over_games_with_results}, UNDER {under_games_with_results}")
+                print(TAG, f"DEBUG: Balanced betting pattern: OVER {over_games_with_results}, UNDER {under_games_with_results}")
 
             # Analyze what actually wins more often
             won_over_bets = won_bets[won_bets['predicted_bet'] == 'OVER']
@@ -204,11 +200,9 @@ class WNBALearningPatternDetector:
             else:
                 analysis['reality_bias'] = 'BALANCED'
 
-            print(
-                f"DEBUG: Analysis - Under games with results: {len(under_results)}, Under wins: {analysis['under_wins']}, Under success: {analysis['under_success_rate']:.2f}")
-            print(
-                f"DEBUG: Analysis - Over games with results: {len(over_results)}, Over wins: {analysis['over_wins']}, Over success: {analysis['over_success_rate']:.2f}")
-            print(f"DEBUG: Total correct bets: {analysis['correct_bets']}/{analysis['games_with_results']}")
+            print(TAG, f"DEBUG: Analysis - Under games with results: {len(under_results)}, Under wins: {analysis['under_wins']}, Under success: {analysis['under_success_rate']:.2f}")
+            print(TAG, f"DEBUG: Analysis - Over games with results: {len(over_results)}, Over wins: {analysis['over_wins']}, Over success: {analysis['over_success_rate']:.2f}")
+            print(TAG, f"DEBUG: Total correct bets: {analysis['correct_bets']}/{analysis['games_with_results']}")
 
             # FIX #3: Apply learning only when there's a strong bias AND poor performance
             if analysis['games_with_results'] >= 5:
@@ -216,60 +210,55 @@ class WNBALearningPatternDetector:
                 if (analysis['prediction_bias'] == 'UNDER' and
                         analysis['under_success_rate'] <= 0.30):  # 30% or worse with majority UNDER bets
                     analysis['learning_recommendation'] = 'FORCE_OVER'
-                    print(
-                        f"DEBUG: FORCING OVER due to majority UNDER bets with poor performance ({analysis['under_success_rate']:.2f})")
+                    print(TAG, f"DEBUG: FORCING OVER due to majority UNDER bets with poor performance ({analysis['under_success_rate']:.2f})")
 
                 elif (analysis['prediction_bias'] == 'OVER' and
                       analysis['over_success_rate'] <= 0.30):  # 30% or worse with majority OVER bets
                     analysis['learning_recommendation'] = 'FORCE_UNDER'
-                    print(
-                        f"DEBUG: FORCING UNDER due to majority OVER bets with poor performance ({analysis['over_success_rate']:.2f})")
+                    print(TAG, f"DEBUG: FORCING UNDER due to majority OVER bets with poor performance ({analysis['over_success_rate']:.2f})")
 
                 elif (analysis['prediction_bias'] == 'UNDER' and
                       analysis['under_success_rate'] <= 0.40):  # 40% or worse with majority UNDER bets
                     analysis['learning_recommendation'] = 'FAVOR_OVER'
-                    print(
-                        f"DEBUG: FAVORING OVER due to majority UNDER bets with mediocre performance ({analysis['under_success_rate']:.2f})")
+                    print(TAG, f"DEBUG: FAVORING OVER due to majority UNDER bets with mediocre performance ({analysis['under_success_rate']:.2f})")
 
                 elif (analysis['prediction_bias'] == 'OVER' and
                       analysis['over_success_rate'] <= 0.40):  # 40% or worse with majority OVER bets
                     analysis['learning_recommendation'] = 'FAVOR_UNDER'
-                    print(
-                        f"DEBUG: FAVORING UNDER due to majority OVER bets with mediocre performance ({analysis['over_success_rate']:.2f})")
+                    print(TAG, f"DEBUG: FAVORING UNDER due to majority OVER bets with mediocre performance ({analysis['over_success_rate']:.2f})")
 
                 else:
                     analysis['learning_recommendation'] = 'NEUTRAL'
-                    print(f"DEBUG: No strong learning recommendation - performance not poor enough or no bias")
+                    print(TAG, f"DEBUG: No strong learning recommendation - performance not poor enough or no bias")
 
             elif analysis['games_with_results'] >= 3:
                 # Weaker learning with 3-4 games, only for very clear patterns
                 if (analysis['prediction_bias'] == 'UNDER' and
                         analysis['under_success_rate'] == 0):  # 0% success with majority UNDER bets
                     analysis['learning_recommendation'] = 'FAVOR_OVER'
-                    print(f"DEBUG: FAVORING OVER due to 0% UNDER success with majority UNDER bets")
+                    print(TAG, f"DEBUG: FAVORING OVER due to 0% UNDER success with majority UNDER bets")
                 elif (analysis['prediction_bias'] == 'OVER' and
                       analysis['over_success_rate'] == 0):  # 0% success with majority OVER bets
                     analysis['learning_recommendation'] = 'FAVOR_UNDER'
-                    print(f"DEBUG: FAVORING UNDER due to 0% OVER success with majority OVER bets")
+                    print(TAG, f"DEBUG: FAVORING UNDER due to 0% OVER success with majority OVER bets")
                 else:
                     analysis['learning_recommendation'] = 'NEUTRAL'
             else:
                 # Not enough data for meaningful learning
                 analysis['learning_recommendation'] = 'NEUTRAL'
-                print(
-                    f"DEBUG: Not enough data ({analysis['games_with_results']} games with results) for learning recommendations")
+                print(TAG, f"DEBUG: Not enough data ({analysis['games_with_results']} games with results) for learning recommendations")
 
-            print(f"DEBUG: Final learning recommendation: {analysis['learning_recommendation']}")
+            print(TAG, f"DEBUG: Final learning recommendation: {analysis['learning_recommendation']}")
 
         return analysis
 
     def calculate_learning_adjustment(self, player_name):
         """Calculate adjustment factors based on historical performance"""
-        print(f"DEBUG: Calculating learning adjustment for {player_name}")
+        print(TAG, f"DEBUG: Calculating learning adjustment for {player_name}")
         historical_data = self.get_historical_betting_data(player_name)
 
         if historical_data is None:
-            print(f"DEBUG: No historical data found for {player_name}")
+            print(TAG, f"DEBUG: No historical data found for {player_name}")
             return {
                 'confidence_multiplier': 1.0,
                 'bias_adjustment': 0.0,
@@ -281,7 +270,7 @@ class WNBALearningPatternDetector:
         performance_analysis = self.analyze_model_performance(historical_data)
 
         if performance_analysis is None:
-            print(f"DEBUG: No performance analysis for {player_name}")
+            print(TAG, f"DEBUG: No performance analysis for {player_name}")
             return {
                 'confidence_multiplier': 1.0,
                 'bias_adjustment': 0.0,
@@ -299,7 +288,7 @@ class WNBALearningPatternDetector:
         else:
             learning_strength = 0.2  # Very weak strength
 
-        print(f"DEBUG: Learning strength: {learning_strength} (based on {games_with_results} games with results)")
+        print(TAG, f"DEBUG: Learning strength: {learning_strength} (based on {games_with_results} games with results)")
 
         # Adjust bias based on recommendation and learning strength
         bias_adjustment = 0.0
@@ -307,19 +296,19 @@ class WNBALearningPatternDetector:
 
         if recommendation == 'FORCE_OVER':
             bias_adjustment = 8.0 * learning_strength  # Strong OVER bias
-            print(f"DEBUG: FORCING OVER with bias: {bias_adjustment}")
+            print(TAG, f"DEBUG: FORCING OVER with bias: {bias_adjustment}")
 
         elif recommendation == 'FORCE_UNDER':
             bias_adjustment = -8.0 * learning_strength  # Strong UNDER bias
-            print(f"DEBUG: FORCING UNDER with bias: {bias_adjustment}")
+            print(TAG, f"DEBUG: FORCING UNDER with bias: {bias_adjustment}")
 
         elif recommendation == 'FAVOR_OVER':
             bias_adjustment = 3.0 * learning_strength
-            print(f"DEBUG: FAVOR OVER bias: {bias_adjustment}")
+            print(TAG, f"DEBUG: FAVOR OVER bias: {bias_adjustment}")
 
         elif recommendation == 'FAVOR_UNDER':
             bias_adjustment = -3.0 * learning_strength
-            print(f"DEBUG: FAVOR UNDER bias: {bias_adjustment}")
+            print(TAG, f"DEBUG: FAVOR UNDER bias: {bias_adjustment}")
 
         # Confidence multiplier based on data quality
         if games_with_results >= 5:
@@ -338,7 +327,7 @@ class WNBALearningPatternDetector:
             'best_model': performance_analysis['best_model']
         }
 
-        print(f"DEBUG: Final adjustment for {player_name}: {adjustment}")
+        print(TAG, f"DEBUG: Final adjustment for {player_name}: {adjustment}")
 
         self.learning_insights[player_name] = {
             'historical_data': performance_analysis,
@@ -720,7 +709,7 @@ class WNBALearningPatternDetector:
             return None
 
         # Debug output
-        print(f"DEBUG: Confidence calculation - Points: {confidence_points}, Learning: {learning_strength:.2f}, "
+        print(TAG, f"DEBUG: Confidence calculation - Points: {confidence_points}, Learning: {learning_strength:.2f}, "
               f"Recommendation: {recommendation}, Dip Prob: {dip_probability:.3f}")
 
         # Map to final bet amount
@@ -747,7 +736,7 @@ class WNBALearningPatternDetector:
             if learning_strength < 0.5:
                 final_amount = None
 
-        print(f"DEBUG: Final bet amount: ${final_amount if final_amount else 'None'}")
+        print(TAG, f"DEBUG: Final bet amount: ${final_amount if final_amount else 'None'}")
         return final_amount
 
 
@@ -756,7 +745,7 @@ def predict(player):
     player_name = player["name"]
     game_date = player.get("game_date", player.get("date"))
 
-    print(f"--- Running prediction for {player_name} on {game_date} ---")
+    print(TAG, f"--- Running prediction for {player_name} on {game_date} ---")
 
     analyzer = WNBALearningPatternDetector()
     results = analyzer.analyze_player(player_name, [game_date])
@@ -773,7 +762,7 @@ def predict(player):
 
             # Check for NaN values and discard if found
             if pd.isna(raw_predicted_points) or pd.isna(dip_probability):
-                print(f"NaN values detected for {player_name}, discarding prediction")
+                print(TAG, f"NaN values detected for {player_name}, discarding prediction")
                 return None
 
             # Round to nearest whole number
@@ -782,10 +771,10 @@ def predict(player):
             over_line = float(player['over_line'])
             under_line = float(player['under_line'])
 
-            print(f"DEBUG: {player_name} - Predicted: {predicted_points} pts, Over: {over_line}, Under: {under_line}")
-            print(f"DEBUG: Learning recommendation: {learning_insights.get('recommendation', 'NEUTRAL')}")
-            print(f"DEBUG: Best performing model: {learning_insights.get('best_model', 'None')}")
-            print(f"DEBUG: Performance category: {performance_category}")
+            print(TAG, f"DEBUG: {player_name} - Predicted: {predicted_points} pts, Over: {over_line}, Under: {under_line}")
+            print(TAG, f"DEBUG: Learning recommendation: {learning_insights.get('recommendation', 'NEUTRAL')}")
+            print(TAG, f"DEBUG: Best performing model: {learning_insights.get('best_model', 'None')}")
+            print(TAG, f"DEBUG: Performance category: {performance_category}")
 
             # Apply learning adjustments to prediction if needed
             adjusted_points = predicted_points
@@ -795,15 +784,13 @@ def predict(player):
                 if predicted_points < over_line:
                     adjustment_factor = 1.2 if recommendation == 'FORCE_OVER' else 1.1
                     adjusted_points = max(over_line + 1, round(predicted_points * adjustment_factor))
-                    print(
-                        f"DEBUG: Adjusted points upward from {predicted_points} to {adjusted_points} for {recommendation}")
+                    print(TAG, f"DEBUG: Adjusted points upward from {predicted_points} to {adjusted_points} for {recommendation}")
 
             elif recommendation in ['FORCE_UNDER', 'FAVOR_UNDER']:
                 if predicted_points > under_line:
                     adjustment_factor = 0.8 if recommendation == 'FORCE_UNDER' else 0.9
                     adjusted_points = min(under_line - 1, round(predicted_points * adjustment_factor))
-                    print(
-                        f"DEBUG: Adjusted points downward from {predicted_points} to {adjusted_points} for {recommendation}")
+                    print(TAG, f"DEBUG: Adjusted points downward from {predicted_points} to {adjusted_points} for {recommendation}")
 
             final_predicted_points = adjusted_points
 
@@ -816,16 +803,16 @@ def predict(player):
             # Apply learning overrides if needed
             if recommendation == 'FORCE_OVER':
                 bet = "OVER"
-                print(f"DEBUG: FORCING OVER bet due to learning")
+                print(TAG, f"DEBUG: FORCING OVER bet due to learning")
             elif recommendation == 'FORCE_UNDER':
                 bet = "UNDER"
-                print(f"DEBUG: FORCING UNDER bet due to learning")
+                print(TAG, f"DEBUG: FORCING UNDER bet due to learning")
             elif recommendation == 'FAVOR_OVER' and final_predicted_points >= over_line - 1:
                 bet = "OVER"
-                print(f"DEBUG: FAVORING OVER bet due to learning")
+                print(TAG, f"DEBUG: FAVORING OVER bet due to learning")
             elif recommendation == 'FAVOR_UNDER' and final_predicted_points <= under_line + 1:
                 bet = "UNDER"
-                print(f"DEBUG: FAVORING UNDER bet due to learning")
+                print(TAG, f"DEBUG: FAVORING UNDER bet due to learning")
 
             # Calculate bet amount (1-5 or None)
             amount = analyzer.calculate_confidence_score(learning_insights, dip_probability, performance_category)
@@ -833,11 +820,11 @@ def predict(player):
             # Ensure performance note is max 3 words
             performance_note = performance_category
 
-            print(f"Prediction successful for {player_name}: {final_predicted_points} pts")
+            print(TAG, f"Prediction successful for {player_name}: {final_predicted_points} pts")
             if amount:
-                print(f"DEBUG: Bet amount: {amount}/5")
+                print(TAG, f"DEBUG: Bet amount: {amount}/5")
             else:
-                print(f"DEBUG: Bet amount: None (insufficient data)")
+                print(TAG, f"DEBUG: Bet amount: None (insufficient data)")
 
             print()
 
@@ -850,12 +837,12 @@ def predict(player):
                 "amount": amount
             }
         else:
-            print(f"No prediction data available for {player_name}")
+            print(TAG, f"No prediction data available for {player_name}")
             return None
     else:
         if results is None:
-            print(f"{player_name} not in dip results")
-        print(f"Prediction not generated for {player_name}")
+            print(TAG, f"{player_name} not in dip results")
+        print(TAG, f"Prediction not generated for {player_name}")
         return None
 
 
@@ -887,18 +874,18 @@ if __name__ == "__main__":
 
             # Only print if we have a valid prediction (clear menstrual pattern found)
             if result is not None:
-                print(f"{player['name']} predicted points: {result['predicted_points']}")
-                print(f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
-                print(f"Bet Amount: ${result['amount']}" if result['amount'] else "No bet recommended")
+                print(TAG, f"{player['name']} predicted points: {result['predicted_points']}")
+                print(TAG, f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
+                print(TAG, f"Bet Amount: ${result['amount']}" if result['amount'] else "No bet recommended")
                 print()
 
         # Close database connection when done
         close_db_connection()
 
     except FileNotFoundError:
-        print("props.json file not found")
+        print(TAG, "props.json file not found")
     except Exception as e:
-        print(f"Error: {e}")
+        print(TAG, f"Error: {e}")
     finally:
         close_db_connection()
 """

@@ -3,6 +3,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import warnings
 
+TAG = "[CL2]"
+
 warnings.filterwarnings('ignore')
 
 
@@ -296,13 +298,13 @@ def predict(player):
     over_line = float(player['over_line'])
     under_line = float(player['under_line'])
 
-    print(f"\n--- CL2: Running prediction for {player['name']} on {player['date']} ---")
+    print(TAG, f"\n--- CL2: Running prediction for {player['name']} on {player['date']} ---")
 
     # Load and analyze player data
     player_data = load_player_data(player_name)
     if player_data is None:
-        print(f"{player_name} not found in data")
-        print(f"Prediction not generated for {player_name}")
+        print(TAG, f"{player_name} not found in data")
+        print(TAG, f"Prediction not generated for {player_name}")
         print()
         return None  # Skip player if no data
 
@@ -313,8 +315,8 @@ def predict(player):
 
     # Check if we found a clear menstrual pattern
     if not cycle_patterns or cycle_patterns['cycle_count'] < 3:
-        print(f"{player_name} not in dip results")
-        print(f"Prediction not generated for {player_name}")
+        print(TAG, f"{player_name} not in dip results")
+        print(TAG, f"Prediction not generated for {player_name}")
         print()
         return None  # Skip player if no clear cyclical pattern
 
@@ -362,11 +364,11 @@ def predict(player):
         in_dip_window, proximity
     )
 
-    print(f"Prediction successful for {player_name}: {round(predicted_points)} pts")
+    print(TAG, f"Prediction successful for {player_name}: {round(predicted_points)} pts")
     if amount:
-        print(f"Betting confidence: {confidence_score:.2f}, Amount: ${amount}")
+        print(TAG, f"Betting confidence: {confidence_score:.2f}, Amount: ${amount}")
     else:
-        print(f"Betting confidence too low: {confidence_score:.2f}, No bet recommended")
+        print(TAG, f"Betting confidence too low: {confidence_score:.2f}, No bet recommended")
     print()
 
     return {
@@ -388,9 +390,9 @@ if __name__ == "__main__":
     try:
         test_df = pd.read_csv("playerboxes/player_box_2024.csv")
         sample_players = test_df['athlete_display_name'].unique()[:5]
-        print(f"Sample players in data: {sample_players}")
+        print(TAG, f"Sample players in data: {sample_players}")
     except:
-        print("Could not load sample data file")
+        print(TAG, "Could not load sample data file")
 
     try:
         with open('props.json', 'r') as f:
@@ -408,13 +410,13 @@ if __name__ == "__main__":
 
             # Only print if we have a valid prediction (clear menstrual pattern found)
             if result is not None:
-                print(f"{player['name']} predicted points: {result['predicted_points']}")
-                print(f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
-                print(f"Bet Amount: ${result['amount']}" if result['amount'] else "No bet recommended")
+                print(TAG, f"{player['name']} predicted points: {result['predicted_points']}")
+                print(TAG, f"Bet: {result['bet']}, Over line: {result['over_line']}, Under line: {result['under_line']}")
+                print(TAG, f"Bet Amount: ${result['amount']}" if result['amount'] else "No bet recommended")
                 print()
 
     except FileNotFoundError:
-        print("props.json file not found")
+        print(TAG, "props.json file not found")
     except Exception as e:
-        print(f"Error: {e}")
+        print(TAG, f"Error: {e}")
 """
