@@ -24,7 +24,7 @@ jobs:
       - name: Run scraper
         run: |
           TODAY=$(date +%Y-%m-%d)
-          END_DATE="2025-09-26"
+          END_DATE="2026-09-26"
           
           if [[ "$TODAY" > "$END_DATE" ]]; then
             exit 0
