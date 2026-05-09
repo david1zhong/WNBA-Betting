@@ -385,29 +385,29 @@ def predict(player):
 
     box_df = _load_playerboxes()
     if box_df.empty:
-        print(TAG, f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results [exit: no playerbox CSV data]")
         return None
 
     pdata = box_df[box_df["athlete_display_name"] == name].copy()
     target = pd.to_datetime(date_str)
     pdata = pdata[pdata["game_date"] < target].copy()
     if len(pdata) < MIN_CAREER_GAMES:
-        print(TAG, f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results [exit: career_games={len(pdata)} < {MIN_CAREER_GAMES}]")
         return None
 
     feats = _player_features_at(box_df, name, date_str)
     if feats is None:
-        print(TAG, f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results [exit: features unavailable]")
         return None
 
     conn = _get_db()
     if conn is None:
-        print(TAG, f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results [exit: no DB connection]")
         return None
 
     pred_df = _fetch_player_predictions(conn, name)
     if pred_df.empty:
-        print(TAG, f"{name} not in dip results")
+        print(TAG, f"{name} not in dip results [exit: no historical predictions for player]")
         return None
 
     # Phase-in: check GLOBAL graded prediction counts (across all players),
@@ -455,7 +455,15 @@ def predict(player):
         })
 
     if not contributions:
-        print(TAG, f"{name} not in dip results")
+        n_today_preds = len(today_source_preds)
+        print(
+            TAG,
+            f"{name} not in dip results "
+            f"[exit: no source-model contributions today; "
+            f"today_source_preds={n_today_preds} models, "
+            f"use_models={len(use_models)}, "
+            f"global_counts={global_counts}]",
+        )
         return None
 
     weights = np.array([c["weight"] for c in contributions], dtype=float)
@@ -481,7 +489,13 @@ def predict(player):
 
     # Self-skip: drop if calibrated meta-confidence is too low
     if confidence < 0.55:
-        print(TAG, f"{name} not in dip results")
+        print(
+            TAG,
+            f"{name} not in dip results "
+            f"[exit: confidence={confidence:.3f} < 0.55; "
+            f"predicted={predicted_raw:.2f}, line={over_line}, "
+            f"sigma={sigma:.2f}, n_contrib={len(contributions)}]",
+        )
         return None
 
     bet = "OVER" if predicted_points > over_line else "UNDER"

@@ -23,7 +23,12 @@ with open("props.json") as f:
     players = data["players"]
 
 
-with engine.begin() as conn:
+# NOTE: each INSERT runs in its own short transaction so that base-model
+# predictions for today are committed and visible to LEARN models that read
+# them back from the predictions table (e.g. CLC3_LEARN's _get_source_predictions
+# opens a separate psycopg2 connection — uncommitted writes on this SQLAlchemy
+# connection wouldn't be visible to it under Postgres READ COMMITTED isolation).
+with engine.connect() as conn:
     for player in players:
         print(f"\n{'#' * 60}")
         print(f"# {player['name']} — {player['date']}")
@@ -43,32 +48,33 @@ with engine.begin() as conn:
             note = result.get("note")
             amount = result.get("amount", None)
 
-            conn.execute(
-                text("""
-                    INSERT INTO predictions
-                        (player_name, model_name, date,
-                         predicted_pts, over_line, under_line,
-                         over_odds, under_odds, bet, note, amount)
-                    VALUES
-                        (:player_name, :model_name, :date,
-                         :predicted_pts, :over_line, :under_line,
-                         :over_odds, :under_odds, :bet, :note, :amount)
-                    ON CONFLICT (player_name, model_name, date) DO NOTHING
-                """),
-                {
-                    'player_name': player['name'],
-                    'model_name': model_name,
-                    'date': player['date'],
-                    'predicted_pts': predicted_pts,
-                    'over_line': player['over_line'],
-                    'under_line': player['under_line'],
-                    'over_odds': player['over_odds'],
-                    'under_odds': player['under_odds'],
-                    'bet': bet,
-                    'note': note,
-                    'amount': amount
-                }
-            )
+            with conn.begin():
+                conn.execute(
+                    text("""
+                        INSERT INTO predictions
+                            (player_name, model_name, date,
+                             predicted_pts, over_line, under_line,
+                             over_odds, under_odds, bet, note, amount)
+                        VALUES
+                            (:player_name, :model_name, :date,
+                             :predicted_pts, :over_line, :under_line,
+                             :over_odds, :under_odds, :bet, :note, :amount)
+                        ON CONFLICT (player_name, model_name, date) DO NOTHING
+                    """),
+                    {
+                        'player_name': player['name'],
+                        'model_name': model_name,
+                        'date': player['date'],
+                        'predicted_pts': predicted_pts,
+                        'over_line': player['over_line'],
+                        'under_line': player['under_line'],
+                        'over_odds': player['over_odds'],
+                        'under_odds': player['under_odds'],
+                        'bet': bet,
+                        'note': note,
+                        'amount': amount
+                    }
+                )
 
 
 print("Predictions added to database.")
