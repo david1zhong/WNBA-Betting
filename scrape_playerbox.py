@@ -1,8 +1,9 @@
 import requests
+from datetime import datetime
 
-url = "https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_wnba_player_boxscores/player_box_2025.csv"
-
-filename = "playerboxes/player_box_2025.csv"
+year = datetime.now().year
+url = f"https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_wnba_player_boxscores/player_box_{year}.csv"
+filename = f"playerboxes/player_box_{year}.csv"
 
 response = requests.get(url)
 if response.status_code == 200:
