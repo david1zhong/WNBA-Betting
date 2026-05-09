@@ -285,15 +285,27 @@ st.subheader("Daily Profit per Model")
 df['date'] = pd.to_datetime(df['date'])
 daily_profit = df.groupby(["model_name", "date"])["profit"].sum().reset_index()
 daily_profit = daily_profit[daily_profit["profit"] != 0]
+daily_profit["_year"] = daily_profit["date"].dt.year
 
 for model in daily_profit["model_name"].unique():
     model_data = daily_profit[daily_profit["model_name"] == model].sort_values("date")
-    
+    m_2026 = model_data[model_data["_year"] == 2026]
+    m_2025 = model_data[model_data["_year"] == 2025]
+
     st.write(f"**{model}**")
-    st.line_chart(
-        model_data.set_index("date")["profit"],
-        use_container_width=True
-    )
+    cols = st.columns(2)
+    with cols[0]:
+        st.caption("2026 Season")
+        if m_2026.empty:
+            st.write("No data.")
+        else:
+            st.line_chart(m_2026.set_index("date")["profit"], use_container_width=True)
+    with cols[1]:
+        st.caption("2025 Season")
+        if m_2025.empty:
+            st.write("No data.")
+        else:
+            st.line_chart(m_2025.set_index("date")["profit"], use_container_width=True)
 
 
 
