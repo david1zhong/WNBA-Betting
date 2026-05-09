@@ -367,9 +367,10 @@ _ou_models = sorted(_ou_df_all["model_name"].unique()) if not _ou_df_all.empty e
 
 def _ou_breakdown(season_df, models_idx):
     cols = ["Unders", "Overs", "U %", "O %", "O Win %", "U Win %"]
+    EM = "—"
     if season_df.empty:
         return pd.DataFrame(
-            {c: ["0" if c in ("Unders", "Overs") else "0.0%"] * len(models_idx) for c in cols},
+            {c: [EM] * len(models_idx) for c in cols},
             index=pd.Index(models_idx, name="model_name"),
         )
     counts = season_df.groupby(["model_name", "bet"]).size().unstack(fill_value=0)
@@ -395,7 +396,7 @@ def _ou_breakdown(season_df, models_idx):
     under_pct = (win_counts["Under_Wins"] / counts["Unders"].replace(0, np.nan) * 100).round(1).fillna(0)
     total_safe = total.replace(0, np.nan)
 
-    return pd.DataFrame({
+    out = pd.DataFrame({
         "Unders": counts["Unders"].astype(int).astype(str),
         "Overs": counts["Overs"].astype(int).astype(str),
         "U %": (counts["Unders"] / total_safe * 100).round(1).fillna(0).astype(str) + "%",
@@ -403,6 +404,15 @@ def _ou_breakdown(season_df, models_idx):
         "O Win %": over_pct.astype(str) + "%",
         "U Win %": under_pct.astype(str) + "%",
     })
+
+    # Models with zero graded bets in this season have no meaningful values
+    # for any of the six columns — show em dash across the row instead of
+    # spurious "0" / "0.0%" placeholders.
+    no_data = total == 0
+    if no_data.any():
+        out.loc[no_data, :] = EM
+
+    return out
 
 
 _ou_combined = pd.concat(
@@ -671,5 +681,14 @@ _err_combined = pd.concat(
 )
 # Sort by Total MAE so the leaderboard is intuitive
 _err_combined = _err_combined.sort_values(("Total", "MAE"))
-_styled_err = _err_combined.style.format(lambda v: "—" if pd.isna(v) else f"{v:.3f}")
+def _fmt_err(v):
+    if v is None or pd.isna(v):
+        return "—"
+    try:
+        return f"{float(v):.3f}"
+    except (TypeError, ValueError):
+        return "—"
+
+
+_styled_err = _err_combined.style.format(_fmt_err, na_rep="—")
 st.dataframe(_styled_err, use_container_width=True)
