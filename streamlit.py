@@ -140,7 +140,7 @@ def _wl_breakdown(season_df, models_index):
         if col not in counts.columns:
             counts[col] = 0
     counts = counts[["WON", "LOST"]]
-    totals = counts.sum(axis=1).replace(0, pd.NA)
+    totals = counts.sum(axis=1).replace(0, np.nan)
     pct = (counts.div(totals, axis=0) * 100).round(1).fillna(0).astype(str) + "%"
     return counts.astype(str) + " (" + pct + ")"
 
@@ -379,9 +379,9 @@ def _ou_breakdown(season_df, models_idx):
         if c not in win_counts.columns:
             win_counts[c] = 0
 
-    over_pct = (win_counts["Over_Wins"] / counts["Overs"].replace(0, pd.NA) * 100).round(1).fillna(0)
-    under_pct = (win_counts["Under_Wins"] / counts["Unders"].replace(0, pd.NA) * 100).round(1).fillna(0)
-    total_safe = total.replace(0, pd.NA)
+    over_pct = (win_counts["Over_Wins"] / counts["Overs"].replace(0, np.nan) * 100).round(1).fillna(0)
+    under_pct = (win_counts["Under_Wins"] / counts["Unders"].replace(0, np.nan) * 100).round(1).fillna(0)
+    total_safe = total.replace(0, np.nan)
 
     return pd.DataFrame({
         "Unders": counts["Unders"].astype(int).astype(str),
