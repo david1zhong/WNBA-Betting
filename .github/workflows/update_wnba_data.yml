@@ -43,6 +43,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add playerboxes/player_box_2025.csv
+          git add playerboxes/
           git commit -m "Update player box CSV [skip ci]" || echo "No changes to commit"
           git push
