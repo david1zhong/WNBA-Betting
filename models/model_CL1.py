@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import math
 from datetime import datetime, timedelta
 import pytz
 import json
@@ -10,6 +11,24 @@ from sqlalchemy import create_engine, text
 
 TAG = "[CL1]"
 warnings.filterwarnings('ignore')
+
+
+def _normal_cdf(x):
+    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+
+
+def _confidence_to_amount(confidence):
+    if confidence >= 0.75:
+        return 5
+    if confidence >= 0.68:
+        return 4
+    if confidence >= 0.62:
+        return 3
+    if confidence >= 0.58:
+        return 2
+    if confidence >= 0.55:
+        return 1
+    return None
 
 
 class WNBACyclicalPatternDetector:
@@ -240,10 +259,26 @@ class WNBACyclicalPatternDetector:
 
         predictions_2025 = self.generate_2025_predictions(player_data, baseline, results, self.custom_game_dates)
 
-        # Store results for printing instead of printing directly
+        # Recent point variance is needed by predict() to gauge confidence
+        # vs. the betting line. Compute it here off the same player_data so
+        # we don't reload CSVs in predict().
+        if self.custom_game_dates:
+            target = pd.Timestamp(self.custom_game_dates[0])
+            prior = player_data[player_data['game_date'] < target]
+        else:
+            prior = player_data
+        last10 = prior.tail(10)['points']
+        if len(last10) >= 10:
+            recent_std = float(last10.std(ddof=0))
+        elif len(prior) >= 2:
+            recent_std = float(prior['points'].std(ddof=0))
+        else:
+            recent_std = float('nan')
+
         self.prediction_results = {
             'player_name': player_name,
-            'predictions': predictions_2025
+            'predictions': predictions_2025,
+            'recent_std': recent_std,
         }
 
         return predictions_2025
@@ -290,12 +325,26 @@ def predict(player):
             under_line = float(player['under_line'])
             bet = "OVER" if predicted_points > over_line else "UNDER"
 
+            recent_std = analyzer.prediction_results.get('recent_std')
+            if recent_std is None or pd.isna(recent_std):
+                recent_std = 4.0
+            sigma = max(2.0, float(recent_std))
+
+            z = (over_line - predicted_points) / sigma
+            if bet == "OVER":
+                p_correct = 1.0 - _normal_cdf(z)
+            else:
+                p_correct = _normal_cdf(z)
+            confidence = float(min(0.95, max(0.0, p_correct)))
+            amount = _confidence_to_amount(confidence)
+
             return {
                 "predicted_points": predicted_points,
                 "bet": bet,
                 "over_line": over_line,
                 "under_line": under_line,
-                "note": performance_note
+                "note": performance_note,
+                "amount": amount,
             }
         else:
             print(TAG, f"Prediction empty or invalid for {player['name']}")
