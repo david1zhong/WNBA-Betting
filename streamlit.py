@@ -140,9 +140,14 @@ def _wl_breakdown(season_df, models_index):
         if col not in counts.columns:
             counts[col] = 0
     counts = counts[["WON", "LOST"]]
-    totals = counts.sum(axis=1).replace(0, np.nan)
-    pct = (counts.div(totals, axis=0) * 100).round(1).fillna(0).astype(str) + "%"
-    return counts.astype(str) + " (" + pct + ")"
+    raw_totals = counts.sum(axis=1)
+    totals_safe = raw_totals.replace(0, np.nan)
+    pct = (counts.div(totals_safe, axis=0) * 100).round(1).fillna(0).astype(str) + "%"
+    out = counts.astype(str) + " (" + pct + ")"
+    no_data = raw_totals == 0
+    if no_data.any():
+        out.loc[no_data, :] = "—"
+    return out
 
 
 _wl_combined = pd.concat(
@@ -212,7 +217,7 @@ def _profit_raw(season_df, models_idx):
     cols = ["bet_amount", "winnings_amount", "losses_amount", "total_profit"]
     if season_df.empty:
         return pd.DataFrame(
-            0.0,
+            np.nan,
             index=pd.Index(models_idx, name="model_name"),
             columns=cols,
         )
@@ -222,7 +227,18 @@ def _profit_raw(season_df, models_idx):
         losses_amount=("profit", lambda x: x[x < 0].sum()),
         total_profit=("profit", "sum"),
     )
-    g = g.reindex(models_idx, fill_value=0.0)
+    # Reindex with NaN (not 0.0) so missing models stay NaN — covers the
+    # 3 new CLC models that didn't run in 2025 at all.
+    g = g.reindex(models_idx)
+    # Models with rows but no real betting activity (e.g. CL1, which doesn't
+    # set 'amount') aggregate to all-zeros — convert those to NaN too so the
+    # currency formatter renders em dash instead of $0.00.
+    zero_mask = (
+        g["bet_amount"].fillna(0).eq(0)
+        & g["winnings_amount"].fillna(0).eq(0)
+        & g["losses_amount"].fillna(0).eq(0)
+    )
+    g.loc[zero_mask, :] = np.nan
     g.index.name = "model_name"
     return g[cols]
 
