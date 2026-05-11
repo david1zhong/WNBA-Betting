@@ -10,7 +10,15 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
 
 model_files = [f[:-3] for f in os.listdir(MODEL_DIR) if f.endswith(".py") and f != "__init__.py"]
-model_files.sort(key=lambda n: (1 if "LEARN" in n else 0, n))
+# Run order: base models → LEARN models → SELECTIVE meta-models.
+# Each later tier reads earlier-tier predictions from the DB, so ordering matters.
+def _model_sort_key(n):
+    if "SELECTIVE" in n:
+        return (2, n)
+    if "LEARN" in n:
+        return (1, n)
+    return (0, n)
+model_files.sort(key=_model_sort_key)
 
 models = {}
 for mf in model_files:
