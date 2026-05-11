@@ -124,13 +124,14 @@ def decide(source_preds, source_win_rates, over_line, under_line, over_odds, und
         weight = max(0.0, rate - BREAK_EVEN)
         if weight <= 0:
             continue
+        entry = (model, rate, weight, p["pred"])
         if p["bet"] == "OVER":
-            over_models.append((model, rate, weight))
+            over_models.append(entry)
         elif p["bet"] == "UNDER":
-            under_models.append((model, rate, weight))
+            under_models.append(entry)
 
-    over_w = sum(w for _, _, w in over_models)
-    under_w = sum(w for _, _, w in under_models)
+    over_w = sum(w for _, _, w, _ in over_models)
+    under_w = sum(w for _, _, w, _ in under_models)
 
     if over_w == 0 and under_w == 0:
         return {"_skip_reason": "no source model with positive edge weighed in"}
@@ -147,7 +148,7 @@ def decide(source_preds, source_win_rates, over_line, under_line, over_odds, und
         return {"_skip_reason": "weighted vote tied"}
 
     # Ensemble probability = weight-averaged win rate of models voting that side
-    ensemble_prob = sum(r * w for _, r, w in voting) / sum(w for _, _, w in voting)
+    ensemble_prob = sum(r * w for _, r, w, _ in voting) / sum(w for _, _, w, _ in voting)
 
     # Split-line boost: when under_line - over_line >= 1.0 (e.g. O14.5 / U15.5)
     # the bookmaker has "split" the line. Both bets win on the middle integer
@@ -189,10 +190,15 @@ def decide(source_preds, source_win_rates, over_line, under_line, over_odds, und
     else:
         note = "Small Edge"
 
-    # predicted_points = median of source point predictions (point estimate
-    # for the schema only — the bet decision uses ensemble_prob, not this).
-    preds_list = [p["pred"] for p in source_preds.values()]
-    predicted_points = int(round(float(np.median(preds_list))))
+    # predicted_points = median of the VOTING side's point predictions.
+    # Using the all-sources median can produce predicted=24 with bet=UNDER on a
+    # 23.5 line, because the weighted vote can land on UNDER (higher-win-rate
+    # voters) even when the overall median is above the line. Restricting to
+    # voting-side preds keeps predicted_points consistent with the bet — every
+    # voting-side model already predicted on the bet's side of the line by
+    # construction (that's why they voted that way).
+    voting_preds = [pred for _, _, _, pred in voting]
+    predicted_points = int(round(float(np.median(voting_preds))))
 
     return {
         "bet": direction,
@@ -205,7 +211,7 @@ def decide(source_preds, source_win_rates, over_line, under_line, over_odds, und
             "margin": margin,
             "kelly_f": f_kelly,
             "n_voting": len(voting),
-            "voting_models": [m for m, _, _ in voting],
+            "voting_models": [m for m, _, _, _ in voting],
         },
     }
 
