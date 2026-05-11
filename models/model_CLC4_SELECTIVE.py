@@ -116,19 +116,25 @@ def decide(source_preds, source_win_rates, over_line, under_line, over_odds, und
     over_models = []
     under_models = []
     for model, p in source_preds.items():
-        rate = source_win_rates.get(model)
-        # Models with no track record or below 50% get weight zero — do NOT
-        # anti-follow a losing model (it's likely just noise, not signal-flipped).
+        entry = source_win_rates.get(model)
+        # Look up SIDE-SPECIFIC rate when available. Falls back to overall rate
+        # if entry is a float (legacy/backtester format).
+        if isinstance(entry, dict):
+            rate = entry.get(p["bet"])
+        else:
+            rate = entry  # legacy: single overall rate
+        # Models with no track record on this side, or below 50% on this side,
+        # get weight zero — do NOT anti-follow (likely noise, not signal-flipped).
         if rate is None or rate < 0.50:
             continue
         weight = max(0.0, rate - BREAK_EVEN)
         if weight <= 0:
             continue
-        entry = (model, rate, weight, p["pred"])
+        row = (model, rate, weight, p["pred"])
         if p["bet"] == "OVER":
-            over_models.append(entry)
+            over_models.append(row)
         elif p["bet"] == "UNDER":
-            under_models.append(entry)
+            under_models.append(row)
 
     over_w = sum(w for _, _, w, _ in over_models)
     under_w = sum(w for _, _, w, _ in under_models)
@@ -212,6 +218,10 @@ def decide(source_preds, source_win_rates, over_line, under_line, over_odds, und
             "kelly_f": f_kelly,
             "n_voting": len(voting),
             "voting_models": [m for m, _, _, _ in voting],
+            "n_over_voters": len(over_models),
+            "n_under_voters": len(under_models),
+            "over_weight": over_w,
+            "under_weight": under_w,
         },
     }
 
@@ -265,9 +275,22 @@ def _load_playerboxes():
     return df
 
 
+MIN_SIDE_SAMPLE = 10  # min graded bets on a side before we trust that side's rate
+
+
 def _source_win_rates(conn):
-    """Rolling per-model win rate from the last ROLLING_HISTORY_N graded bets.
-    Cached so we only query once per run."""
+    """Rolling per-model, per-SIDE win rate from the last ROLLING_HISTORY_N
+    graded bets on each side.
+
+    Side-specific rates fix the saturation problem: source models historically
+    bet UNDER more often, so a model's overall rate is dominated by its UNDER
+    record. When that same model occasionally votes OVER, weighting by overall
+    rate falsely treats it as a strong OVER signal. Splitting by side ensures
+    a model's OVER vote only contributes if it has actually been profitable
+    on OVERs.
+
+    Returns: {model_name: {"OVER": float|None, "UNDER": float|None}}
+    """
     if _WIN_RATES_CACHE["data"] is not None:
         return _WIN_RATES_CACHE["data"]
     rates = {}
@@ -276,20 +299,25 @@ def _source_win_rates(conn):
         for model in SOURCE_MODELS:
             cur.execute(
                 """
-                SELECT result FROM predictions
+                SELECT bet, result FROM predictions
                 WHERE model_name = %s
                   AND result IN ('WON', 'LOST')
+                  AND bet IN ('OVER', 'UNDER')
                 ORDER BY date DESC
-                LIMIT %s
                 """,
-                (model, ROLLING_HISTORY_N),
+                (model,),
             )
             rows = cur.fetchall()
-            if not rows:
-                rates[model] = None
-                continue
-            wins = sum(1 for (r,) in rows if r == "WON")
-            rates[model] = wins / len(rows)
+            over_results = [r for b, r in rows if b == "OVER"][:ROLLING_HISTORY_N]
+            under_results = [r for b, r in rows if b == "UNDER"][:ROLLING_HISTORY_N]
+            over_n = len(over_results)
+            under_n = len(under_results)
+            rates[model] = {
+                "OVER": (sum(1 for r in over_results if r == "WON") / over_n)
+                        if over_n >= MIN_SIDE_SAMPLE else None,
+                "UNDER": (sum(1 for r in under_results if r == "WON") / under_n)
+                         if under_n >= MIN_SIDE_SAMPLE else None,
+            }
     except Exception:
         pass
     finally:
@@ -392,7 +420,8 @@ def predict(player):
         TAG,
         f"{name}: bet={result['bet']} amount=${result['amount']} "
         f"prob={diag['ensemble_prob']:.3f} margin={diag['margin']:+.3f} "
-        f"voters={diag['n_voting']}/{len(preds)}"
+        f"voters O:{diag['n_over_voters']} (w={diag['over_weight']:.3f}) / "
+        f"U:{diag['n_under_voters']} (w={diag['under_weight']:.3f})"
     )
 
     return {

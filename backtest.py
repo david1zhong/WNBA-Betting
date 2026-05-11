@@ -173,7 +173,7 @@ def _simulate_clc4(graded):
     try:
         from models.model_CLC4_SELECTIVE import (
             decide, SOURCE_MODELS, MIN_SOURCE_PREDS, ROLLING_HISTORY_N,
-            MIN_CAREER_GAMES, _american_to_decimal,
+            MIN_CAREER_GAMES, MIN_SIDE_SAMPLE, _american_to_decimal,
         )
     except Exception as e:
         return None, f"Could not import CLC4_SELECTIVE: {e}"
@@ -222,17 +222,23 @@ def _simulate_clc4(graded):
             skipped["too_few_sources"] += 1
             continue
 
-        # Win rates AS OF this date — strictly prior
+        # Win rates AS OF this date — strictly prior, side-specific.
+        # Each side's rate uses up to ROLLING_HISTORY_N most-recent bets on
+        # THAT side. Mirrors the production _source_win_rates query so the
+        # sim measures the same decision logic CLC4 will use live.
         target_dt = pd.Timestamp(date_val)
-        prior = g[g["date"] < target_dt]
-        prior = prior[prior["result"].isin(["WON", "LOST"])]
+        prior = g[(g["date"] < target_dt) & g["result"].isin(["WON", "LOST"])]
         source_win_rates = {}
         for model in SOURCE_MODELS:
-            mp = prior[prior["model_name"] == model].tail(ROLLING_HISTORY_N)
-            if mp.empty:
-                source_win_rates[model] = None
-            else:
-                source_win_rates[model] = (mp["result"] == "WON").mean()
+            mp = prior[prior["model_name"] == model].sort_values("date", ascending=False)
+            over_side = mp[mp["bet"] == "OVER"].head(ROLLING_HISTORY_N)
+            under_side = mp[mp["bet"] == "UNDER"].head(ROLLING_HISTORY_N)
+            source_win_rates[model] = {
+                "OVER": (over_side["result"] == "WON").mean()
+                        if len(over_side) >= MIN_SIDE_SAMPLE else None,
+                "UNDER": (under_side["result"] == "WON").mean()
+                         if len(under_side) >= MIN_SIDE_SAMPLE else None,
+            }
 
         first = group.iloc[0]
         try:
