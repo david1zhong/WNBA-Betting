@@ -39,9 +39,9 @@ for player in data["players"]:
     window_end_est = eastern.localize(window_end)
     window_end_utc = window_end_est.astimezone(pytz.UTC)
 
-    candidate_games = df[(df["athlete_display_name"] == player_name) &
-                         (df["game_date_time"] >= props_date_utc) &
-                         (df["game_date_time"] <= window_end_utc)]
+    candidate_games = df[(df["athlete_display_name"].str.lower() == player_name.lower()) &
+                     (df["game_date_time"] >= props_date_utc) &
+                     (df["game_date_time"] <= window_end_utc)]
 
     if candidate_games.empty:
         print(f"{player_name} did not play on {props_date.date()}")
