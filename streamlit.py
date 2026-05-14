@@ -316,17 +316,23 @@ def _build_fade_df(source_df):
 
     actual = pd.to_numeric(source_df["actual_pts"], errors="coerce")
 
+    # Grade the fade bet using the SAME convention as update_after.py: a side
+    # wins only on a STRICT inequality; everything else — including an exact
+    # tie — is a loss. update_after.py has no PUSH branch (a tie falls through
+    # ELSE -> LOST), so we match it. This keeps the fade W/L counts a clean
+    # inverse of the originals for the common equal-line case.
     res = pd.Series(np.nan, index=source_df.index, dtype=object)
     gradable = actual.notna() & fade_line.notna() & fade_bet.notna()
     over_g = gradable & is_over
     under_g = gradable & ~is_over
     res[over_g & (actual > fade_line)] = "WON"
-    res[over_g & (actual < fade_line)] = "LOST"
-    res[over_g & (actual == fade_line)] = "PUSH"
+    res[over_g & (actual <= fade_line)] = "LOST"
     res[under_g & (actual < fade_line)] = "WON"
-    res[under_g & (actual > fade_line)] = "LOST"
-    res[under_g & (actual == fade_line)] = "PUSH"
-    res[source_df["result"] == "VOID"] = "VOID"
+    res[under_g & (actual >= fade_line)] = "LOST"
+    # Carry over non-settled originals — fading a bet that never settled
+    # (DNP, VOID) doesn't settle either.
+    _carry = source_df["result"].isin(["DNP", "VOID"])
+    res[_carry] = source_df["result"][_carry]
     fade["result"] = res
 
     amount = pd.to_numeric(source_df["amount"], errors="coerce").fillna(0)
@@ -337,7 +343,6 @@ def _build_fade_df(source_df):
     profit = pd.Series(np.nan, index=source_df.index, dtype=float)
     profit[res == "WON"] = amount[res == "WON"] * (dec[res == "WON"] - 1.0)
     profit[res == "LOST"] = -amount[res == "LOST"]
-    profit[res.isin(["PUSH", "VOID"])] = 0.0
     fade["profit"] = profit.fillna(0.0)
 
     return fade
