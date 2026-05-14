@@ -227,12 +227,7 @@ def _profit_raw(season_df, models_idx):
         losses_amount=("profit", lambda x: x[x < 0].sum()),
         total_profit=("profit", "sum"),
     )
-    # Reindex with NaN (not 0.0) so missing models stay NaN — covers the
-    # 3 new CLC models that didn't run in 2025 at all.
     g = g.reindex(models_idx)
-    # Models with rows but no real betting activity (e.g. CL1, which doesn't
-    # set 'amount') aggregate to all-zeros — convert those to NaN too so the
-    # currency formatter renders em dash instead of $0.00.
     zero_mask = (
         g["bet_amount"].fillna(0).eq(0)
         & g["winnings_amount"].fillna(0).eq(0)
@@ -295,14 +290,6 @@ st.subheader("Profit Per Model")
 st.dataframe(_styled_profit, use_container_width=True)
 
 
-# ----------------------------------------------------------------------------
-# FADE — what if you bet the OPPOSITE of every model's pick?
-# ----------------------------------------------------------------------------
-# For each prediction, flip the bet (OVER <-> UNDER), re-grade it against the
-# fade bet's OWN line, and price the payout with that side's odds. Same stake.
-# Column names are kept identical to the source df so the existing breakdown
-# helpers (_wl_breakdown, summarize, _profit_raw) work on the fade view as-is.
-
 def _build_fade_df(source_df):
     """Return a fade view of the predictions: bet flipped, result and profit
     recomputed against the opposite side's line and odds."""
@@ -329,7 +316,6 @@ def _build_fade_df(source_df):
 
     actual = pd.to_numeric(source_df["actual_pts"], errors="coerce")
 
-    # Grade the fade bet off actual points vs the fade bet's line.
     res = pd.Series(np.nan, index=source_df.index, dtype=object)
     gradable = actual.notna() & fade_line.notna() & fade_bet.notna()
     over_g = gradable & is_over
@@ -340,11 +326,9 @@ def _build_fade_df(source_df):
     res[under_g & (actual < fade_line)] = "WON"
     res[under_g & (actual > fade_line)] = "LOST"
     res[under_g & (actual == fade_line)] = "PUSH"
-    # A voided original bet is voided no matter which side you take.
     res[source_df["result"] == "VOID"] = "VOID"
     fade["result"] = res
 
-    # Profit: same stake amount, priced with the fade bet's odds.
     amount = pd.to_numeric(source_df["amount"], errors="coerce").fillna(0)
     dec = pd.Series(
         np.where(fade_odds > 0, fade_odds / 100.0 + 1.0, 100.0 / fade_odds.abs() + 1.0),
@@ -360,14 +344,6 @@ def _build_fade_df(source_df):
 
 
 fade_df = _build_fade_df(df)
-
-st.header("FADE — Betting the Opposite of Each Model")
-st.caption(
-    "Each section below flips every model's pick to the other side, re-grades "
-    "it against that side's line, and prices the payout with that side's odds "
-    "(same stake amount). It answers: would systematically fading a model have "
-    "made money?"
-)
 
 st.subheader("Wins and Losses per Model Yesterday FADE")
 _fade_yesterday_df = fade_df[
@@ -561,9 +537,6 @@ def _ou_breakdown(season_df, models_idx):
         "U Win %": under_pct.astype(str) + "%",
     })
 
-    # Models with zero graded bets in this season have no meaningful values
-    # for any of the six columns — show em dash across the row instead of
-    # spurious "0" / "0.0%" placeholders.
     no_data = total == 0
     if no_data.any():
         out.loc[no_data, :] = EM
@@ -835,7 +808,6 @@ _err_combined = pd.concat(
     },
     axis=1,
 )
-# Sort by Total MAE so the leaderboard is intuitive
 _err_combined = _err_combined.sort_values(("Total", "MAE"))
 def _fmt_err(v):
     if v is None or pd.isna(v):
