@@ -295,6 +295,146 @@ st.subheader("Profit Per Model")
 st.dataframe(_styled_profit, use_container_width=True)
 
 
+# ----------------------------------------------------------------------------
+# FADE — what if you bet the OPPOSITE of every model's pick?
+# ----------------------------------------------------------------------------
+# For each prediction, flip the bet (OVER <-> UNDER), re-grade it against the
+# fade bet's OWN line, and price the payout with that side's odds. Same stake.
+# Column names are kept identical to the source df so the existing breakdown
+# helpers (_wl_breakdown, summarize, _profit_raw) work on the fade view as-is.
+
+def _build_fade_df(source_df):
+    """Return a fade view of the predictions: bet flipped, result and profit
+    recomputed against the opposite side's line and odds."""
+    fade = source_df.copy()
+
+    fade_bet = source_df["bet"].map({"OVER": "UNDER", "UNDER": "OVER"})
+    fade["bet"] = fade_bet
+    is_over = fade_bet == "OVER"
+
+    fade_line = pd.to_numeric(
+        pd.Series(
+            np.where(is_over, source_df["over_line"], source_df["under_line"]),
+            index=source_df.index,
+        ),
+        errors="coerce",
+    )
+    fade_odds = pd.to_numeric(
+        pd.Series(
+            np.where(is_over, source_df["over_odds"], source_df["under_odds"]),
+            index=source_df.index,
+        ),
+        errors="coerce",
+    ).fillna(-110).replace(0, -110)
+
+    actual = pd.to_numeric(source_df["actual_pts"], errors="coerce")
+
+    # Grade the fade bet off actual points vs the fade bet's line.
+    res = pd.Series(np.nan, index=source_df.index, dtype=object)
+    gradable = actual.notna() & fade_line.notna() & fade_bet.notna()
+    over_g = gradable & is_over
+    under_g = gradable & ~is_over
+    res[over_g & (actual > fade_line)] = "WON"
+    res[over_g & (actual < fade_line)] = "LOST"
+    res[over_g & (actual == fade_line)] = "PUSH"
+    res[under_g & (actual < fade_line)] = "WON"
+    res[under_g & (actual > fade_line)] = "LOST"
+    res[under_g & (actual == fade_line)] = "PUSH"
+    # A voided original bet is voided no matter which side you take.
+    res[source_df["result"] == "VOID"] = "VOID"
+    fade["result"] = res
+
+    # Profit: same stake amount, priced with the fade bet's odds.
+    amount = pd.to_numeric(source_df["amount"], errors="coerce").fillna(0)
+    dec = pd.Series(
+        np.where(fade_odds > 0, fade_odds / 100.0 + 1.0, 100.0 / fade_odds.abs() + 1.0),
+        index=source_df.index,
+    )
+    profit = pd.Series(np.nan, index=source_df.index, dtype=float)
+    profit[res == "WON"] = amount[res == "WON"] * (dec[res == "WON"] - 1.0)
+    profit[res == "LOST"] = -amount[res == "LOST"]
+    profit[res.isin(["PUSH", "VOID"])] = 0.0
+    fade["profit"] = profit.fillna(0.0)
+
+    return fade
+
+
+fade_df = _build_fade_df(df)
+
+st.header("FADE — Betting the Opposite of Each Model")
+st.caption(
+    "Each section below flips every model's pick to the other side, re-grades "
+    "it against that side's line, and prices the payout with that side's odds "
+    "(same stake amount). It answers: would systematically fading a model have "
+    "made money?"
+)
+
+st.subheader("Wins and Losses per Model Yesterday FADE")
+_fade_yesterday_df = fade_df[
+    (fade_df["date"].dt.date == yesterday_date)
+    & (fade_df["result"].isin(["WON", "LOST"]))
+]
+if _fade_yesterday_df.empty:
+    _fade_counts_yest = pd.DataFrame(
+        {"model_name": df["model_name"].unique(), "WON": 0, "LOST": 0}
+    ).set_index("model_name")
+else:
+    _fade_counts_yest = (
+        _fade_yesterday_df.groupby(["model_name", "result"]).size().unstack(fill_value=0)
+    )
+    for col in ["WON", "LOST"]:
+        if col not in _fade_counts_yest.columns:
+            _fade_counts_yest[col] = 0
+    _fade_counts_yest = _fade_counts_yest[["WON", "LOST"]]
+_fade_totals_yest = _fade_counts_yest.sum(axis=1)
+_fade_pct_yest = (
+    _fade_counts_yest.div(_fade_totals_yest.replace(0, np.nan), axis=0)
+    .multiply(100)
+    .round(1)
+    .fillna(0)
+    .astype(str)
+    + "%"
+)
+st.table(_fade_counts_yest.astype(str) + " (" + _fade_pct_yest + ")")
+
+st.subheader("Wins and Losses per Model FADE")
+_fade_wl_filtered = fade_df[fade_df["result"].isin(["WON", "LOST"])].copy()
+_fade_wl_filtered["_year"] = pd.to_datetime(_fade_wl_filtered["date"]).dt.year
+_fade_wl_combined = pd.concat(
+    {
+        "2026": _wl_breakdown(_fade_wl_filtered[_fade_wl_filtered["_year"] == 2026], _wl_models),
+        "2025": _wl_breakdown(_fade_wl_filtered[_fade_wl_filtered["_year"] == 2025], _wl_models),
+        "Total": _wl_breakdown(_fade_wl_filtered, _wl_models),
+    },
+    axis=1,
+)
+st.table(_fade_wl_combined)
+
+st.subheader(f"Profit per Model Yesterday FADE - {yesterday}")
+_fade_df_yesterday = fade_df[fade_df["date"].dt.date == yesterday]
+st.dataframe(summarize(_fade_df_yesterday))
+
+st.subheader("Profit Per Model FADE")
+_fade_year_series = fade_df["date"].dt.year
+_fade_profit_combined = pd.concat(
+    {
+        "2026": _profit_raw(fade_df[_fade_year_series == 2026], _models_idx),
+        "2025": _profit_raw(fade_df[_fade_year_series == 2025], _models_idx),
+        "Total": _profit_raw(fade_df, _models_idx),
+    },
+    axis=1,
+)
+_fade_winnings_cols = [c for c in _fade_profit_combined.columns if c[1] == "winnings_amount"]
+_fade_losses_cols = [c for c in _fade_profit_combined.columns if c[1] == "losses_amount"]
+_fade_profit_cols = [c for c in _fade_profit_combined.columns if c[1] == "total_profit"]
+_styled_fade_profit = (
+    _fade_profit_combined.style
+    .format(_currency)
+    .map(_hl_pos, subset=_fade_winnings_cols)
+    .map(_hl_neg, subset=_fade_losses_cols)
+    .map(_hl_profit, subset=_fade_profit_cols)
+)
+st.dataframe(_styled_fade_profit, use_container_width=True)
 
 
 st.subheader("Daily Profit per Model")
