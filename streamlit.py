@@ -316,11 +316,6 @@ def _build_fade_df(source_df):
 
     actual = pd.to_numeric(source_df["actual_pts"], errors="coerce")
 
-    # Grade the fade bet using the SAME convention as update_after.py: a side
-    # wins only on a STRICT inequality; everything else — including an exact
-    # tie — is a loss. update_after.py has no PUSH branch (a tie falls through
-    # ELSE -> LOST), so we match it. This keeps the fade W/L counts a clean
-    # inverse of the originals for the common equal-line case.
     res = pd.Series(np.nan, index=source_df.index, dtype=object)
     gradable = actual.notna() & fade_line.notna() & fade_bet.notna()
     over_g = gradable & is_over
@@ -329,8 +324,7 @@ def _build_fade_df(source_df):
     res[over_g & (actual <= fade_line)] = "LOST"
     res[under_g & (actual < fade_line)] = "WON"
     res[under_g & (actual >= fade_line)] = "LOST"
-    # Carry over non-settled originals — fading a bet that never settled
-    # (DNP, VOID) doesn't settle either.
+
     _carry = source_df["result"].isin(["DNP", "VOID"])
     res[_carry] = source_df["result"][_carry]
     fade["result"] = res
@@ -343,8 +337,6 @@ def _build_fade_df(source_df):
     profit = pd.Series(np.nan, index=source_df.index, dtype=float)
     profit[res == "WON"] = amount[res == "WON"] * (dec[res == "WON"] - 1.0)
     profit[res == "LOST"] = -amount[res == "LOST"]
-    # Round to 2 decimal places to match update_after.py's profit precision
-    # — keeps chart hover values clean and tables consistent across original/fade.
     fade["profit"] = profit.fillna(0.0).round(2)
 
     return fade
@@ -423,10 +415,6 @@ st.dataframe(_styled_fade_profit, use_container_width=True)
 st.subheader("Daily Profit per Model")
 df['date'] = pd.to_datetime(df['date'])
 
-# Original and FADE daily profit per (model, date). Each is filtered to
-# non-zero rows so the existing "skip dead days" behavior is preserved on
-# each side independently — when one side has activity and the other doesn't,
-# the chart line for the silent side simply breaks (Altair handles NaN gaps).
 daily_profit = df.groupby(["model_name", "date"])["profit"].sum().reset_index()
 daily_profit = daily_profit[daily_profit["profit"] != 0]
 daily_profit["_year"] = daily_profit["date"].dt.year
