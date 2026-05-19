@@ -420,14 +420,37 @@ st.dataframe(_styled_fade_profit, use_container_width=True)
 
 st.subheader("Daily Profit per Model")
 df['date'] = pd.to_datetime(df['date'])
+
+# Original and FADE daily profit per (model, date). Each is filtered to
+# non-zero rows so the existing "skip dead days" behavior is preserved on
+# each side independently — when one side has activity and the other doesn't,
+# the chart line for the silent side simply breaks (Altair handles NaN gaps).
 daily_profit = df.groupby(["model_name", "date"])["profit"].sum().reset_index()
 daily_profit = daily_profit[daily_profit["profit"] != 0]
 daily_profit["_year"] = daily_profit["date"].dt.year
 
-for model in daily_profit["model_name"].unique():
-    model_data = daily_profit[daily_profit["model_name"] == model].sort_values("date")
-    m_2026 = model_data[model_data["_year"] == 2026]
-    m_2025 = model_data[model_data["_year"] == 2025]
+fade_daily = fade_df.groupby(["model_name", "date"])["profit"].sum().reset_index()
+fade_daily = fade_daily[fade_daily["profit"] != 0]
+
+_all_models = sorted(set(daily_profit["model_name"]) | set(fade_daily["model_name"]))
+
+for model in _all_models:
+    orig = (
+        daily_profit[daily_profit["model_name"] == model]
+        .set_index("date")[["profit"]]
+        .rename(columns={"profit": "Original"})
+    )
+    fade = (
+        fade_daily[fade_daily["model_name"] == model]
+        .set_index("date")[["profit"]]
+        .rename(columns={"profit": "FADE"})
+    )
+    combined = orig.join(fade, how="outer").sort_index()
+    if combined.empty:
+        continue
+    combined["_year"] = combined.index.year
+    m_2026 = combined[combined["_year"] == 2026].drop(columns=["_year"])
+    m_2025 = combined[combined["_year"] == 2025].drop(columns=["_year"])
 
     st.write(f"**{model}**")
     cols = st.columns(2)
@@ -436,13 +459,13 @@ for model in daily_profit["model_name"].unique():
         if m_2026.empty:
             st.write("No data.")
         else:
-            st.line_chart(m_2026.set_index("date")["profit"], use_container_width=True)
+            st.line_chart(m_2026, use_container_width=True)
     with cols[1]:
         st.caption("2025 Season")
         if m_2025.empty:
             st.write("No data.")
         else:
-            st.line_chart(m_2025.set_index("date")["profit"], use_container_width=True)
+            st.line_chart(m_2025, use_container_width=True)
 
 
 
