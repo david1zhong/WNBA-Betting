@@ -1,27 +1,27 @@
 {
-  "_comment": "9 player props as of 2026-05-19 09:34 EDT",
+  "_comment": "9 player props as of 2026-05-19 12:51 EDT",
   "players": [
     {
       "name": "Brittney Sykes",
       "date": "2026-05-19",
       "over_line": "19.5",
-      "over_odds": "-105",
+      "over_odds": "-102",
       "under_line": "19.5",
-      "under_odds": "-108"
+      "under_odds": "-115"
     },
     {
       "name": "Kahleah Copper",
       "date": "2026-05-19",
       "over_line": "18.5",
-      "over_odds": "-112",
+      "over_odds": "-115",
       "under_line": "18.5",
-      "under_odds": "-112"
+      "under_odds": "+107"
     },
     {
       "name": "Marina Mabrey",
       "date": "2026-05-19",
-      "over_line": "18.5",
-      "over_odds": "-102",
+      "over_line": "17.5",
+      "over_odds": "-118",
       "under_line": "18.5",
       "under_odds": "-120"
     },
@@ -29,9 +29,9 @@
       "name": "Alyssa Thomas",
       "date": "2026-05-19",
       "over_line": "15.5",
-      "over_odds": "-114",
-      "under_line": "16.5",
-      "under_odds": "-130"
+      "over_odds": "-115",
+      "under_line": "15.5",
+      "under_odds": "-115"
     },
     {
       "name": "Jovana Nogic",
@@ -45,7 +45,7 @@
       "name": "DeWanna Bonner",
       "date": "2026-05-19",
       "over_line": "11.5",
-      "over_odds": "-104",
+      "over_odds": "-110",
       "under_line": "11.5",
       "under_odds": "-110"
     },
@@ -55,7 +55,7 @@
       "over_line": "11.5",
       "over_odds": "+102",
       "under_line": "11.5",
-      "under_odds": "-115"
+      "under_odds": "-130"
     },
     {
       "name": "Natasha Mack",
@@ -69,9 +69,9 @@
       "name": "Nyara Sabally",
       "date": "2026-05-19",
       "over_line": "7.5",
-      "over_odds": "-132",
-      "under_line": "8.5",
-      "under_odds": "-105"
+      "over_odds": "-130",
+      "under_line": "7.5",
+      "under_odds": "+110"
     }
   ]
 }
