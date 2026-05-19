@@ -343,7 +343,9 @@ def _build_fade_df(source_df):
     profit = pd.Series(np.nan, index=source_df.index, dtype=float)
     profit[res == "WON"] = amount[res == "WON"] * (dec[res == "WON"] - 1.0)
     profit[res == "LOST"] = -amount[res == "LOST"]
-    fade["profit"] = profit.fillna(0.0)
+    # Round to 2 decimal places to match update_after.py's profit precision
+    # — keeps chart hover values clean and tables consistent across original/fade.
+    fade["profit"] = profit.fillna(0.0).round(2)
 
     return fade
 
