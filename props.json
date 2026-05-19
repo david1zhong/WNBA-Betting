@@ -1,123 +1,75 @@
 {
-  "_comment": "15 player props as of 2026-05-18 12:48 EDT",
+  "_comment": "9 player props as of 2026-05-19 09:34 EDT",
   "players": [
     {
-      "name": "Paige Bueckers",
-      "date": "2026-05-18",
+      "name": "Brittney Sykes",
+      "date": "2026-05-19",
       "over_line": "19.5",
-      "over_odds": "-110",
-      "under_line": "20.5",
-      "under_odds": "-120"
-    },
-    {
-      "name": "Sonia Citron",
-      "date": "2026-05-18",
-      "over_line": "18.5",
-      "over_odds": "-118",
-      "under_line": "18.5",
-      "under_odds": "-118"
-    },
-    {
-      "name": "Arike Ogunbowale",
-      "date": "2026-05-18",
-      "over_line": "16.5",
-      "over_odds": "-130",
-      "under_line": "17.5",
-      "under_odds": "-122"
-    },
-    {
-      "name": "Carla Leite",
-      "date": "2026-05-18",
-      "over_line": "15.5",
-      "over_odds": "-130",
-      "under_line": "16.5",
-      "under_odds": "-120"
-    },
-    {
-      "name": "Kiki Iriafen",
-      "date": "2026-05-18",
-      "over_line": "14.5",
-      "over_odds": "-125",
-      "under_line": "15.5",
-      "under_odds": "-118"
-    },
-    {
-      "name": "Bridget Carleton",
-      "date": "2026-05-18",
-      "over_line": "15.5",
       "over_odds": "-105",
-      "under_line": "15.5",
+      "under_line": "19.5",
+      "under_odds": "-108"
+    },
+    {
+      "name": "Kahleah Copper",
+      "date": "2026-05-19",
+      "over_line": "18.5",
+      "over_odds": "-112",
+      "under_line": "18.5",
+      "under_odds": "-112"
+    },
+    {
+      "name": "Marina Mabrey",
+      "date": "2026-05-19",
+      "over_line": "18.5",
+      "over_odds": "-102",
+      "under_line": "18.5",
       "under_odds": "-120"
     },
     {
-      "name": "Shakira Austin",
-      "date": "2026-05-18",
-      "over_line": "14.5",
-      "over_odds": "-120",
-      "under_line": "14.5",
-      "under_odds": "+102"
+      "name": "Alyssa Thomas",
+      "date": "2026-05-19",
+      "over_line": "15.5",
+      "over_odds": "-114",
+      "under_line": "16.5",
+      "under_odds": "-130"
     },
     {
-      "name": "Aneesah Morrow",
-      "date": "2026-05-18",
-      "over_line": "13.5",
+      "name": "Jovana Nogic",
+      "date": "2026-05-19",
+      "over_line": "11.5",
       "over_odds": "-130",
-      "under_line": "14.5",
-      "under_odds": "-115"
+      "under_line": "12.5",
+      "under_odds": "-130"
     },
     {
-      "name": "Brittney Griner",
-      "date": "2026-05-18",
-      "over_line": "13.5",
-      "over_odds": "-110",
-      "under_line": "13.5",
+      "name": "DeWanna Bonner",
+      "date": "2026-05-19",
+      "over_line": "11.5",
+      "over_odds": "-104",
+      "under_line": "11.5",
       "under_odds": "-110"
     },
     {
-      "name": "Luisa Geiselsoder",
-      "date": "2026-05-18",
-      "over_line": "10.5",
-      "over_odds": "-120",
+      "name": "Kiki Rice",
+      "date": "2026-05-19",
+      "over_line": "11.5",
+      "over_odds": "+102",
       "under_line": "11.5",
-      "under_odds": "-125"
-    },
-    {
-      "name": "Hailey Van Lith",
-      "date": "2026-05-18",
-      "over_line": "9.5",
-      "over_odds": "-128",
-      "under_line": "10.5",
-      "under_odds": "-105"
-    },
-    {
-      "name": "Jessica Shepard",
-      "date": "2026-05-18",
-      "over_line": "9.5",
-      "over_odds": "-130",
-      "under_line": "10.5",
       "under_odds": "-115"
     },
     {
-      "name": "Odyssey Sims",
-      "date": "2026-05-18",
-      "over_line": "9.5",
-      "over_odds": "-125",
-      "under_line": "10.5",
-      "under_odds": "-130"
-    },
-    {
-      "name": "Saniya Rivers",
-      "date": "2026-05-18",
-      "over_line": "9.5",
-      "over_odds": "+102",
-      "under_line": "9.5",
-      "under_odds": "-130"
-    },
-    {
-      "name": "Alanna Smith",
-      "date": "2026-05-18",
+      "name": "Natasha Mack",
+      "date": "2026-05-19",
       "over_line": "8.5",
-      "over_odds": "-115",
+      "over_odds": "-125",
+      "under_line": "8.5",
+      "under_odds": "+101"
+    },
+    {
+      "name": "Nyara Sabally",
+      "date": "2026-05-19",
+      "over_line": "7.5",
+      "over_odds": "-132",
       "under_line": "8.5",
       "under_odds": "-105"
     }
