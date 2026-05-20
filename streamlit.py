@@ -53,14 +53,17 @@ def render_season_table(season_df, key_prefix):
     AND result AND player AND date). Click any column header in the table
     itself to sort — sort + filter combine."""
     with st.expander("Filters", expanded=False):
-        c1, c2, c3, c4, c5 = st.columns(5)
-        with c1:
+        # Two rows of three filters each — keeps each multiselect usable width
+        # instead of cramming six into one row.
+        r1c1, r1c2, r1c3 = st.columns(3)
+        r2c1, r2c2, r2c3 = st.columns(3)
+        with r1c1:
             models_avail = sorted(season_df["model_name"].dropna().unique())
             models_sel = st.multiselect(
                 "Model(s)", models_avail, default=[],
                 placeholder="All models", key=f"{key_prefix}_models",
             )
-        with c2:
+        with r1c2:
             # Dates as YYYY-MM-DD strings, recent first — typical use is
             # "today" or "yesterday" which sit at the top.
             dates_avail = sorted(
@@ -71,12 +74,18 @@ def render_season_table(season_df, key_prefix):
                 "Date(s)", dates_avail, default=[],
                 placeholder="All dates", key=f"{key_prefix}_dates",
             )
-        with c3:
+        with r1c3:
+            players_avail = sorted(season_df["player_name"].dropna().unique())
+            players_sel = st.multiselect(
+                "Player(s)", players_avail, default=[],
+                placeholder="All players", key=f"{key_prefix}_players",
+            )
+        with r2c1:
             bets_sel = st.multiselect(
                 "Bet", ["OVER", "UNDER"], default=[],
                 placeholder="All bets", key=f"{key_prefix}_bets",
             )
-        with c4:
+        with r2c2:
             results_avail = [
                 r for r in ["WON", "LOST", "DNP", "VOID"]
                 if r in season_df["result"].dropna().unique()
@@ -85,11 +94,15 @@ def render_season_table(season_df, key_prefix):
                 "Result", results_avail, default=[],
                 placeholder="All results", key=f"{key_prefix}_results",
             )
-        with c5:
-            players_avail = sorted(season_df["player_name"].dropna().unique())
-            players_sel = st.multiselect(
-                "Player(s)", players_avail, default=[],
-                placeholder="All players", key=f"{key_prefix}_players",
+        with r2c3:
+            _amt_numeric = pd.to_numeric(season_df["amount"], errors="coerce")
+            amounts_avail = sorted(_amt_numeric.dropna().astype(int).unique().tolist())
+            amount_options = [f"${a}" for a in amounts_avail]
+            if _amt_numeric.isna().any():
+                amount_options.append("No Bet")
+            amount_sel = st.multiselect(
+                "Amount", amount_options, default=[],
+                placeholder="All amounts", key=f"{key_prefix}_amount",
             )
 
     filtered = season_df
@@ -104,6 +117,23 @@ def render_season_table(season_df, key_prefix):
         filtered = filtered[filtered["result"].isin(results_sel)]
     if players_sel:
         filtered = filtered[filtered["player_name"].isin(players_sel)]
+    if amount_sel:
+        # "$1" -> 1, ..., "No Bet" -> include NaN rows
+        selected_amts = []
+        include_none = False
+        for s in amount_sel:
+            if s == "No Bet":
+                include_none = True
+            else:
+                try:
+                    selected_amts.append(int(s.lstrip("$")))
+                except ValueError:
+                    continue
+        amt_col = pd.to_numeric(filtered["amount"], errors="coerce")
+        mask = amt_col.isin(selected_amts)
+        if include_none:
+            mask = mask | amt_col.isna()
+        filtered = filtered[mask]
 
     # Summary metrics for the current view — most useful when filters are
     # combined (e.g. one model + one date), but useful unfiltered too.
@@ -113,16 +143,24 @@ def render_season_table(season_df, key_prefix):
     n_overs = int((filtered["bet"] == "OVER").sum())
     n_unders = int((filtered["bet"] == "UNDER").sum())
     wagered = float(pd.to_numeric(filtered["amount"], errors="coerce").fillna(0).sum())
+    n_won = int((filtered["result"] == "WON").sum())
+    n_lost = int((filtered["result"] == "LOST").sum())
+    n_dnp = int((filtered["result"] == "DNP").sum())
 
     if n_filt != n_total:
         prefix = f"Showing {n_filt:,} of {n_total:,} rows"
     else:
         prefix = f"Showing all {n_total:,} rows"
     st.caption(
-        f"{prefix} • "
-        f"{n_players} player{'s' if n_players != 1 else ''} • "
-        f"{n_overs} OVER / {n_unders} UNDER • "
-        f"${wagered:,.2f} wagered"
+        " • ".join([
+            prefix,
+            f"{n_players} player{'s' if n_players != 1 else ''}",
+            f"{n_overs} OVER / {n_unders} UNDER",
+            f"${wagered:,.2f} wagered",
+            f"WON: {n_won}/{n_filt}",
+            f"LOST: {n_lost}/{n_filt}",
+            f"DNP: {n_dnp}/{n_filt}",
+        ])
     )
 
     styled = (
