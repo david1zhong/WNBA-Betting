@@ -50,10 +50,10 @@ def render_season_table(season_df, key_prefix):
 
     Each multiselect defaults to empty = no filter on that column. Pick one
     or more values to narrow. Multiple filters AND together (model AND bet
-    AND result AND player). Click any column header in the table itself to
-    sort — sort + filter combine."""
+    AND result AND player AND date). Click any column header in the table
+    itself to sort — sort + filter combine."""
     with st.expander("Filters", expanded=False):
-        c1, c2, c3, c4 = st.columns(4)
+        c1, c2, c3, c4, c5 = st.columns(5)
         with c1:
             models_avail = sorted(season_df["model_name"].dropna().unique())
             models_sel = st.multiselect(
@@ -61,11 +61,22 @@ def render_season_table(season_df, key_prefix):
                 placeholder="All models", key=f"{key_prefix}_models",
             )
         with c2:
+            # Dates as YYYY-MM-DD strings, recent first — typical use is
+            # "today" or "yesterday" which sit at the top.
+            dates_avail = sorted(
+                pd.to_datetime(season_df["date"]).dt.strftime("%Y-%m-%d").unique(),
+                reverse=True,
+            )
+            dates_sel = st.multiselect(
+                "Date(s)", dates_avail, default=[],
+                placeholder="All dates", key=f"{key_prefix}_dates",
+            )
+        with c3:
             bets_sel = st.multiselect(
                 "Bet", ["OVER", "UNDER"], default=[],
                 placeholder="All bets", key=f"{key_prefix}_bets",
             )
-        with c3:
+        with c4:
             results_avail = [
                 r for r in ["WON", "LOST", "DNP", "VOID"]
                 if r in season_df["result"].dropna().unique()
@@ -74,7 +85,7 @@ def render_season_table(season_df, key_prefix):
                 "Result", results_avail, default=[],
                 placeholder="All results", key=f"{key_prefix}_results",
             )
-        with c4:
+        with c5:
             players_avail = sorted(season_df["player_name"].dropna().unique())
             players_sel = st.multiselect(
                 "Player(s)", players_avail, default=[],
@@ -84,6 +95,9 @@ def render_season_table(season_df, key_prefix):
     filtered = season_df
     if models_sel:
         filtered = filtered[filtered["model_name"].isin(models_sel)]
+    if dates_sel:
+        date_strs = pd.to_datetime(filtered["date"]).dt.strftime("%Y-%m-%d")
+        filtered = filtered[date_strs.isin(dates_sel)]
     if bets_sel:
         filtered = filtered[filtered["bet"].isin(bets_sel)]
     if results_sel:
@@ -91,10 +105,25 @@ def render_season_table(season_df, key_prefix):
     if players_sel:
         filtered = filtered[filtered["player_name"].isin(players_sel)]
 
-    if len(filtered) != len(season_df):
-        st.caption(f"Showing {len(filtered):,} of {len(season_df):,} rows")
+    # Summary metrics for the current view — most useful when filters are
+    # combined (e.g. one model + one date), but useful unfiltered too.
+    n_total = len(season_df)
+    n_filt = len(filtered)
+    n_players = filtered["player_name"].nunique()
+    n_overs = int((filtered["bet"] == "OVER").sum())
+    n_unders = int((filtered["bet"] == "UNDER").sum())
+    wagered = float(pd.to_numeric(filtered["amount"], errors="coerce").fillna(0).sum())
+
+    if n_filt != n_total:
+        prefix = f"Showing {n_filt:,} of {n_total:,} rows"
     else:
-        st.caption(f"Showing all {len(season_df):,} rows")
+        prefix = f"Showing all {n_total:,} rows"
+    st.caption(
+        f"{prefix} • "
+        f"{n_players} player{'s' if n_players != 1 else ''} • "
+        f"{n_overs} OVER / {n_unders} UNDER • "
+        f"${wagered:,.2f} wagered"
+    )
 
     styled = (
         filtered.style
