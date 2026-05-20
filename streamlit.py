@@ -45,9 +45,59 @@ def smart_format(x):
     return str(x)
 
 
-def render_season_table(season_df):
+def render_season_table(season_df, key_prefix):
+    """Render a season's predictions table with combinable filters.
+
+    Each multiselect defaults to empty = no filter on that column. Pick one
+    or more values to narrow. Multiple filters AND together (model AND bet
+    AND result AND player). Click any column header in the table itself to
+    sort — sort + filter combine."""
+    with st.expander("Filters", expanded=False):
+        c1, c2, c3, c4 = st.columns(4)
+        with c1:
+            models_avail = sorted(season_df["model_name"].dropna().unique())
+            models_sel = st.multiselect(
+                "Model(s)", models_avail, default=[],
+                placeholder="All models", key=f"{key_prefix}_models",
+            )
+        with c2:
+            bets_sel = st.multiselect(
+                "Bet", ["OVER", "UNDER"], default=[],
+                placeholder="All bets", key=f"{key_prefix}_bets",
+            )
+        with c3:
+            results_avail = [
+                r for r in ["WON", "LOST", "DNP", "VOID"]
+                if r in season_df["result"].dropna().unique()
+            ]
+            results_sel = st.multiselect(
+                "Result", results_avail, default=[],
+                placeholder="All results", key=f"{key_prefix}_results",
+            )
+        with c4:
+            players_avail = sorted(season_df["player_name"].dropna().unique())
+            players_sel = st.multiselect(
+                "Player(s)", players_avail, default=[],
+                placeholder="All players", key=f"{key_prefix}_players",
+            )
+
+    filtered = season_df
+    if models_sel:
+        filtered = filtered[filtered["model_name"].isin(models_sel)]
+    if bets_sel:
+        filtered = filtered[filtered["bet"].isin(bets_sel)]
+    if results_sel:
+        filtered = filtered[filtered["result"].isin(results_sel)]
+    if players_sel:
+        filtered = filtered[filtered["player_name"].isin(players_sel)]
+
+    if len(filtered) != len(season_df):
+        st.caption(f"Showing {len(filtered):,} of {len(season_df):,} rows")
+    else:
+        st.caption(f"Showing all {len(season_df):,} rows")
+
     styled = (
-        season_df.style
+        filtered.style
         .map(highlight_result, subset=["result"])
         .format({col: smart_format for col in num_cols})
         .hide(axis="index")
@@ -78,13 +128,13 @@ st.subheader("2026 Season" + _today_summary)
 if df_2026.empty:
     st.write("No predictions yet.")
 else:
-    render_season_table(df_2026)
+    render_season_table(df_2026, key_prefix="season_2026")
 
 st.subheader("2025 Season")
 if df_2025.empty:
     st.write("No predictions yet.")
 else:
-    render_season_table(df_2025)
+    render_season_table(df_2025, key_prefix="season_2025")
 
 
 st.subheader("Wins and Losses per Model Yesterday")
