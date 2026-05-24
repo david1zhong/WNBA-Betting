@@ -1,205 +1,197 @@
 {
-  "_comment": "25 player props as of 2026-05-23 11:03 EDT",
+  "_comment": "24 player props as of 2026-05-24 11:06 EDT",
   "players": [
     {
-      "name": "A'ja Wilson",
-      "date": "2026-05-23",
-      "over_line": "23.5",
-      "over_odds": "-115",
-      "under_line": "23.5",
+      "name": "Allisha Gray",
+      "date": "2026-05-24",
+      "over_line": "19.5",
+      "over_odds": "+110",
+      "under_line": "19.5",
+      "under_odds": "-119"
+    },
+    {
+      "name": "Kahleah Copper",
+      "date": "2026-05-24",
+      "over_line": "18.5",
+      "over_odds": "-130",
+      "under_line": "19.5",
+      "under_odds": "-122"
+    },
+    {
+      "name": "Breanna Stewart",
+      "date": "2026-05-24",
+      "over_line": "19.5",
+      "over_odds": "-105",
+      "under_line": "19.5",
       "under_odds": "-115"
     },
     {
-      "name": "Kelsey Plum",
-      "date": "2026-05-23",
-      "over_line": "19.5",
-      "over_odds": "-125",
-      "under_line": "20.5",
-      "under_odds": "-109"
-    },
-    {
-      "name": "Brittney Sykes",
-      "date": "2026-05-23",
-      "over_line": "19.5",
-      "over_odds": "-110",
-      "under_line": "20.5",
-      "under_odds": "-128"
-    },
-    {
-      "name": "Marina Mabrey",
-      "date": "2026-05-23",
+      "name": "Paige Bueckers",
+      "date": "2026-05-24",
       "over_line": "18.5",
-      "over_odds": "-110",
+      "over_odds": "+102",
       "under_line": "18.5",
       "under_odds": "-112"
     },
     {
-      "name": "Dearica Hamby",
-      "date": "2026-05-23",
-      "over_line": "16.5",
-      "over_odds": "-115",
-      "under_line": "16.5",
-      "under_odds": "-115"
+      "name": "Sonia Citron",
+      "date": "2026-05-24",
+      "over_line": "17.5",
+      "over_odds": "-110",
+      "under_line": "18.5",
+      "under_odds": "-128"
     },
     {
-      "name": "Jackie Young",
-      "date": "2026-05-23",
+      "name": "Alyssa Thomas",
+      "date": "2026-05-24",
       "over_line": "16.5",
       "over_odds": "-120",
+      "under_line": "17.5",
+      "under_odds": "-126"
+    },
+    {
+      "name": "Arike Ogunbowale",
+      "date": "2026-05-24",
+      "over_line": "15.5",
+      "over_odds": "-120",
       "under_line": "16.5",
+      "under_odds": "-128"
+    },
+    {
+      "name": "Rhyne Howard",
+      "date": "2026-05-24",
+      "over_line": "15.5",
+      "over_odds": "-123",
+      "under_line": "16.5",
+      "under_odds": "-130"
+    },
+    {
+      "name": "Kiki Iriafen",
+      "date": "2026-05-24",
+      "over_line": "14.5",
+      "over_odds": "-120",
+      "under_line": "14.5",
       "under_odds": "-120"
     },
     {
-      "name": "Nneka Ogwumike",
-      "date": "2026-05-23",
-      "over_line": "16.5",
-      "over_odds": "-106",
-      "under_line": "16.5",
-      "under_odds": "-112"
-    },
-    {
-      "name": "Kayla McBride",
-      "date": "2026-05-23",
-      "over_line": "15.5",
-      "over_odds": "-120",
-      "under_line": "15.5",
-      "under_odds": "-102"
-    },
-    {
-      "name": "Skylar Diggins",
-      "date": "2026-05-23",
-      "over_line": "15.5",
-      "over_odds": "-117",
-      "under_line": "15.5",
-      "under_odds": "-117"
-    },
-    {
-      "name": "Chennedy Carter",
-      "date": "2026-05-23",
-      "over_line": "15.5",
-      "over_odds": "-110",
-      "under_line": "15.5",
-      "under_odds": "-110"
-    },
-    {
-      "name": "Cheyenne Parker-Tyus",
-      "date": "2026-05-23",
+      "name": "Zia Cooke",
+      "date": "2026-05-24",
       "over_line": "14.5",
       "over_odds": "-125",
       "under_line": "14.5",
       "under_odds": "-125"
     },
     {
-      "name": "Natasha Howard",
-      "date": "2026-05-23",
-      "over_line": "15.5",
+      "name": "Shakira Austin",
+      "date": "2026-05-24",
+      "over_line": "13.5",
+      "over_odds": "-125",
+      "under_line": "14.5",
+      "under_odds": "-107"
+    },
+    {
+      "name": "Flau'Jae Johnson",
+      "date": "2026-05-24",
+      "over_line": "13.5",
+      "over_odds": "-125",
+      "under_line": "14.5",
+      "under_odds": "-118"
+    },
+    {
+      "name": "Sabrina Ionescu",
+      "date": "2026-05-24",
+      "over_line": "13.5",
+      "over_odds": "-112",
+      "under_line": "14.5",
+      "under_odds": "-130"
+    },
+    {
+      "name": "Jovana Nogic",
+      "date": "2026-05-24",
+      "over_line": "13.5",
       "over_odds": "-120",
       "under_line": "15.5",
       "under_odds": "-120"
     },
     {
-      "name": "Bridget Carleton",
-      "date": "2026-05-23",
-      "over_line": "15.5",
-      "over_odds": "-105",
-      "under_line": "15.5",
-      "under_odds": "-118"
+      "name": "Natisha Hiedeman",
+      "date": "2026-05-24",
+      "over_line": "13.5",
+      "over_odds": "-102",
+      "under_line": "13.5",
+      "under_odds": "-105"
     },
     {
-      "name": "Carla Leite",
-      "date": "2026-05-23",
-      "over_line": "14.5",
-      "over_odds": "-134",
-      "under_line": "15.5",
+      "name": "Angel Reese",
+      "date": "2026-05-24",
+      "over_line": "13.5",
+      "over_odds": "+102",
+      "under_line": "13.5",
       "under_odds": "-130"
     },
     {
-      "name": "Courtney Williams",
-      "date": "2026-05-23",
-      "over_line": "14.5",
-      "over_odds": "-122",
-      "under_line": "15.5",
+      "name": "Jonquel Jones",
+      "date": "2026-05-24",
+      "over_line": "11.5",
+      "over_odds": "-128",
+      "under_line": "12.5",
+      "under_odds": "-105"
+    },
+    {
+      "name": "DeWanna Bonner",
+      "date": "2026-05-24",
+      "over_line": "10.5",
+      "over_odds": "-125",
+      "under_line": "11.5",
+      "under_odds": "-123"
+    },
+    {
+      "name": "Jordin Canada",
+      "date": "2026-05-24",
+      "over_line": "10.5",
+      "over_odds": "-118",
+      "under_line": "10.5",
+      "under_odds": "-105"
+    },
+    {
+      "name": "Jessica Shepard",
+      "date": "2026-05-24",
+      "over_line": "10.5",
+      "over_odds": "+102",
+      "under_line": "10.5",
       "under_odds": "-120"
     },
     {
-      "name": "Olivia Miles",
-      "date": "2026-05-23",
-      "over_line": "14.5",
-      "over_odds": "+102",
-      "under_line": "14.5",
-      "under_odds": "-117"
+      "name": "Satou Sabally",
+      "date": "2026-05-24",
+      "over_line": "9.5",
+      "over_odds": "-108",
+      "under_line": "9.5",
+      "under_odds": "-105"
     },
     {
-      "name": "Kamilla Cardoso",
-      "date": "2026-05-23",
-      "over_line": "13.5",
-      "over_odds": "-110",
-      "under_line": "13.5",
-      "under_odds": "-110"
-    },
-    {
-      "name": "Kiki Rice",
-      "date": "2026-05-23",
-      "over_line": "12.5",
-      "over_odds": "-115",
-      "under_line": "12.5",
-      "under_odds": "-115"
-    },
-    {
-      "name": "Gabriela Jaquez",
-      "date": "2026-05-23",
-      "over_line": "12.5",
-      "over_odds": "-112",
-      "under_line": "12.5",
-      "under_odds": "-112"
-    },
-    {
-      "name": "Chelsea Gray",
-      "date": "2026-05-23",
-      "over_line": "12.5",
-      "over_odds": "-104",
-      "under_line": "12.5",
-      "under_odds": "-115"
-    },
-    {
-      "name": "Natasha Cloud",
-      "date": "2026-05-23",
-      "over_line": "10.5",
-      "over_odds": "-114",
-      "under_line": "10.5",
-      "under_odds": "-114"
-    },
-    {
-      "name": "Ariel Atkins",
-      "date": "2026-05-23",
-      "over_line": "10.5",
-      "over_odds": "-110",
-      "under_line": "10.5",
-      "under_odds": "-109"
-    },
-    {
-      "name": "Jewell Loyd",
-      "date": "2026-05-23",
+      "name": "Natasha Mack",
+      "date": "2026-05-24",
       "over_line": "8.5",
-      "over_odds": "-130",
+      "over_odds": "-135",
       "under_line": "9.5",
       "under_odds": "-125"
     },
     {
-      "name": "NaLyssa Smith",
-      "date": "2026-05-23",
-      "over_line": "7.5",
-      "over_odds": "-124",
-      "under_line": "7.5",
-      "under_odds": "-106"
+      "name": "Azzi Fudd",
+      "date": "2026-05-24",
+      "over_line": "8.5",
+      "over_odds": "+102",
+      "under_line": "8.5",
+      "under_odds": "-110"
     },
     {
-      "name": "Emily Engstler",
-      "date": "2026-05-23",
-      "over_line": "6.5",
-      "over_odds": "-112",
-      "under_line": "6.5",
-      "under_odds": "-112"
+      "name": "Naz Hillmon",
+      "date": "2026-05-24",
+      "over_line": "8.5",
+      "over_odds": "-115",
+      "under_line": "8.5",
+      "under_odds": "-110"
     }
   ]
 }
