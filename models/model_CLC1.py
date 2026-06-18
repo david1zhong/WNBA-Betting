@@ -411,7 +411,10 @@ def predict(player):
     if rec_mean is not None and rec_std and rec_std > 0:
         sd_below = (rec_mean - predicted_raw) / rec_std
         if sd_below >= LOW_OUTPUT_SD and dip_recurs and confidence >= LOW_OUTPUT_CONF:
-            note = "Low Output"
+            # Low Output calls from this model underperform badly; abstain rather
+            # than insert a bet we don't trust.
+            print(TAG, f"{name} skipped (Low Output suppressed)")
+            return None
 
     amount = _confidence_to_amount(confidence)
 

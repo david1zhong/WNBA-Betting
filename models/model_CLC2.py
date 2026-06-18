@@ -379,7 +379,10 @@ def predict(player):
         sd_below = (rec_mean - median_pred) / rec_std
         dip_recurs = _detect_monthly_dip(pdata, date_str, career_mean)
         if sd_below >= LOW_OUTPUT_SD and dip_recurs and confidence >= LOW_OUTPUT_CONF:
-            note = "Low Output"
+            # Low Output calls from this model underperform badly; abstain rather
+            # than insert a bet we don't trust.
+            print(TAG, f"{name} skipped (Low Output suppressed)")
+            return None
 
     amount = _confidence_to_amount(confidence)
 
