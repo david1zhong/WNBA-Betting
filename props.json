@@ -1,277 +1,173 @@
 {
-  "_comment": "34 player props as of 2026-07-02 12:06 EDT",
+  "_comment": "21 player props as of 2026-07-03 11:53 EDT",
   "players": [
     {
-      "name": "Paige Bueckers",
-      "date": "2026-07-02",
-      "over_line": "20.5",
-      "over_odds": "-105",
-      "under_line": "20.5",
-      "under_odds": "-110"
-    },
-    {
-      "name": "Kahleah Copper",
-      "date": "2026-07-02",
-      "over_line": "18.5",
+      "name": "A'ja Wilson",
+      "date": "2026-07-03",
+      "over_line": "23.5",
       "over_odds": "-115",
-      "under_line": "18.5",
-      "under_odds": "-103"
-    },
-    {
-      "name": "Rhyne Howard",
-      "date": "2026-07-02",
-      "over_line": "17.5",
-      "over_odds": "-120",
-      "under_line": "18.5",
-      "under_odds": "-120"
-    },
-    {
-      "name": "Dominique Malonga",
-      "date": "2026-07-02",
-      "over_line": "18.5",
-      "over_odds": "-120",
-      "under_line": "18.5",
-      "under_odds": "-120"
-    },
-    {
-      "name": "Sonia Citron",
-      "date": "2026-07-02",
-      "over_line": "17.5",
-      "over_odds": "-115",
-      "under_line": "17.5",
+      "under_line": "24.5",
       "under_odds": "-115"
     },
     {
-      "name": "Allisha Gray",
-      "date": "2026-07-02",
-      "over_line": "16.5",
+      "name": "Jackie Young",
+      "date": "2026-07-03",
+      "over_line": "18.5",
+      "over_odds": "-122",
+      "under_line": "20.5",
+      "under_odds": "-130"
+    },
+    {
+      "name": "Olivia Miles",
+      "date": "2026-07-03",
+      "over_line": "18.5",
+      "over_odds": "-108",
+      "under_line": "18.5",
+      "under_odds": "-110"
+    },
+    {
+      "name": "Breanna Stewart",
+      "date": "2026-07-03",
+      "over_line": "18.5",
+      "over_odds": "-119",
+      "under_line": "19.5",
+      "under_odds": "-115"
+    },
+    {
+      "name": "Natasha Howard",
+      "date": "2026-07-03",
+      "over_line": "15.5",
       "over_odds": "-120",
-      "under_line": "17.5",
+      "under_line": "16.5",
+      "under_odds": "-119"
+    },
+    {
+      "name": "Courtney Williams",
+      "date": "2026-07-03",
+      "over_line": "15.5",
+      "over_odds": "+105",
+      "under_line": "15.5",
+      "under_odds": "-111"
+    },
+    {
+      "name": "Skylar Diggins",
+      "date": "2026-07-03",
+      "over_line": "14.5",
+      "over_odds": "-105",
+      "under_line": "15.5",
+      "under_odds": "-125"
+    },
+    {
+      "name": "Jonquel Jones",
+      "date": "2026-07-03",
+      "over_line": "14.5",
+      "over_odds": "-110",
+      "under_line": "15.5",
+      "under_odds": "-135"
+    },
+    {
+      "name": "Sabrina Ionescu",
+      "date": "2026-07-03",
+      "over_line": "14.5",
+      "over_odds": "-105",
+      "under_line": "14.5",
+      "under_odds": "-104"
+    },
+    {
+      "name": "Sydney Taylor",
+      "date": "2026-07-03",
+      "over_line": "14.5",
+      "over_odds": "-108",
+      "under_line": "15.5",
+      "under_odds": "-135"
+    },
+    {
+      "name": "Kayla McBride",
+      "date": "2026-07-03",
+      "over_line": "14.5",
+      "over_odds": "-105",
+      "under_line": "15.5",
       "under_odds": "-120"
     },
     {
-      "name": "Natisha Hiedeman",
-      "date": "2026-07-02",
-      "over_line": "15.5",
-      "over_odds": "-115",
-      "under_line": "15.5",
-      "under_odds": "-105"
-    },
-    {
-      "name": "Alyssa Thomas",
-      "date": "2026-07-02",
-      "over_line": "14.5",
-      "over_odds": "-115",
-      "under_line": "14.5",
-      "under_odds": "-102"
-    },
-    {
-      "name": "Azzi Fudd",
-      "date": "2026-07-02",
-      "over_line": "14.5",
-      "over_odds": "-105",
-      "under_line": "14.5",
-      "under_odds": "-103"
-    },
-    {
-      "name": "Angel Reese",
-      "date": "2026-07-02",
-      "over_line": "14.5",
-      "over_odds": "-112",
-      "under_line": "15.5",
-      "under_odds": "-140"
-    },
-    {
-      "name": "Kiki Iriafen",
-      "date": "2026-07-02",
-      "over_line": "14.5",
-      "over_odds": "-105",
-      "under_line": "14.5",
-      "under_odds": "-105"
-    },
-    {
-      "name": "Arike Ogunbowale",
-      "date": "2026-07-02",
+      "name": "Chennedy Carter",
+      "date": "2026-07-03",
       "over_line": "13.5",
-      "over_odds": "-120",
-      "under_line": "14.5",
-      "under_odds": "-122"
-    },
-    {
-      "name": "Jessica Shepard",
-      "date": "2026-07-02",
-      "over_line": "13.5",
-      "over_odds": "-105",
+      "over_odds": "-114",
       "under_line": "13.5",
-      "under_odds": "-108"
+      "under_odds": "-105"
     },
     {
-      "name": "Valeriane Ayayi",
-      "date": "2026-07-02",
+      "name": "Chelsea Gray",
+      "date": "2026-07-03",
       "over_line": "13.5",
-      "over_odds": "-112",
+      "over_odds": "-113",
+      "under_line": "14.5",
+      "under_odds": "-120"
+    },
+    {
+      "name": "Kamilla Cardoso",
+      "date": "2026-07-03",
+      "over_line": "13.5",
+      "over_odds": "+102",
       "under_line": "13.5",
       "under_odds": "-112"
     },
     {
-      "name": "Flau'Jae Johnson",
-      "date": "2026-07-02",
-      "over_line": "12.5",
-      "over_odds": "-105",
-      "under_line": "12.5",
-      "under_odds": "-108"
-    },
-    {
-      "name": "Shakira Austin",
-      "date": "2026-07-02",
-      "over_line": "12.5",
-      "over_odds": "-108",
-      "under_line": "12.5",
-      "under_odds": "-110"
-    },
-    {
-      "name": "Leila Lacan",
-      "date": "2026-07-02",
+      "name": "NaLyssa Smith",
+      "date": "2026-07-03",
       "over_line": "11.5",
-      "over_odds": "-112",
+      "over_odds": "-120",
       "under_line": "12.5",
-      "under_odds": "-127"
+      "under_odds": "-112"
     },
     {
-      "name": "DeWanna Bonner",
-      "date": "2026-07-02",
-      "over_line": "11.5",
-      "over_odds": "-114",
-      "under_line": "12.5",
-      "under_odds": "-128"
-    },
-    {
-      "name": "Brittney Griner",
-      "date": "2026-07-02",
-      "over_line": "11.5",
-      "over_odds": "-125",
-      "under_line": "12.5",
+      "name": "Azura Stevens",
+      "date": "2026-07-03",
+      "over_line": "10.5",
+      "over_odds": "-130",
+      "under_line": "11.5",
       "under_odds": "-125"
     },
     {
-      "name": "Awa Fam",
-      "date": "2026-07-02",
-      "over_line": "11.5",
+      "name": "Leonie Fiebich",
+      "date": "2026-07-03",
+      "over_line": "8.5",
       "over_odds": "-110",
-      "under_line": "11.5",
-      "under_odds": "-114"
-    },
-    {
-      "name": "Jordin Canada",
-      "date": "2026-07-02",
-      "over_line": "10.5",
-      "over_odds": "-118",
-      "under_line": "11.5",
-      "under_odds": "-145"
-    },
-    {
-      "name": "Olivia Nelson-Ododa",
-      "date": "2026-07-02",
-      "over_line": "9.5",
-      "over_odds": "-104",
-      "under_line": "10.5",
-      "under_odds": "-135"
-    },
-    {
-      "name": "Michaela Onyenwere",
-      "date": "2026-07-02",
-      "over_line": "9.5",
-      "over_odds": "-110",
-      "under_line": "9.5",
-      "under_odds": "-108"
-    },
-    {
-      "name": "Diamond Miller",
-      "date": "2026-07-02",
-      "over_line": "8.5",
-      "over_odds": "-105",
-      "under_line": "9.5",
-      "under_odds": "-145"
-    },
-    {
-      "name": "Alexa Held",
-      "date": "2026-07-02",
-      "over_line": "8.5",
-      "over_odds": "-116",
-      "under_line": "9.5",
-      "under_odds": "-135"
-    },
-    {
-      "name": "Monique Akoa Makani",
-      "date": "2026-07-02",
-      "over_line": "8.5",
-      "over_odds": "-105",
       "under_line": "8.5",
-      "under_odds": "-118"
+      "under_odds": "-106"
     },
     {
-      "name": "Aaliyah Edwards",
-      "date": "2026-07-02",
+      "name": "Nia Coffey",
+      "date": "2026-07-03",
       "over_line": "8.5",
       "over_odds": "+105",
       "under_line": "8.5",
-      "under_odds": "-125"
+      "under_odds": "-110"
     },
     {
-      "name": "Kennedy Burke",
-      "date": "2026-07-02",
+      "name": "Gabriela Jaquez",
+      "date": "2026-07-03",
       "over_line": "7.5",
-      "over_odds": "-130",
+      "over_odds": "-100",
       "under_line": "8.5",
-      "under_odds": "-115"
+      "under_odds": "-150"
     },
     {
-      "name": "Jade Melbourne",
-      "date": "2026-07-02",
+      "name": "Pauline Astier",
+      "date": "2026-07-03",
       "over_line": "7.5",
-      "over_odds": "-129",
-      "under_line": "8.5",
-      "under_odds": "-125"
-    },
-    {
-      "name": "Noemie Brochant",
-      "date": "2026-07-02",
-      "over_line": "7.5",
-      "over_odds": "-126",
+      "over_odds": "-113",
       "under_line": "7.5",
-      "under_odds": "-105"
+      "under_odds": "-106"
     },
     {
-      "name": "Naz Hillmon",
-      "date": "2026-07-02",
+      "name": "Jewell Loyd",
+      "date": "2026-07-03",
       "over_line": "7.5",
-      "over_odds": "-115",
+      "over_odds": "-112",
       "under_line": "8.5",
-      "under_odds": "-145"
-    },
-    {
-      "name": "Charlisse Leger-Walker",
-      "date": "2026-07-02",
-      "over_line": "7.5",
-      "over_odds": "-115",
-      "under_line": "8.5",
-      "under_odds": "-145"
-    },
-    {
-      "name": "Awak Kuier",
-      "date": "2026-07-02",
-      "over_line": "5.5",
-      "over_odds": "-135",
-      "under_line": "5.5",
-      "under_odds": "+105"
-    },
-    {
-      "name": "Ezi Magbegor",
-      "date": "2026-07-02",
-      "over_line": "4.5",
-      "over_odds": "-160",
-      "under_line": "5.5",
-      "under_odds": "-139"
+      "under_odds": "-140"
     }
   ]
 }
