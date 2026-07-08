@@ -46,15 +46,7 @@ def smart_format(x):
 
 
 def render_season_table(season_df, key_prefix):
-    """Render a season's predictions table with combinable filters.
-
-    Each multiselect defaults to empty = no filter on that column. Pick one
-    or more values to narrow. Multiple filters AND together (model AND bet
-    AND result AND player AND date). Click any column header in the table
-    itself to sort — sort + filter combine."""
     with st.expander("Filters", expanded=False):
-        # Two rows of three filters each — keeps each multiselect usable width
-        # instead of cramming six into one row.
         r1c1, r1c2, r1c3 = st.columns(3)
         r2c1, r2c2, r2c3 = st.columns(3)
         with r1c1:
@@ -64,8 +56,6 @@ def render_season_table(season_df, key_prefix):
                 placeholder="All models", key=f"{key_prefix}_models",
             )
         with r1c2:
-            # Dates as YYYY-MM-DD strings, recent first — typical use is
-            # "today" or "yesterday" which sit at the top.
             dates_avail = sorted(
                 pd.to_datetime(season_df["date"]).dt.strftime("%Y-%m-%d").unique(),
                 reverse=True,
@@ -118,7 +108,6 @@ def render_season_table(season_df, key_prefix):
     if players_sel:
         filtered = filtered[filtered["player_name"].isin(players_sel)]
     if amount_sel:
-        # "$1" -> 1, ..., "No Bet" -> include NaN rows
         selected_amts = []
         include_none = False
         for s in amount_sel:
@@ -135,8 +124,6 @@ def render_season_table(season_df, key_prefix):
             mask = mask | amt_col.isna()
         filtered = filtered[mask]
 
-    # Summary metrics for the current view — most useful when filters are
-    # combined (e.g. one model + one date), but useful unfiltered too.
     n_total = len(season_df)
     n_filt = len(filtered)
     n_players = filtered["player_name"].nunique()
@@ -209,9 +196,6 @@ st.subheader("Wins and Losses per Model Yesterday")
 eastern = pytz.timezone("US/Eastern")
 yesterday_date = (datetime.now(eastern) - timedelta(days=1)).date()
 
-# Rows with a real stake vs "paper picks" (row inserted with a bet but no
-# amount). Paper picks are shown separately so W/L records stay comparable
-# across models — some models emit many unstaked picks, others none.
 _staked_mask = pd.to_numeric(df["amount"], errors="coerce").fillna(0) > 0
 
 
@@ -278,7 +262,7 @@ def _wl_breakdown(season_df, models_index):
     out = counts.astype(str) + " (" + pct + ")"
     no_data = raw_totals == 0
     if no_data.any():
-        out.loc[no_data, :] = "—"
+        out.loc[no_data, :] = "-"
     return out
 
 
@@ -290,7 +274,7 @@ _wl_combined = pd.concat(
     },
     axis=1,
 )
-st.caption("Staked bets only — paper picks (no bet amount) are in the expander below.")
+st.caption("Staked bets only.")
 st.table(_wl_combined)
 
 with st.expander("Paper picks (no stake)"):
@@ -312,10 +296,9 @@ with st.expander("Paper picks (no stake)"):
 df['profit'] = df['profit'].fillna(0)
 df['amount'] = df['amount'].fillna(0)
 df['date'] = pd.to_datetime(df['date'])
-# Same Eastern-time "yesterday" as the win/loss tables above — a naive
-# datetime.now() on a UTC host flips to the wrong day after 8 PM ET.
 yesterday = yesterday_date
-df_yesterday = df[df['date'].dt.date == yesterday]
+df_graded = df[df["result"].notna()]
+df_yesterday = df_graded[df_graded['date'].dt.date == yesterday]
 
 def summarize(df_input):
     grouped = df_input.groupby('model_name').agg(
@@ -388,13 +371,13 @@ def _profit_raw(season_df, models_idx):
 
 
 _models_idx = sorted(df["model_name"].unique())
-_year_series = df["date"].dt.year
+_graded_year_series = df_graded["date"].dt.year
 
 _profit_combined = pd.concat(
     {
-        "2026": _profit_raw(df[_year_series == 2026], _models_idx),
-        "2025": _profit_raw(df[_year_series == 2025], _models_idx),
-        "Total": _profit_raw(df, _models_idx),
+        "2026": _profit_raw(df_graded[_graded_year_series == 2026], _models_idx),
+        "2025": _profit_raw(df_graded[_graded_year_series == 2025], _models_idx),
+        "Total": _profit_raw(df_graded, _models_idx),
     },
     axis=1,
 )
@@ -402,7 +385,7 @@ _profit_combined = pd.concat(
 
 def _currency(v):
     if not isinstance(v, (int, float, np.floating)) or pd.isna(v):
-        return "—"
+        return "-"
     return f"${v:,.2f}"
 
 
@@ -440,8 +423,6 @@ st.dataframe(_styled_profit, use_container_width=True)
 
 
 def _build_fade_df(source_df):
-    """Return a fade view of the predictions: bet flipped, result and profit
-    recomputed against the opposite side's line and odds."""
     fade = source_df.copy()
 
     fade_bet = source_df["bet"].map({"OVER": "UNDER", "UNDER": "OVER"})
@@ -473,7 +454,6 @@ def _build_fade_df(source_df):
     res[over_g & (actual < fade_line)] = "LOST"
     res[under_g & (actual < fade_line)] = "WON"
     res[under_g & (actual > fade_line)] = "LOST"
-    # Push: exactly on the line is a void, not a loss.
     res[gradable & (actual == fade_line)] = "VOID"
 
     _carry = source_df["result"].isin(["DNP", "VOID"])
@@ -539,16 +519,17 @@ _fade_wl_combined = pd.concat(
 st.table(_fade_wl_combined)
 
 st.subheader(f"Profit per Model Yesterday FADE - {yesterday}")
-_fade_df_yesterday = fade_df[fade_df["date"].dt.date == yesterday]
+_fade_graded = fade_df[fade_df["result"].notna()]
+_fade_df_yesterday = _fade_graded[_fade_graded["date"].dt.date == yesterday]
 st.dataframe(summarize(_fade_df_yesterday))
 
 st.subheader("Profit Per Model FADE")
-_fade_year_series = fade_df["date"].dt.year
+_fade_year_series = _fade_graded["date"].dt.year
 _fade_profit_combined = pd.concat(
     {
-        "2026": _profit_raw(fade_df[_fade_year_series == 2026], _models_idx),
-        "2025": _profit_raw(fade_df[_fade_year_series == 2025], _models_idx),
-        "Total": _profit_raw(fade_df, _models_idx),
+        "2026": _profit_raw(_fade_graded[_fade_year_series == 2026], _models_idx),
+        "2025": _profit_raw(_fade_graded[_fade_year_series == 2025], _models_idx),
+        "Total": _profit_raw(_fade_graded, _models_idx),
     },
     axis=1,
 )
@@ -568,16 +549,21 @@ st.dataframe(_styled_fade_profit, use_container_width=True)
 st.subheader("Daily Profit per Model")
 df['date'] = pd.to_datetime(df['date'])
 
-# Chart only days with graded bets, but keep genuine break-even ($0) days —
-# filtering on profit != 0 silently dropped them.
-_graded_rows = df[df["result"].isin(["WON", "LOST", "VOID"])]
+_staked_daily = pd.to_numeric(df["amount"], errors="coerce").fillna(0) > 0
+_graded_rows = df[df["result"].isin(["WON", "LOST", "VOID"]) & _staked_daily]
 daily_profit = _graded_rows.groupby(["model_name", "date"])["profit"].sum().reset_index()
-daily_profit["_year"] = daily_profit["date"].dt.year
 
-_fade_graded_rows = fade_df[fade_df["result"].isin(["WON", "LOST", "VOID"])]
+_fade_graded_rows = fade_df[fade_df["result"].isin(["WON", "LOST", "VOID"]) & _fade_staked]
 fade_daily = _fade_graded_rows.groupby(["model_name", "date"])["profit"].sum().reset_index()
 
 _all_models = sorted(set(daily_profit["model_name"]) | set(fade_daily["model_name"]))
+
+_daily_view = st.radio(
+    "View",
+    ("Original", "FADE", "Both"),
+    horizontal=True,
+    key="daily_profit_view",
+)
 
 for model in _all_models:
     orig = (
@@ -590,7 +576,13 @@ for model in _all_models:
         .set_index("date")[["profit"]]
         .rename(columns={"profit": "FADE"})
     )
-    combined = orig.join(fade, how="outer").sort_index()
+    if _daily_view == "Original":
+        combined = orig
+    elif _daily_view == "FADE":
+        combined = fade
+    else:
+        combined = orig.join(fade, how="outer")
+    combined = combined.sort_index().dropna(how="all")
     if combined.empty:
         continue
     combined["_year"] = combined.index.year
@@ -616,10 +608,6 @@ for model in _all_models:
 
 
 
-# All graded model-bets per player. The old drop_duplicates on
-# (player, date) kept one arbitrary model's row per game — since models bet
-# opposite directions on the same player, that sampled a random pick per
-# game instead of measuring anything.
 result_df = df[df["result"].isin(["WON", "LOST"])]
 
 grouped = result_df.groupby("player_name").apply(
@@ -678,7 +666,7 @@ _ou_models = sorted(_ou_df_all["model_name"].unique()) if not _ou_df_all.empty e
 
 def _ou_breakdown(season_df, models_idx):
     cols = ["Unders", "Overs", "U %", "O %", "O Win %", "U Win %"]
-    EM = "—"
+    EM = "-"
     if season_df.empty:
         return pd.DataFrame(
             {c: [EM] * len(models_idx) for c in cols},
@@ -741,10 +729,6 @@ st.table(_ou_combined)
 st.subheader("Average Model Accuracy (PTS Differential)")
 _acc_year = df["date"].dt.year
 
-# These models don't store a genuine point estimate in predicted_pts
-# (CLCF1/CLCF2/CLCF3 clamp it to the bet's side of the line, CLC4 stores the
-# voting side's median), so predicted-vs-actual comparisons are meaningless
-# for them.
 _FABRICATED_PRED_MODELS = {"model_CLCF1", "model_CLCF2", "model_CLCF3",
                            "model_CLC4_SELECTIVE"}
 _acc_models_idx = [m for m in _models_idx if m not in _FABRICATED_PRED_MODELS]
@@ -763,8 +747,8 @@ _accuracy_combined = pd.DataFrame({
     "Total": _acc_series(df, _acc_models_idx),
 })
 st.caption(
-    "CLCF1, CLCF2 and CLC4_SELECTIVE are excluded: they store a bet signal, "
-    "not a point estimate, in predicted_pts."
+    "CLCF1, CLCF2, CLCF3 and CLC4_SELECTIVE are excluded: they store a bet "
+    "signal, not a point estimate, in predicted_pts."
 )
 st.bar_chart(_accuracy_combined)
 
@@ -868,12 +852,12 @@ stats = pd.DataFrame(
 
 def format_currency_2(x):
     if pd.isna(x):
-        return "—"
+        return "-"
     return f"${x:,.2f}"
 
 def format_float_max3(x):
     if pd.isna(x):
-        return "—"
+        return "-"
     return f"{x:.3f}"
 
 styled_stats = (
@@ -970,8 +954,8 @@ sportsbook_metrics_df.index = ['Sportsbook']
 
 st.subheader("Model vs Sportsbook Error Comparison")
 st.caption(
-    "CLCF1, CLCF2 and CLC4_SELECTIVE are excluded: they store a bet signal, "
-    "not a point estimate, in predicted_pts."
+    "CLCF1, CLCF2, CLCF3 and CLC4_SELECTIVE are excluded: they store a bet "
+    "signal, not a point estimate, in predicted_pts."
 )
 
 
@@ -1006,12 +990,12 @@ _err_combined = pd.concat(
 _err_combined = _err_combined.sort_values(("Total", "MAE"))
 def _fmt_err(v):
     if v is None or pd.isna(v):
-        return "—"
+        return "-"
     try:
         return f"{float(v):.3f}"
     except (TypeError, ValueError):
-        return "—"
+        return "-"
 
 
-_styled_err = _err_combined.style.format(_fmt_err, na_rep="—")
+_styled_err = _err_combined.style.format(_fmt_err, na_rep="-")
 st.dataframe(_styled_err, use_container_width=True)
