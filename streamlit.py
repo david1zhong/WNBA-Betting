@@ -224,7 +224,6 @@ if _yest_staked.empty:
 else:
     combined_yesterday = _wl_counts_table(_yest_staked)
 
-st.caption("Staked bets only.")
 st.table(combined_yesterday)
 
 _yest_paper = yesterday_df[~_staked_mask.reindex(yesterday_df.index, fill_value=False)]
@@ -274,7 +273,6 @@ _wl_combined = pd.concat(
     },
     axis=1,
 )
-st.caption("Staked bets only.")
 st.table(_wl_combined)
 
 with st.expander("Paper picks (no stake)"):
@@ -290,6 +288,57 @@ with st.expander("Paper picks (no stake)"):
             axis=1,
         )
         st.table(_wl_paper_combined)
+
+
+st.subheader("Win Rate vs Break-Even per Model")
+
+_edge_all = _wl_filtered.copy()
+_edge_side_odds = pd.to_numeric(
+    pd.Series(
+        np.where(_edge_all["bet"] == "UNDER",
+                 _edge_all["under_odds"], _edge_all["over_odds"]),
+        index=_edge_all.index,
+    ),
+    errors="coerce",
+).fillna(-110).replace(0, -110)
+_edge_all["_be"] = np.where(
+    _edge_side_odds > 0,
+    100.0 / (_edge_side_odds + 100.0),
+    _edge_side_odds.abs() / (_edge_side_odds.abs() + 100.0),
+)
+
+
+def _edge_breakdown(season_df, models_idx):
+    cols = ["Bets", "Win %", "Break-Even %", "Edge"]
+    rows = {}
+    for mname in models_idx:
+        g = season_df[season_df["model_name"] == mname]
+        n = len(g)
+        if n == 0:
+            rows[mname] = {c: "-" for c in cols}
+            continue
+        wr = (g["result"] == "WON").mean() * 100
+        be = g["_be"].mean() * 100
+        rows[mname] = {
+            "Bets": str(n),
+            "Win %": f"{wr:.1f}%",
+            "Break-Even %": f"{be:.1f}%",
+            "Edge": f"{wr - be:+.1f}%",
+        }
+    out = pd.DataFrame.from_dict(rows, orient="index")[cols]
+    out.index.name = "model_name"
+    return out
+
+
+_edge_combined = pd.concat(
+    {
+        "2026": _edge_breakdown(_edge_all[_edge_all["_year"] == 2026], _wl_models),
+        "2025": _edge_breakdown(_edge_all[_edge_all["_year"] == 2025], _wl_models),
+        "Total": _edge_breakdown(_edge_all, _wl_models),
+    },
+    axis=1,
+)
+st.table(_edge_combined)
 
 
 
@@ -746,10 +795,6 @@ _accuracy_combined = pd.DataFrame({
     "2025": _acc_series(df[_acc_year == 2025], _acc_models_idx),
     "Total": _acc_series(df, _acc_models_idx),
 })
-st.caption(
-    "CLCF1, CLCF2, CLCF3 and CLC4_SELECTIVE are excluded: they store a bet "
-    "signal, not a point estimate, in predicted_pts."
-)
 st.bar_chart(_accuracy_combined)
 
 
@@ -953,10 +998,6 @@ sportsbook_metrics_df.index = ['Sportsbook']
 
 
 st.subheader("Model vs Sportsbook Error Comparison")
-st.caption(
-    "CLCF1, CLCF2, CLCF3 and CLC4_SELECTIVE are excluded: they store a bet "
-    "signal, not a point estimate, in predicted_pts."
-)
 
 
 def _err_metrics(values):
