@@ -240,7 +240,7 @@ if _yest_staked.empty:
 else:
     combined_yesterday = _wl_counts_table(_yest_staked)
 
-st.caption("Staked bets only — paper picks (no bet amount) are in the expander below.")
+st.caption("Staked bets only.")
 st.table(combined_yesterday)
 
 _yest_paper = yesterday_df[~_staked_mask.reindex(yesterday_df.index, fill_value=False)]
@@ -293,7 +293,7 @@ _wl_combined = pd.concat(
 st.caption("Staked bets only — paper picks (no bet amount) are in the expander below.")
 st.table(_wl_combined)
 
-with st.expander("Paper picks (no stake) — Wins and Losses per Model"):
+with st.expander("Paper picks (no stake)"):
     if _wl_paper.empty:
         st.write("None.")
     else:
