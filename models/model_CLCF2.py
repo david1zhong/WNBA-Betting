@@ -36,6 +36,7 @@ prob - break_even >= EV_MARGIN, quarter-Kelly stake clamped to 1-5.
 import os
 import json
 import warnings
+from datetime import datetime
 from urllib.parse import urlparse, unquote
 
 import numpy as np
@@ -51,7 +52,8 @@ load_dotenv()
 TAG = "[CLCF2]"
 
 YEARS_FILES = {
-    year: f"playerboxes/player_box_{year}.csv" for year in range(2009, 2027)
+    year: f"playerboxes/player_box_{year}.csv"
+    for year in range(2009, datetime.now().year + 1)
 }
 
 # stage-1 (points model) features

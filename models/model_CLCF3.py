@@ -1,33 +1,42 @@
 """
-CLCF1 — a continuously-retrained logistic-regression market model.
+CLCF3 — the project's core premise (cyclical low-output games), made rigorous.
 
-Every morning it refits a small regularized logistic regression on ALL graded
-history in the predictions table (deduplicated to one market row per
-player-date, so it learns from outcomes, not from other models' opinions),
-then prices today's slate and bets only when the modeled probability clears
-the sportsbook break-even by a calibrated margin.
+CL2 detects roughly-monthly performance dips in a player's box history and
+bets UNDER inside the predicted dip window. It was profitable in 2025 but on
+a small, unpriced sample: it never looked at the odds, never calibrated its
+confidence against outcomes, and its dip math wasn't walk-forward-safe
+(z-scores were computed over the whole career, future games included).
 
-Features (chosen by walk-forward ablation on ~1,800 graded player-dates;
-each survived a margin x regularization robustness grid):
-  gap         under_line - over_line. Split lines (gap >= 1) are a structural
-              middle: UNDER at the higher number won 56.7% historically.
-  juice_asym  break-even(under_odds) - break-even(over_odds). Where the book
-              loads the vig is where the sharp side is.
-  player_post the player's historical under-rate, shrunk hard toward the
-              global base rate (player persistence is weak: split-half
-              correlation ~0.09, so BETA_K keeps this feature honest).
-  mid         line level (high lines behave differently from low lines).
-  min_trend   last-5 vs last-15 average minutes — role expanding/shrinking.
-  form_edge   recency-weighted last-15 scoring average minus the line.
+CLCF3 keeps the premise and rebuilds the machinery in the CLCF mold:
 
-Decision rule: EV-gate BOTH sides against their actual odds, require
-prob - break_even >= EV_MARGIN, size with quarter-Kelly clamped to 1-5.
-Abstaining is a feature: the walk-forward backtest made +9% ROI betting
-~570 of ~1,550 opportunities and was profitable in every month tested.
+Signal (per player, box games strictly before the target date only):
+  - performance score = mean of z-scored points and FG%, dips = bottom 25%
+  - intervals between consecutive dips in the 20-40 day band define the
+    player's personal cycle (need >= 3 such intervals)
+  - the next dip is projected k full cycles after the last observed dip
+    (k >= 1, so a long dip drought wraps forward instead of pointing at a
+    date in the past — a bug-fix over CL2, which only looked one cycle out)
+  - dip_score = gaussian proximity of the target date to that projection
+  - dip_gap  = recency-weighted form minus mean points in past dip games
+    (how much this player actually drops when she dips)
 
-Numpy-only training (deterministic gradient descent, no sklearn, no seed
-sensitivity). Walk-forward by construction in production: each day's fit
-only ever sees already-graded games.
+Calibration: a ridge logistic regression (numpy, deterministic) trained on
+all graded market history in the predictions DB — one row per player-date,
+walk-forward honest — maps the dip signal plus market structure (line gap,
+juice asymmetry, line level, player under-rate, form edge) to P(under).
+
+Decision rule — UNDER ONLY, dip-gated. This model exists to call low-output
+games, so it never takes the OVER:
+  - a personal cycle must exist (>= 3 monthly intervals)
+  - dip_score >= DIP_GATE and dip_gap > MIN_DIP_GAP (the projected dip is
+    near AND this player's dips are real scoring drops)
+  - calibrated P(under) must clear the under's break-even by EV_MARGIN
+  - quarter-Kelly stake clamped to 1-5
+
+Walk-forward backtest on the graded history through 2026-07-07 (refit each
+morning, features from prior games only): 165 bets, 96-69 (58.2%), +6.8% ROI
+at the actual under odds, positive in 3 of the 5 months covered. Small
+sample, like CL2's — the premise bets are ~10% of the slate by design.
 """
 import os
 import json
@@ -44,16 +53,19 @@ warnings.filterwarnings("ignore")
 
 load_dotenv()
 
-TAG = "[CLCF1]"
+TAG = "[CLCF3]"
 
 YEARS_FILES = {
     year: f"playerboxes/player_box_{year}.csv"
     for year in range(2009, datetime.now().year + 1)
 }
 
-FEATURES = ("gap", "juice_asym", "player_post", "mid", "min_trend", "form_edge")
+FEATURES = ("gap", "juice_asym", "player_post", "mid",
+            "form_edge", "dip_signal", "dip_drop")
 
-EV_MARGIN = 0.03          # required prob edge over break-even (calibrated)
+EV_MARGIN = 0.03          # required P(under) edge over the under break-even
+DIP_GATE = 0.2            # minimum dip_score to consider a bet
+MIN_DIP_GAP = 2.0         # past dips must average >2 pts below form
 L2 = 2.0                  # ridge strength for the logistic fit
 GD_ITERS = 300
 GD_LR = 0.5
@@ -61,11 +73,14 @@ BETA_K = 12.0             # shrinkage strength for player_post
 QUARTER_KELLY = 0.25
 KELLY_TO_STAKE_MULTIPLIER = 20   # f * 20 -> integer stake, clamped 1-5
 MIN_TRAIN_ROWS = 250      # refuse to bet on a thin training set
-MIN_CAREER_GAMES = 10     # need real box history for form/minutes features
-FORM_GAMES = 15           # lookback for form_edge
+MIN_CAREER_GAMES = 15     # dip stats need a real career sample
+FORM_GAMES = 15           # lookback for form
 FORM_DECAY = 0.85         # recency weight per game (newest weighted most)
-MIN_SHORT = 5             # minutes-trend short window
-MIN_LONG = 15             # minutes-trend long window
+DIP_QUANTILE = 0.25       # bottom 25% of performance scores are dips
+CYCLE_LO_DAYS = 20        # monthly-cycle interval band
+CYCLE_HI_DAYS = 40
+MIN_CYCLES = 3            # intervals in band needed to trust the cycle
+MIN_CYCLE_SIGMA = 2.5     # floor on the dip-window width (days)
 
 _BOX_CACHE = {}
 _DB_CONN = {"conn": None, "tried": False}
@@ -153,8 +168,8 @@ def _load_playerboxes():
     df = pd.concat(frames, ignore_index=True)
     df = df[df["did_not_play"].astype(str).str.upper() != "TRUE"].copy()
     df["game_date"] = pd.to_datetime(df["game_date"], errors="coerce")
-    df["points"] = pd.to_numeric(df["points"], errors="coerce")
-    df["minutes"] = pd.to_numeric(df["minutes"], errors="coerce")
+    for c in ("points", "field_goals_made", "field_goals_attempted"):
+        df[c] = pd.to_numeric(df[c], errors="coerce")
     df = df.dropna(subset=["athlete_display_name", "game_date", "points"])
     df["name_key"] = df["athlete_display_name"].str.lower().str.strip()
     df = df.sort_values("game_date").reset_index(drop=True)
@@ -196,31 +211,73 @@ def _load_history(conn):
 
 # ------------------------------------------------------------------- features
 
-def _box_features(name_key, target_dt):
-    """(min_trend, form, career_games) from box games strictly before
-    target_dt. form is the recency-weighted scoring average; the caller
-    subtracts the line to get form_edge."""
+def _cycle_features(name_key, target_dt):
+    """Dip-cycle stats from box games strictly before target_dt.
+
+    Returns (dip_score, dip_gap, cycle_quality, form, career_n), or None if
+    the career is too thin to say anything. dip_score/cycle_quality are 0.0
+    when no usable monthly cycle exists."""
     grp = _box_groups().get(name_key)
     if grp is None:
-        return 0.0, None, 0
+        return None
     hist = grp[grp["game_date"] < target_dt]
     n = len(hist)
-    if n == 0:
-        return 0.0, None, 0
-    mins = hist["minutes"].dropna()
-    m_short = mins.tail(MIN_SHORT).mean()
-    m_long = mins.tail(MIN_LONG).mean()
-    min_trend = float(m_short - m_long) if pd.notna(m_short) and pd.notna(m_long) else 0.0
-    pts = hist["points"].tail(FORM_GAMES).to_numpy(dtype=float)
+    if n < MIN_CAREER_GAMES:
+        return None
+
+    pts_all = hist["points"].to_numpy(dtype=float)
+    pts = pts_all[-FORM_GAMES:]
     wts = FORM_DECAY ** np.arange(len(pts) - 1, -1, -1)
     form = float((pts * wts).sum() / wts.sum())
-    return min_trend, form, n
+
+    fga = hist["field_goals_attempted"].to_numpy(dtype=float)
+    fgm = hist["field_goals_made"].to_numpy(dtype=float)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        fg_pct = np.where(fga > 0, fgm / fga, 0.0)
+    fg_pct = np.nan_to_num(fg_pct)
+
+    def _z(a):
+        s = a.std()
+        return (a - a.mean()) / s if s > 1e-9 else np.zeros_like(a)
+
+    perf = (_z(pts_all) + _z(fg_pct)) / 2.0
+    thr = np.quantile(perf, DIP_QUANTILE)
+    dip_mask = perf < thr
+    dip_dates = hist["game_date"].to_numpy()[dip_mask]
+    if len(dip_dates) < MIN_CYCLES:
+        return 0.0, 0.0, 0.0, form, n
+
+    dip_gap = float(form - pts_all[dip_mask].mean())
+
+    intervals = np.diff(dip_dates).astype("timedelta64[D]").astype(float)
+    monthly = intervals[(intervals >= CYCLE_LO_DAYS) & (intervals <= CYCLE_HI_DAYS)]
+    if len(monthly) < MIN_CYCLES:
+        return 0.0, dip_gap, 0.0, form, n
+
+    avg_cycle = float(monthly.mean())
+    std_cycle = float(monthly.std()) if len(monthly) > 1 else 5.0
+    sigma = max(std_cycle, MIN_CYCLE_SIGMA)
+    last_dip = pd.Timestamp(dip_dates[-1])
+    days_since = (target_dt - last_dip).days
+    k = max(1, round(days_since / avg_cycle))
+    dist = days_since - k * avg_cycle
+    dip_score = float(np.exp(-0.5 * (dist / sigma) ** 2))
+    cv = std_cycle / avg_cycle
+    cycle_quality = min(1.0, len(monthly) / 10.0) / (1.0 + cv)
+    return dip_score, dip_gap, cycle_quality, form, n
+
+
+def _feature_row(cf, gap, juice_asym, player_post, mid):
+    dip_score, dip_gap, cyc_q, form, _n = cf
+    return [gap, juice_asym, player_post, mid,
+            form - mid, dip_score * cyc_q, dip_score * dip_gap]
 
 
 def _build_training_matrix(hist):
     """Feature matrix + labels from the graded market history. player_post is
-    computed cumulatively (each row only sees results from earlier rows), so
-    the fit stays walk-forward-honest even within the training set."""
+    computed cumulatively (each row only sees results from earlier rows), and
+    every cycle feature uses box games strictly before its row's date, so the
+    fit stays walk-forward-honest even within the training set."""
     h = hist.copy()
     h["under_win"] = (h["actual_pts"] < h["under_line"]).astype(float)
     h["gap"] = h["under_line"] - h["over_line"]
@@ -235,17 +292,19 @@ def _build_training_matrix(hist):
     cum_n = h.groupby("name_key").cumcount()
     h["player_post"] = (global_under * BETA_K + cum_wins) / (BETA_K + cum_n)
 
-    min_trends, form_edges = [], []
-    for _, r in h.iterrows():
-        mt, form, _n = _box_features(r["name_key"], r["date_dt"])
-        min_trends.append(mt)
-        form_edges.append((form - r["mid"]) if form is not None else 0.0)
-    h["min_trend"] = min_trends
-    h["form_edge"] = form_edges
+    rows, labels, kept = [], [], []
+    for idx, r in h.iterrows():
+        cf = _cycle_features(r["name_key"], r["date_dt"])
+        if cf is None:
+            continue
+        rows.append(_feature_row(cf, r["gap"], r["juice_asym"],
+                                 r["player_post"], r["mid"]))
+        labels.append(r["under_win"])
+        kept.append(idx)
 
-    X = h[list(FEATURES)].to_numpy(dtype=float)
-    y = h["under_win"].to_numpy(dtype=float)
-    return X, y, global_under, h
+    X = np.asarray(rows, dtype=float)
+    y = np.asarray(labels, dtype=float)
+    return X, y, global_under, h.loc[kept]
 
 
 def _fit_logistic(X, y):
@@ -283,6 +342,8 @@ def _get_fitted():
         return None
 
     X, y, global_under, h = _build_training_matrix(hist)
+    if len(y) < MIN_TRAIN_ROWS:
+        return None
     fit = _fit_logistic(X, y)
     player_rec = h.groupby("name_key")["under_win"].agg(["sum", "size"])
     _MODEL_CACHE["fit"] = {
@@ -290,7 +351,7 @@ def _get_fitted():
         "global_under": global_under,
         "player_rec": {k: (float(r["sum"]), int(r["size"]))
                        for k, r in player_rec.iterrows()},
-        "n_train": len(h),
+        "n_train": len(y),
     }
     return _MODEL_CACHE["fit"]
 
@@ -304,47 +365,32 @@ def _prob_under(model, x_row):
 
 # ----------------------------------------------------------------- pure logic
 
-def decide(p_under, over_line, under_line, over_odds, under_odds):
-    """EV-gate both sides at their actual odds; quarter-Kelly stake 1-5.
-    Pure function — no I/O. Returns a bet dict or {'_skip_reason': ...}."""
-    over_odds = _to_odds(over_odds)
+def decide(p_under, dip_score, dip_gap, cycle_quality, under_odds):
+    """UNDER-only, dip-gated decision. Pure function — no I/O.
+    Returns a bet dict or {'_skip_reason': ...}."""
+    if cycle_quality <= 0.0:
+        return {"_skip_reason": "no usable monthly dip cycle"}
+    if dip_score < DIP_GATE:
+        return {"_skip_reason": f"outside dip window (dip_score={dip_score:.2f} < {DIP_GATE})"}
+    if dip_gap <= MIN_DIP_GAP:
+        return {"_skip_reason": f"dips too shallow (dip_gap={dip_gap:.1f} <= {MIN_DIP_GAP})"}
+
     under_odds = _to_odds(under_odds)
-
-    candidates = (
-        ("UNDER", p_under, under_odds),
-        ("OVER", 1.0 - p_under, over_odds),
-    )
-    best = None
-    for side, prob, odds in candidates:
-        margin = prob - _break_even(odds)
-        if margin < EV_MARGIN:
-            continue
-        if best is None or margin > best[3]:
-            best = (side, prob, odds, margin)
-
-    if best is None:
-        u_m = p_under - _break_even(under_odds)
-        o_m = (1.0 - p_under) - _break_even(over_odds)
+    margin = p_under - _break_even(under_odds)
+    if margin < EV_MARGIN:
         return {"_skip_reason": (
             f"no edge: p_under={p_under:.3f}, "
-            f"under margin={u_m:+.3f}, over margin={o_m:+.3f} (< +{EV_MARGIN:.2f})")}
+            f"under margin={margin:+.3f} (< +{EV_MARGIN:.2f})")}
 
-    side, prob, odds, margin = best
-    dec_odds = _decimal(odds)
-    edge = prob * dec_odds - 1.0
+    dec_odds = _decimal(under_odds)
+    edge = p_under * dec_odds - 1.0
     if edge <= 0:
         return {"_skip_reason": "kelly edge non-positive"}
     f_kelly = QUARTER_KELLY * edge / (dec_odds - 1.0)
     amount = int(max(1, min(5, round(f_kelly * KELLY_TO_STAKE_MULTIPLIER))))
 
-    if margin >= 0.10:
-        note = "High Edge"
-    elif margin >= 0.06:
-        note = "Medium Edge"
-    else:
-        note = "Small Edge"
-
-    return {"bet": side, "prob": prob, "margin": margin,
+    note = "Low Output" if dip_score >= 0.5 else "Dip Window"
+    return {"bet": "UNDER", "prob": p_under, "margin": margin,
             "amount": amount, "note": note}
 
 
@@ -365,10 +411,11 @@ def predict(player):
     name_key = name.lower().strip()
     target_dt = pd.to_datetime(date_str)
 
-    min_trend, form, career_n = _box_features(name_key, target_dt)
-    if career_n < MIN_CAREER_GAMES or form is None:
-        print(TAG, f"{name} skipped [reason: career_games={career_n} < {MIN_CAREER_GAMES}]")
+    cf = _cycle_features(name_key, target_dt)
+    if cf is None:
+        print(TAG, f"{name} skipped [reason: career shorter than {MIN_CAREER_GAMES} games]")
         return None
+    dip_score, dip_gap, cycle_quality, form, career_n = cf
 
     model = _get_fitted()
     if model is None:
@@ -380,34 +427,31 @@ def predict(player):
     juice_asym = _break_even(under_odds) - _break_even(over_odds)
     wins, n = model["player_rec"].get(name_key, (0.0, 0))
     player_post = (model["global_under"] * BETA_K + wins) / (BETA_K + n)
-    form_edge = form - mid
 
-    x = [gap, juice_asym, player_post, mid, min_trend, form_edge]
+    x = _feature_row(cf, gap, juice_asym, player_post, mid)
     p_under = _prob_under(model, x)
 
-    result = decide(p_under, over_line, under_line, over_odds, under_odds)
+    result = decide(p_under, dip_score, dip_gap, cycle_quality, under_odds)
     if "_skip_reason" in result:
         print(TAG, f"{name} skipped [reason: {result['_skip_reason']}]")
         return None
 
-    # predicted_points: recency-weighted form, clamped to the bet's side of
-    # the line so the stored prediction is never inconsistent with the bet.
-    predicted = int(round(form))
-    if result["bet"] == "UNDER":
-        predicted = min(predicted, int(np.floor(under_line)))
-    else:
-        predicted = max(predicted, int(np.ceil(over_line)))
+    # predicted_points: form minus the dip-weighted expected drop, clamped
+    # under the line so the stored prediction always matches the UNDER bet.
+    predicted = int(round(form - dip_score * dip_gap))
+    predicted = max(0, min(predicted, int(np.floor(under_line))))
 
     print(
         TAG,
-        f"{name}: bet={result['bet']} amount=${result['amount']} "
+        f"{name}: bet=UNDER amount=${result['amount']} "
         f"p_under={p_under:.3f} margin={result['margin']:+.3f} "
+        f"dip_score={dip_score:.2f} dip_gap={dip_gap:.1f} "
         f"form={form:.1f} line={mid} (trained on {model['n_train']} rows)"
     )
 
     return {
         "predicted_points": predicted,
-        "bet": result["bet"],
+        "bet": "UNDER",
         "over_line": over_line,
         "under_line": under_line,
         "note": result["note"],

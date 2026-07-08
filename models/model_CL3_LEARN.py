@@ -13,39 +13,34 @@ TAG = "[CL3_LEARN]"
 
 warnings.filterwarnings('ignore')
 
-# Database connection setup
-conn = psycopg2.connect(
-    dbname=os.getenv("DB_NAME"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    host=os.getenv("DB_HOST"),
-    port=5432
-)
-cur = conn.cursor()
+# Database connection is opened lazily on first use so a transient DB
+# outage at import time can't crash the whole daily run (master_file
+# imports every model before processing any player).
+_conn = None
+
+
+def _get_conn():
+    global _conn
+    if _conn is None or _conn.closed:
+        _conn = psycopg2.connect(
+            dbname=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            host=os.getenv("DB_HOST"),
+            port=5432
+        )
+    return _conn
 
 
 class WNBALearningPatternDetector:
     def __init__(self, focus_player=None, custom_game_dates=None):
         self.focus_player = focus_player
         self.custom_game_dates = custom_game_dates or []
+        # All seasons through the current year; files that don't exist yet
+        # are skipped at load time.
         self.years = {
-            2025: "playerboxes/player_box_2025.csv",
-            2024: "playerboxes/player_box_2024.csv",
-            2023: "playerboxes/player_box_2023.csv",
-            2022: "playerboxes/player_box_2022.csv",
-            2021: "playerboxes/player_box_2021.csv",
-            2020: "playerboxes/player_box_2020.csv",
-            2019: "playerboxes/player_box_2019.csv",
-            2018: "playerboxes/player_box_2018.csv",
-            2017: "playerboxes/player_box_2017.csv",
-            2016: "playerboxes/player_box_2016.csv",
-            2015: "playerboxes/player_box_2015.csv",
-            2014: "playerboxes/player_box_2014.csv",
-            2013: "playerboxes/player_box_2013.csv",
-            2012: "playerboxes/player_box_2012.csv",
-            2011: "playerboxes/player_box_2011.csv",
-            2010: "playerboxes/player_box_2010.csv",
-            2009: "playerboxes/player_box_2009.csv"
+            year: f"playerboxes/player_box_{year}.csv"
+            for year in range(datetime.now().year, 2008, -1)
         }
         self.learning_insights = {}
 
@@ -69,11 +64,12 @@ class WNBALearningPatternDetector:
                 ORDER BY date DESC
             """
 
-            cur.execute(query, (player_name,))
-            results = cur.fetchall()
-
-            # Get column names
-            columns = [desc[0] for desc in cur.description]
+            # Fresh cursor per call; rollback on error below keeps one bad
+            # query from poisoning every later query on the shared connection.
+            with _get_conn().cursor() as cur:
+                cur.execute(query, (player_name,))
+                results = cur.fetchall()
+                columns = [desc[0] for desc in cur.description]
             df = pd.DataFrame(results, columns=columns)
 
             print(TAG, f"DEBUG: Found {len(df)} historical bets for {player_name}")
@@ -85,6 +81,11 @@ class WNBALearningPatternDetector:
 
         except Exception as e:
             print(TAG, f"Error fetching historical data for {player_name}: {e}")
+            try:
+                if _conn is not None and not _conn.closed:
+                    _conn.rollback()
+            except Exception:
+                pass
             return None
 
     def analyze_model_performance(self, historical_data):
@@ -337,13 +338,15 @@ class WNBALearningPatternDetector:
         return adjustment
 
     def get_current_players(self):
-        """Get list of players who played in 2025"""
-        try:
-            df_2025 = pd.read_csv(self.years[2025])
-            current_players = set(df_2025['athlete_display_name'].unique())
-            return current_players
-        except Exception:
-            return set()
+        """Get the active player pool from the latest season file with data"""
+        for year in sorted(self.years, reverse=True):
+            try:
+                current_players = set(pd.read_csv(self.years[year])['athlete_display_name'].unique())
+                if current_players:
+                    return current_players
+            except Exception:
+                continue
+        return set()
 
     def load_all_player_data(self, current_players_only=True):
         """Load data for all years, optionally filtering for current players only"""
@@ -689,22 +692,7 @@ class WNBALearningPatternDetector:
         if learning_adj.get('best_model') and learning_strength >= 0.6:
             confidence_points += 1
 
-        # Convert confidence points to bet amount with strict thresholds
-        if confidence_points >= 6:  # Very confident - rare
-            return 5
-        elif confidence_points >= 5:  # Confident
-            return 4
-        elif confidence_points >= 4:  # Moderately confident
-            return 3
-        elif confidence_points >= 3:  # Slightly confident
-            return 2
-        elif confidence_points >= 2:  # Minimal confidence
-            return 1
-        else:
-            # Not confident enough to bet
-            return None
-
-        # Additional safety check - require minimum learning strength for any bet
+        # Require minimum learning strength for any bet
         if learning_strength < 0.2:
             return None
 
@@ -849,10 +837,10 @@ def predict(player):
 # Close database connections when done
 def close_db_connection():
     """Close database connections"""
-    if cur:
-        cur.close()
-    if conn:
-        conn.close()
+    global _conn
+    if _conn is not None and not _conn.closed:
+        _conn.close()
+    _conn = None
 
 
 """

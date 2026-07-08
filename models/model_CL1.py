@@ -35,33 +35,23 @@ class WNBACyclicalPatternDetector:
     def __init__(self, focus_player=None, custom_game_dates=None):
         self.focus_player = focus_player
         self.custom_game_dates = custom_game_dates or []
+        # All seasons through the current year; files that don't exist yet
+        # are skipped at load time.
         self.years = {
-            2025: "playerboxes/player_box_2025.csv",
-            2024: "playerboxes/player_box_2024.csv",
-            2023: "playerboxes/player_box_2023.csv",
-            2022: "playerboxes/player_box_2022.csv",
-            2021: "playerboxes/player_box_2021.csv",
-            2020: "playerboxes/player_box_2020.csv",
-            2019: "playerboxes/player_box_2019.csv",
-            2018: "playerboxes/player_box_2018.csv",
-            2017: "playerboxes/player_box_2017.csv",
-            2016: "playerboxes/player_box_2016.csv",
-            2015: "playerboxes/player_box_2015.csv",
-            2014: "playerboxes/player_box_2014.csv",
-            2013: "playerboxes/player_box_2013.csv",
-            2012: "playerboxes/player_box_2012.csv",
-            2011: "playerboxes/player_box_2011.csv",
-            2010: "playerboxes/player_box_2010.csv",
-            2009: "playerboxes/player_box_2009.csv"
+            year: f"playerboxes/player_box_{year}.csv"
+            for year in range(datetime.now().year, 2008, -1)
         }
 
     def get_current_players(self):
-        try:
-            df_2024 = pd.read_csv(self.years[2025])
-            current_players = set(df_2024['athlete_display_name'].unique())
-            return current_players
-        except Exception:
-            return set()
+        # Latest season file with data defines the active player pool.
+        for year in sorted(self.years, reverse=True):
+            try:
+                current_players = set(pd.read_csv(self.years[year])['athlete_display_name'].unique())
+                if current_players:
+                    return current_players
+            except Exception:
+                continue
+        return set()
 
     def load_all_player_data(self, current_players_only=True):
         all_data = []

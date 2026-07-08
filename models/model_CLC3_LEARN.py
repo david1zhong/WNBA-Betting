@@ -17,24 +17,11 @@ np.random.seed(42)
 load_dotenv()
 
 
+# All seasons through the current year; files that don't exist yet are
+# skipped at load time.
 YEARS_FILES = {
-    2025: "playerboxes/player_box_2025.csv",
-    2024: "playerboxes/player_box_2024.csv",
-    2023: "playerboxes/player_box_2023.csv",
-    2022: "playerboxes/player_box_2022.csv",
-    2021: "playerboxes/player_box_2021.csv",
-    2020: "playerboxes/player_box_2020.csv",
-    2019: "playerboxes/player_box_2019.csv",
-    2018: "playerboxes/player_box_2018.csv",
-    2017: "playerboxes/player_box_2017.csv",
-    2016: "playerboxes/player_box_2016.csv",
-    2015: "playerboxes/player_box_2015.csv",
-    2014: "playerboxes/player_box_2014.csv",
-    2013: "playerboxes/player_box_2013.csv",
-    2012: "playerboxes/player_box_2012.csv",
-    2011: "playerboxes/player_box_2011.csv",
-    2010: "playerboxes/player_box_2010.csv",
-    2009: "playerboxes/player_box_2009.csv",
+    year: f"playerboxes/player_box_{year}.csv"
+    for year in range(datetime.now().year, 2008, -1)
 }
 
 ALL_SOURCE_MODELS = (

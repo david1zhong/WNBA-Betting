@@ -30,7 +30,11 @@ def _normalize_odds(v):
     except (TypeError, ValueError):
         return None
 
-model_files = [f[:-3] for f in os.listdir(MODEL_DIR) if f.endswith(".py") and f != "__init__.py"]
+# Underscore-prefixed files are shared helpers (e.g. _schedule.py), not models.
+model_files = [
+    f[:-3] for f in os.listdir(MODEL_DIR)
+    if f.endswith(".py") and not f.startswith("_")
+]
 
 def _model_sort_key(n):
     if "SELECTIVE" in n:

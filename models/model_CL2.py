@@ -10,24 +10,11 @@ warnings.filterwarnings('ignore')
 
 def load_player_data(player_name):
     """Load and combine all historical data for a specific player"""
+    # All seasons through the current year; files that don't exist yet are
+    # skipped at load time.
     data_files = {
-        2025: "playerboxes/player_box_2025.csv",
-        2024: "playerboxes/player_box_2024.csv",
-        2023: "playerboxes/player_box_2023.csv",
-        2022: "playerboxes/player_box_2022.csv",
-        2021: "playerboxes/player_box_2021.csv",
-        2020: "playerboxes/player_box_2020.csv",
-        2019: "playerboxes/player_box_2019.csv",
-        2018: "playerboxes/player_box_2018.csv",
-        2017: "playerboxes/player_box_2017.csv",
-        2016: "playerboxes/player_box_2016.csv",
-        2015: "playerboxes/player_box_2015.csv",
-        2014: "playerboxes/player_box_2014.csv",
-        2013: "playerboxes/player_box_2013.csv",
-        2012: "playerboxes/player_box_2012.csv",
-        2011: "playerboxes/player_box_2011.csv",
-        2010: "playerboxes/player_box_2010.csv",
-        2009: "playerboxes/player_box_2009.csv"
+        year: f"playerboxes/player_box_{year}.csv"
+        for year in range(datetime.now().year, 2008, -1)
     }
 
     all_data = []
@@ -37,24 +24,11 @@ def load_player_data(player_name):
             try:
                 df = pd.read_csv(file_path)
 
-                # Try multiple matching approaches
-                # 1. Exact match
-                player_df = df[df['athlete_display_name'] == player_name]
-
-                # 2. If no exact match, try case-insensitive contains
-                if player_df.empty:
-                    player_df = df[df['athlete_display_name'].str.contains(player_name, case=False, na=False)]
-
-                # 3. If still no match, try partial matching (last name)
-                if player_df.empty and ' ' in player_name:
-                    last_name = player_name.split()[-1]
-                    player_df = df[df['athlete_display_name'].str.contains(last_name, case=False, na=False)]
-
-                    # If multiple players match last name, try to get exact match
-                    if len(player_df) > 1:
-                        exact_match = df[df['athlete_display_name'].str.contains(player_name, case=False, na=False)]
-                        if not exact_match.empty:
-                            player_df = exact_match
+                # Case-insensitive exact match only. Substring/last-name
+                # fallbacks are unsafe here: they blend other players'
+                # careers into the history (any shared last name matches).
+                names_lower = df['athlete_display_name'].str.lower().str.strip()
+                player_df = df[names_lower == player_name.lower().strip()]
 
                 if not player_df.empty:
                     all_data.append(player_df)

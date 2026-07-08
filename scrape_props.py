@@ -56,18 +56,19 @@ for player in players:
     over_odds = over_odds_raw.get_text(strip=True) if over_odds_raw else None
     under_odds = under_odds_raw.get_text(strip=True) if under_odds_raw else None
 
-    if over_odds is None and under_odds is None:
-        over_odds = under_odds = "-120"
-    elif over_odds is None:
-        over_odds = under_odds
-    elif under_odds is None:
-        under_odds = over_odds
+    # "even" means +100 — never substitute the other side's juice, or wins
+    # get graded at the wrong payout.
+    if over_odds is not None and over_odds.lower() in ("even", "ev", "evens", "pk", "pick"):
+        over_odds = "+100"
+    if under_odds is not None and under_odds.lower() in ("even", "ev", "evens", "pk", "pick"):
+        under_odds = "+100"
 
-    if over_odds == "even":
-        over_odds = under_odds
-
-    if under_odds == "even":
-        under_odds = over_odds
+    # A missing side gets a neutral default rather than the other side's
+    # price (the two sides carry different juice).
+    if over_odds is None:
+        over_odds = "-120"
+    if under_odds is None:
+        under_odds = "-120"
 
     data.append({
         "name": name,

@@ -209,41 +209,56 @@ st.subheader("Wins and Losses per Model Yesterday")
 eastern = pytz.timezone("US/Eastern")
 yesterday_date = (datetime.now(eastern) - timedelta(days=1)).date()
 
+# Rows with a real stake vs "paper picks" (row inserted with a bet but no
+# amount). Paper picks are shown separately so W/L records stay comparable
+# across models — some models emit many unstaked picks, others none.
+_staked_mask = pd.to_numeric(df["amount"], errors="coerce").fillna(0) > 0
+
+
+def _wl_counts_table(frame):
+    counts = frame.groupby(["model_name", "result"]).size().unstack(fill_value=0)
+    for col in ["WON", "LOST"]:
+        if col not in counts.columns:
+            counts[col] = 0
+    counts = counts[["WON", "LOST"]]
+    totals = counts.sum(axis=1).replace(0, np.nan)
+    pct = (counts.div(totals, axis=0) * 100).round(1).fillna(0).astype(str) + "%"
+    return counts.astype(str) + " (" + pct + ")"
+
+
 yesterday_df = df[
     (pd.to_datetime(df["date"]).dt.date == yesterday_date) &
     (df["result"].isin(["WON", "LOST"]))
 ]
 
-if yesterday_df.empty:
+_yest_staked = yesterday_df[_staked_mask.reindex(yesterday_df.index, fill_value=False)]
+if _yest_staked.empty:
     model_names = df["model_name"].unique()
-    counts_yesterday = pd.DataFrame({"model_name": model_names, "WON": 0, "LOST": 0})
-    counts_yesterday = counts_yesterday.set_index("model_name")
+    combined_yesterday = pd.DataFrame(
+        {"model_name": model_names, "WON": "0 (0.0%)", "LOST": "0 (0.0%)"}
+    ).set_index("model_name")
 else:
-    counts_yesterday = (
-        yesterday_df.groupby(["model_name", "result"])
-        .size()
-        .unstack(fill_value=0)
-    )
-    for col in ["WON", "LOST"]:
-        if col not in counts_yesterday.columns:
-            counts_yesterday[col] = 0
-    counts_yesterday = counts_yesterday[["WON", "LOST"]]
+    combined_yesterday = _wl_counts_table(_yest_staked)
 
-totals_yesterday = counts_yesterday.sum(axis=1)
-percent_df_yesterday = counts_yesterday.div(totals_yesterday, axis=0).multiply(100)
-percent_df_yesterday = percent_df_yesterday.round(1).astype(str) + "%"
-
-combined_yesterday = counts_yesterday.astype(str) + " (" + percent_df_yesterday + ")"
-
+st.caption("Staked bets only — paper picks (no bet amount) are in the expander below.")
 st.table(combined_yesterday)
+
+_yest_paper = yesterday_df[~_staked_mask.reindex(yesterday_df.index, fill_value=False)]
+with st.expander("Paper picks yesterday (no stake)"):
+    if _yest_paper.empty:
+        st.write("None.")
+    else:
+        st.table(_wl_counts_table(_yest_paper))
 
 
 
 st.subheader("Wins and Losses per Model")
 
-_wl_filtered = df[df["result"].isin(["WON", "LOST"])].copy()
-_wl_filtered["_year"] = pd.to_datetime(_wl_filtered["date"]).dt.year
-_wl_models = sorted(_wl_filtered["model_name"].unique())
+_wl_all = df[df["result"].isin(["WON", "LOST"])].copy()
+_wl_all["_year"] = pd.to_datetime(_wl_all["date"]).dt.year
+_wl_models = sorted(_wl_all["model_name"].unique())
+_wl_filtered = _wl_all[_staked_mask.reindex(_wl_all.index, fill_value=False)]
+_wl_paper = _wl_all[~_staked_mask.reindex(_wl_all.index, fill_value=False)]
 
 
 def _wl_breakdown(season_df, models_index):
@@ -275,14 +290,31 @@ _wl_combined = pd.concat(
     },
     axis=1,
 )
+st.caption("Staked bets only — paper picks (no bet amount) are in the expander below.")
 st.table(_wl_combined)
+
+with st.expander("Paper picks (no stake) — Wins and Losses per Model"):
+    if _wl_paper.empty:
+        st.write("None.")
+    else:
+        _wl_paper_combined = pd.concat(
+            {
+                "2026": _wl_breakdown(_wl_paper[_wl_paper["_year"] == 2026], _wl_models),
+                "2025": _wl_breakdown(_wl_paper[_wl_paper["_year"] == 2025], _wl_models),
+                "Total": _wl_breakdown(_wl_paper, _wl_models),
+            },
+            axis=1,
+        )
+        st.table(_wl_paper_combined)
 
 
 
 df['profit'] = df['profit'].fillna(0)
 df['amount'] = df['amount'].fillna(0)
 df['date'] = pd.to_datetime(df['date'])
-yesterday = datetime.now().date() - timedelta(days=1)
+# Same Eastern-time "yesterday" as the win/loss tables above — a naive
+# datetime.now() on a UTC host flips to the wrong day after 8 PM ET.
+yesterday = yesterday_date
 df_yesterday = df[df['date'].dt.date == yesterday]
 
 def summarize(df_input):
@@ -438,9 +470,11 @@ def _build_fade_df(source_df):
     over_g = gradable & is_over
     under_g = gradable & ~is_over
     res[over_g & (actual > fade_line)] = "WON"
-    res[over_g & (actual <= fade_line)] = "LOST"
+    res[over_g & (actual < fade_line)] = "LOST"
     res[under_g & (actual < fade_line)] = "WON"
-    res[under_g & (actual >= fade_line)] = "LOST"
+    res[under_g & (actual > fade_line)] = "LOST"
+    # Push: exactly on the line is a void, not a loss.
+    res[gradable & (actual == fade_line)] = "VOID"
 
     _carry = source_df["result"].isin(["DNP", "VOID"])
     res[_carry] = source_df["result"][_carry]
@@ -462,9 +496,11 @@ def _build_fade_df(source_df):
 fade_df = _build_fade_df(df)
 
 st.subheader("Wins and Losses per Model Yesterday FADE")
+_fade_staked = pd.to_numeric(fade_df["amount"], errors="coerce").fillna(0) > 0
 _fade_yesterday_df = fade_df[
     (fade_df["date"].dt.date == yesterday_date)
     & (fade_df["result"].isin(["WON", "LOST"]))
+    & _fade_staked
 ]
 if _fade_yesterday_df.empty:
     _fade_counts_yest = pd.DataFrame(
@@ -490,7 +526,7 @@ _fade_pct_yest = (
 st.table(_fade_counts_yest.astype(str) + " (" + _fade_pct_yest + ")")
 
 st.subheader("Wins and Losses per Model FADE")
-_fade_wl_filtered = fade_df[fade_df["result"].isin(["WON", "LOST"])].copy()
+_fade_wl_filtered = fade_df[fade_df["result"].isin(["WON", "LOST"]) & _fade_staked].copy()
 _fade_wl_filtered["_year"] = pd.to_datetime(_fade_wl_filtered["date"]).dt.year
 _fade_wl_combined = pd.concat(
     {
@@ -532,12 +568,14 @@ st.dataframe(_styled_fade_profit, use_container_width=True)
 st.subheader("Daily Profit per Model")
 df['date'] = pd.to_datetime(df['date'])
 
-daily_profit = df.groupby(["model_name", "date"])["profit"].sum().reset_index()
-daily_profit = daily_profit[daily_profit["profit"] != 0]
+# Chart only days with graded bets, but keep genuine break-even ($0) days —
+# filtering on profit != 0 silently dropped them.
+_graded_rows = df[df["result"].isin(["WON", "LOST", "VOID"])]
+daily_profit = _graded_rows.groupby(["model_name", "date"])["profit"].sum().reset_index()
 daily_profit["_year"] = daily_profit["date"].dt.year
 
-fade_daily = fade_df.groupby(["model_name", "date"])["profit"].sum().reset_index()
-fade_daily = fade_daily[fade_daily["profit"] != 0]
+_fade_graded_rows = fade_df[fade_df["result"].isin(["WON", "LOST", "VOID"])]
+fade_daily = _fade_graded_rows.groupby(["model_name", "date"])["profit"].sum().reset_index()
 
 _all_models = sorted(set(daily_profit["model_name"]) | set(fade_daily["model_name"]))
 
@@ -578,12 +616,15 @@ for model in _all_models:
 
 
 
+# All graded model-bets per player. The old drop_duplicates on
+# (player, date) kept one arbitrary model's row per game — since models bet
+# opposite directions on the same player, that sampled a random pick per
+# game instead of measuring anything.
 result_df = df[df["result"].isin(["WON", "LOST"])]
-dedup = result_df.drop_duplicates(subset=["player_name", "date"])
 
-grouped = dedup.groupby("player_name").apply(
+grouped = result_df.groupby("player_name").apply(
     lambda g: pd.Series({
-        "total_games": len(g),
+        "total_bets": len(g),
         "correct_bets": (g["result"] == "WON").sum(),
 
         "over_bets": (g["bet"] == "OVER").sum(),
@@ -600,7 +641,10 @@ grouped = dedup.groupby("player_name").apply(
     })
 ).reset_index()
 
-grouped["accuracy"] = (grouped["correct_bets"] / grouped["total_games"]).apply(
+for _c in ["total_bets", "correct_bets", "over_bets", "under_bets"]:
+    grouped[_c] = grouped[_c].astype(int)
+
+grouped["accuracy"] = (grouped["correct_bets"] / grouped["total_bets"]).apply(
     lambda x: f"{x*100:.2f}%" if pd.notnull(x) else "-"
 )
 
@@ -611,12 +655,12 @@ grouped["under_win_rate"] = grouped["under_win_rate"].apply(
     lambda x: f"{x*100:.2f}%" if pd.notnull(x) else "-"
 )
 
-grouped["over_bets"] = grouped["over_bets"].astype(str) + " / " + grouped["total_games"].astype(str)
-grouped["under_bets"] = grouped["under_bets"].astype(str) + " / " + grouped["total_games"].astype(str)
+grouped["over_bets"] = grouped["over_bets"].astype(str) + " / " + grouped["total_bets"].astype(str)
+grouped["under_bets"] = grouped["under_bets"].astype(str) + " / " + grouped["total_bets"].astype(str)
 
-st.subheader("Most Correct Bet Players (No Duplicate Games)")
+st.subheader("Most Correct Bet Players (All Model Bets)")
 st.dataframe(grouped[
-    ["player_name", "correct_bets", "total_games", "accuracy",
+    ["player_name", "correct_bets", "total_bets", "accuracy",
      "over_bets", "under_bets", "over_win_rate", "under_win_rate"]
 ])
 
@@ -697,6 +741,14 @@ st.table(_ou_combined)
 st.subheader("Average Model Accuracy (PTS Differential)")
 _acc_year = df["date"].dt.year
 
+# These models don't store a genuine point estimate in predicted_pts
+# (CLCF1/CLCF2/CLCF3 clamp it to the bet's side of the line, CLC4 stores the
+# voting side's median), so predicted-vs-actual comparisons are meaningless
+# for them.
+_FABRICATED_PRED_MODELS = {"model_CLCF1", "model_CLCF2", "model_CLCF3",
+                           "model_CLC4_SELECTIVE"}
+_acc_models_idx = [m for m in _models_idx if m not in _FABRICATED_PRED_MODELS]
+
 
 def _acc_series(season_df, models_idx):
     if season_df.empty:
@@ -706,10 +758,14 @@ def _acc_series(season_df, models_idx):
 
 
 _accuracy_combined = pd.DataFrame({
-    "2026": _acc_series(df[_acc_year == 2026], _models_idx),
-    "2025": _acc_series(df[_acc_year == 2025], _models_idx),
-    "Total": _acc_series(df, _models_idx),
+    "2026": _acc_series(df[_acc_year == 2026], _acc_models_idx),
+    "2025": _acc_series(df[_acc_year == 2025], _acc_models_idx),
+    "Total": _acc_series(df, _acc_models_idx),
 })
+st.caption(
+    "CLCF1, CLCF2 and CLC4_SELECTIVE are excluded: they store a bet signal, "
+    "not a point estimate, in predicted_pts."
+)
 st.bar_chart(_accuracy_combined)
 
 
@@ -913,6 +969,10 @@ sportsbook_metrics_df.index = ['Sportsbook']
 
 
 st.subheader("Model vs Sportsbook Error Comparison")
+st.caption(
+    "CLCF1, CLCF2 and CLC4_SELECTIVE are excluded: they store a bet signal, "
+    "not a point estimate, in predicted_pts."
+)
 
 
 def _err_metrics(values):
@@ -937,9 +997,9 @@ def _err_breakdown(season_df, models_idx):
 _err_year = df["date"].dt.year
 _err_combined = pd.concat(
     {
-        "2026": _err_breakdown(df[_err_year == 2026], _models_idx),
-        "2025": _err_breakdown(df[_err_year == 2025], _models_idx),
-        "Total": _err_breakdown(df, _models_idx),
+        "2026": _err_breakdown(df[_err_year == 2026], _acc_models_idx),
+        "2025": _err_breakdown(df[_err_year == 2025], _acc_models_idx),
+        "Total": _err_breakdown(df, _acc_models_idx),
     },
     axis=1,
 )

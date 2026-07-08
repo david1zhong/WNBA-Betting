@@ -1,0 +1,37 @@
+name: Void Flau'Jae CL2 rows (one-off)
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Set to "true" to actually void. Anything else = dry run (preview only).'
+        required: true
+        default: 'false'
+
+jobs:
+  void:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run void_flaujae_cl2.py
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          VOID_APPLY: ${{ github.event.inputs.apply }}
+        run: python void_flaujae_cl2.py
