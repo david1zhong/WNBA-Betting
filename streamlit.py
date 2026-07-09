@@ -139,7 +139,7 @@ def render_season_table(season_df, key_prefix):
     else:
         prefix = f"Showing all {n_total:,} rows"
     st.caption(
-        " • ".join([
+        " | ".join([
             prefix,
             f"{n_players} player{'s' if n_players != 1 else ''}",
             f"{n_overs} OVER / {n_unders} UNDER",
