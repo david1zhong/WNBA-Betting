@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import pytz
 import numpy as np
+import altair as alt
 from datetime import datetime, timedelta
 import os
 from sqlalchemy import create_engine
@@ -614,6 +615,44 @@ _daily_view = st.radio(
     key="daily_profit_view",
 )
 
+
+def _daily_line_chart(frame):
+    """Daily-profit chart: consecutive-day runs draw as lines; an isolated
+    single-day value draws as a horizontal dash instead of a floating dot."""
+    parts = []
+    for col in frame.columns:
+        present = frame[col].notna()
+        run_id = (present != present.shift()).cumsum()
+        parts.append(
+            pd.DataFrame(
+                {
+                    "date": frame.index,
+                    "series": col,
+                    "profit": frame[col].values,
+                    "run": run_id.values,
+                }
+            )[present.values]
+        )
+    long = pd.concat(parts, ignore_index=True)
+    run_size = long.groupby(["series", "run"])["profit"].transform("size")
+    enc = dict(
+        x=alt.X("date:T", title=None),
+        y=alt.Y("profit:Q", title=None),
+        color=alt.Color("series:N", title=None),
+        tooltip=[
+            alt.Tooltip("date:T", title="Date"),
+            alt.Tooltip("series:N", title="Series"),
+            alt.Tooltip("profit:Q", title="Profit"),
+        ],
+    )
+    lines = alt.Chart(long[run_size > 1]).mark_line().encode(detail="run:N", **enc)
+    dashes = (
+        alt.Chart(long[run_size == 1])
+        .mark_point(shape="stroke", size=120, strokeWidth=2.5)
+        .encode(**enc)
+    )
+    st.altair_chart(lines + dashes, use_container_width=True)
+
 for model in _all_models:
     orig = (
         daily_profit[daily_profit["model_name"] == model]
@@ -645,13 +684,13 @@ for model in _all_models:
         if m_2026.empty:
             st.write("No data.")
         else:
-            st.line_chart(m_2026, use_container_width=True)
+            _daily_line_chart(m_2026)
     with cols[1]:
         st.caption("2025 Season")
         if m_2025.empty:
             st.write("No data.")
         else:
-            st.line_chart(m_2025, use_container_width=True)
+            _daily_line_chart(m_2025)
 
 
 
