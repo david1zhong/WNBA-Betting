@@ -16,7 +16,7 @@ import os
 import sys
 import psycopg2
 
-TARGET_MODELS = ("model_CLC1", "model_CLC2", "model_CLC3_LEARN")
+TARGET_MODELS = ("model_CLCF3")
 TARGET_NOTE = "Low Output"
 
 WHERE = "model_name = ANY(%s) AND note = %s"
