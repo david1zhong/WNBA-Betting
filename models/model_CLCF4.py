@@ -40,12 +40,14 @@ scores Brier 0.2485 vs the book's no-vig 0.2492, and staking only when it
 clears the break-even by EV_MARGIN backtests +8.1% ROI (52 bets, 32-20,
 61.5%, positive 3 of 4 months — small sample by design).
 
-Output: every eligible player gets a row — the honest prediction plus the
-side the model favors — so the error comparison accumulates a full slate
-every day. amount is set (quarter-Kelly, 1-5) only on calibrated edges;
-otherwise the row is a paper pick, same convention as CL1's 2025 season.
-With no DB (or thin graded history) the model still emits paper picks and
-never stakes.
+Output: every eligible player whose calibrated side agrees with the raw
+prediction gets a row — the honest prediction plus the side the model
+favors. When the calibration picks a side the prediction contradicts
+(historically 38% winners vs 52% coherent), the model abstains, so the
+error-comparison slate is coherent picks only. amount is set
+(quarter-Kelly, 1-5) only on calibrated edges; otherwise the row is a
+paper pick, same convention as CL1's 2025 season. With no DB (or thin
+graded history) the model still emits paper picks and never stakes.
 """
 import os
 import json
@@ -473,10 +475,11 @@ def _get_fitted():
 
 # ----------------------------------------------------------------- pure logic
 
-def decide(p_under, p_over, over_odds, under_odds, can_stake):
+def decide(pred, over_line, under_line, p_under, p_over, over_odds, under_odds, can_stake):
     """Pick the side with the better probability margin; stake it only when
     calibrated (can_stake) and the margin clears EV_MARGIN. Pure function.
-    Always returns a pick dict: amount is None for paper picks."""
+    Returns a pick dict (amount is None for paper picks), or None to abstain
+    when the chosen side contradicts the raw prediction."""
     u_odds, o_odds = _to_odds(under_odds), _to_odds(over_odds)
     m_under = p_under - _break_even(u_odds)
     m_over = p_over - _break_even(o_odds)
@@ -485,6 +488,15 @@ def decide(p_under, p_over, over_odds, under_odds, can_stake):
         side, prob, margin, odds = "UNDER", p_under, m_under, u_odds
     else:
         side, prob, margin, odds = "OVER", p_over, m_over, o_odds
+
+    # Coherence gate: the calibration's under-heavy base rate must not
+    # outvote the regression. Picks placed against our own prediction
+    # graded 38% vs 52% when coherent — abstain rather than bet the
+    # disagreement.
+    if side == "UNDER" and not pred < under_line:
+        return None
+    if side == "OVER" and not pred > over_line:
+        return None
 
     amount = None
     note = "Lean"
@@ -549,7 +561,15 @@ def predict(player):
         p_under = _norm_cdf((under_line - pred) / sigma)
         p_over = 1.0 - _norm_cdf((over_line - pred) / sigma)
 
-    result = decide(p_under, p_over, over_odds, under_odds, cal is not None)
+    result = decide(pred, over_line, under_line, p_under, p_over,
+                    over_odds, under_odds, cal is not None)
+    if result is None:
+        print(
+            TAG,
+            f"{name} skipped [reason: calibrated side contradicts prediction "
+            f"(pred={pred:.1f}, line O{over_line}/U{under_line})]",
+        )
+        return None
     predicted = max(0, int(round(pred)))
     staked = f"${result['amount']}" if result["amount"] else "paper"
     cal_note = f"cal n={cal['n_cal']}" if cal is not None else "uncalibrated"
