@@ -4,8 +4,8 @@ CLCF3's Low Output calls underperform and skew the dashboard's pooled
 Low Output stats. This deletes ONLY rows where:
     model_name = 'model_CLCF3' AND note = 'Low Output'
 
-model_CL2 also emits "Low Output" and is intentionally left untouched.
-CLC1/CLC2/CLC3_LEARN Low Output rows were scrubbed by earlier runs.
+model_CL2 and model_CLC3_LEARN also emit "Low Output" and are intentionally
+left untouched. CLC1/CLC2 Low Output rows were scrubbed by earlier runs.
 
 Safe by default: prints what it WOULD delete (with a year/result breakdown) and
 exits without changing anything. Pass --apply (or set SCRUB_APPLY=true) to commit

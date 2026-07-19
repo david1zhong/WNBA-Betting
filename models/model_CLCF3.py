@@ -389,9 +389,13 @@ def decide(p_under, dip_score, dip_gap, cycle_quality, under_odds):
     f_kelly = QUARTER_KELLY * edge / (dec_odds - 1.0)
     amount = int(max(1, min(5, round(f_kelly * KELLY_TO_STAKE_MULTIPLIER))))
 
-    note = "Low Output" if dip_score >= 0.5 else "Dip Window"
+    if dip_score >= 0.5:
+        # Low Output calls from this model underperform badly; abstain rather
+        # than insert a bet we don't trust.
+        return {"_skip_reason": f"Low Output suppressed (dip_score={dip_score:.2f} >= 0.5)"}
+
     return {"bet": "UNDER", "prob": p_under, "margin": margin,
-            "amount": amount, "note": note}
+            "amount": amount, "note": "Dip Window"}
 
 
 # ----------------------------------------------------------------- production

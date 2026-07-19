@@ -1,4 +1,4 @@
-name: Scrub Low Output (CLC1/CLC2/CLC3)
+name: Scrub Low Output (CLCF3)
 
 on:
   workflow_dispatch:
