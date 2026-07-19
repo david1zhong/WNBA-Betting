@@ -1,13 +1,11 @@
-"""One-off cleanup: remove "Low Output" prediction rows produced by
-CLC1/CLC2/CLC3/CLCF3.
+"""One-off cleanup: remove "Low Output" prediction rows produced by CLCF3.
 
-These models' Low Output calls underperform and skew the dashboard's pooled
+CLCF3's Low Output calls underperform and skew the dashboard's pooled
 Low Output stats. This deletes ONLY rows where:
-    model_name IN ('model_CLC1', 'model_CLC2', 'model_CLC3_LEARN',
-                   'model_CLCF3')
-    AND note = 'Low Output'
+    model_name = 'model_CLCF3' AND note = 'Low Output'
 
 model_CL2 also emits "Low Output" and is intentionally left untouched.
+CLC1/CLC2/CLC3_LEARN Low Output rows were scrubbed by earlier runs.
 
 Safe by default: prints what it WOULD delete (with a year/result breakdown) and
 exits without changing anything. Pass --apply (or set SCRUB_APPLY=true) to commit
@@ -18,7 +16,7 @@ import os
 import sys
 import psycopg2
 
-TARGET_MODELS = ("model_CLC1", "model_CLC2", "model_CLC3_LEARN", "model_CLCF3")
+TARGET_MODELS = ("model_CLCF3",)
 TARGET_NOTE = "Low Output"
 
 WHERE = "model_name = ANY(%s) AND note = %s"
