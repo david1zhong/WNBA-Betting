@@ -1,45 +1,4 @@
 {
-  "_comment": "5 player props as of 2026-07-25 11:04 EDT",
-  "players": [
-    {
-      "name": "Jessica Shepard",
-      "date": "2026-07-25",
-      "over_line": "7.5",
-      "over_odds": "-120",
-      "under_line": "7.5",
-      "under_odds": "-105"
-    },
-    {
-      "name": "Aliyah Boston",
-      "date": "2026-07-25",
-      "over_line": "7.5",
-      "over_odds": "+105",
-      "under_line": "7.5",
-      "under_odds": "-135"
-    },
-    {
-      "name": "Breanna Stewart",
-      "date": "2026-07-25",
-      "over_line": "7.5",
-      "over_odds": "+102",
-      "under_line": "7.5",
-      "under_odds": "-130"
-    },
-    {
-      "name": "A'ja Wilson",
-      "date": "2026-07-25",
-      "over_line": "8.5",
-      "over_odds": "-115",
-      "under_line": "8.5",
-      "under_odds": "-110"
-    },
-    {
-      "name": "Angel Reese",
-      "date": "2026-07-25",
-      "over_line": "9.5",
-      "over_odds": "-115",
-      "under_line": "9.5",
-      "under_odds": "-110"
-    }
-  ]
+  "_comment": "0 player props as of 2026-07-26 11:07 EDT",
+  "players": []
 }
