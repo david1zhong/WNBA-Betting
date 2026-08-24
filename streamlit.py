@@ -136,9 +136,9 @@ def render_season_table(season_df, key_prefix):
     n_dnp = int((filtered["result"] == "DNP").sum())
 
     if n_filt != n_total:
-        prefix = f"Showing {n_filt:,} of {n_total:,} rows"
+        prefix = f"{n_filt:,} of {n_total:,} rows match filters"
     else:
-        prefix = f"Showing all {n_total:,} rows"
+        prefix = f"{n_total:,} rows"
     st.caption(
         " | ".join([
             prefix,
@@ -151,10 +151,57 @@ def render_season_table(season_df, key_prefix):
         ])
     )
 
+    # Streamlit serializes every cell in a Pandas Styler, even though the
+    # dataframe is displayed in a fixed-height, scrollable area. Paginating
+    # here keeps large seasons below Pandas' Styler cell limit and avoids
+    # sending thousands of off-screen styled rows to the browser.
+    table_df = filtered
+    styler_cell_limit = int(pd.get_option("styler.render.max_elements"))
+    max_page_size = max(
+        1,
+        min(5000, styler_cell_limit // max(len(filtered.columns), 1)),
+    )
+    page_size_options = [
+        size for size in [500, 1000, 2500, 5000]
+        if size <= max_page_size
+    ] or [max_page_size]
+    default_page_size = max(
+        size for size in page_size_options
+        if size <= min(1000, max_page_size)
+    )
+    if n_filt > default_page_size:
+        page_size_col, page_col, _ = st.columns([1, 1, 4])
+        with page_size_col:
+            page_size = st.selectbox(
+                "Rows per page",
+                page_size_options,
+                index=page_size_options.index(default_page_size),
+                key=f"{key_prefix}_page_size",
+            )
+
+        page_count = (n_filt + page_size - 1) // page_size
+        page_key = f"{key_prefix}_page"
+        if st.session_state.get(page_key, 1) > page_count:
+            st.session_state[page_key] = page_count
+        with page_col:
+            page = int(st.number_input(
+                "Page",
+                min_value=1,
+                max_value=page_count,
+                value=1,
+                step=1,
+                key=page_key,
+            ))
+
+        start = (page - 1) * page_size
+        stop = min(start + page_size, n_filt)
+        table_df = filtered.iloc[start:stop]
+        st.caption(f"Displaying rows {start + 1:,}-{stop:,} of {n_filt:,}")
+
     styled = (
-        filtered.style
+        table_df.style
         .map(highlight_result, subset=["result"])
-        .format({col: smart_format for col in num_cols})
+        .format({col: smart_format for col in num_cols if col in table_df.columns})
         .hide(axis="index")
     )
     st.dataframe(styled, use_container_width=True, height=600)
